@@ -34,8 +34,12 @@ export function Navbar({ mode, setMode }: NavbarProps) {
 
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-slate-700">
-            <Link href="#features" className="hover:text-black transition-colors">
-              Product
+            <Link href="#products" className="hover:text-black transition-colors">
+              Products
+            </Link>
+
+            <Link href="#plans" className="hover:text-black transition-colors">
+              Plans
             </Link>
 
             <div
@@ -43,33 +47,36 @@ export function Navbar({ mode, setMode }: NavbarProps) {
               onMouseEnter={() => setActiveDropdown("solutions")}
               onMouseLeave={() => setActiveDropdown(null)}
             >
-              <button className="flex items-center gap-1 hover:text-black transition-colors py-2">
-                <span>Solutions</span>
+              <button className="flex items-center gap-1 hover:text-black transition-colors py-2 cursor-pointer">
+                <span>Workflow</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
               </button>
               {activeDropdown === "solutions" && (
-                <div className="absolute top-full left-0 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full left-0 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                   <Link
-                    href="#lifecycle"
+                    href="#customers"
                     className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                   >
-                    <div className="text-xs font-semibold text-slate-900">Subscription Automation</div>
-                    <div className="text-[11px] text-slate-500">Scheduled batch cycles & autopilot.</div>
+                    <div className="text-xs font-semibold text-slate-900">Customer Subscriptions</div>
+                    <div className="text-[11px] text-slate-500">Directory & renewal management.</div>
+                  </Link>
+                  <Link
+                    href="#billing"
+                    className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="text-xs font-semibold text-slate-900">Automated Billing</div>
+                    <div className="text-[11px] text-slate-500">Recurring invoices & GST tax calc.</div>
                   </Link>
                   <Link
                     href="#analytics"
                     className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                   >
-                    <div className="text-xs font-semibold text-slate-900">Revenue & MRR Telemetry</div>
-                    <div className="text-[11px] text-slate-500">Real-time financial analytics.</div>
+                    <div className="text-xs font-semibold text-slate-900">Business Analytics</div>
+                    <div className="text-[11px] text-slate-500">Live MRR telemetry & charts.</div>
                   </Link>
                 </div>
               )}
             </div>
-
-            <Link href="#pricing" className="hover:text-black transition-colors">
-              Pricing
-            </Link>
 
             <div
               className="relative"

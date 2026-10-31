@@ -584,6 +584,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
   return (
     <div
       ref={pinSectionRef}
+      id="hero"
       className="relative w-full min-h-screen bg-white z-20 overflow-hidden"
     >
       {/* Background Purple, Blue and Mint Ambient Lighting */}
@@ -652,7 +653,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               <button
                 type="button"
                 onClick={() => {
-                  const target = document.getElementById("automated-billing");
+                  const target = document.getElementById("billing");
                   if (target) {
                     target.scrollIntoView({ behavior: "smooth" });
                   }
@@ -705,6 +706,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           {/* ================================================================ */}
           <div
             ref={slide2ContainerRef}
+            id="products"
             style={{ opacity: 0, pointerEvents: "none" }}
             className="absolute left-6 sm:left-10 lg:left-12 max-w-md lg:max-w-lg z-20 flex flex-col items-start space-y-6 will-change-transform"
           >
@@ -1052,6 +1054,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           {/* ================================================================ */}
           <div
             ref={slide3ContainerRef}
+            id="plans"
             className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1240px] mx-auto will-change-transform pointer-events-none"
           >
             {/* Top Centered Notification: "Ready for Plans" (Travels from Slide 2) */}
