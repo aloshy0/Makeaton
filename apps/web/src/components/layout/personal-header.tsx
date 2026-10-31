@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   Search,
   Bell,
@@ -13,6 +13,7 @@ import {
   LogOut,
   Briefcase,
   Check,
+  Building2,
   Sparkles,
 } from "lucide-react";
 import { useAccount } from "../../context/account-context";
@@ -23,12 +24,15 @@ interface PersonalHeaderProps {
 
 export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
   const router = useRouter();
-  const { user, workspaces, switchContext, switchWorkspace, logout } = useAccount();
+  const pathname = usePathname();
+  const { user, workspaces, activeWorkspace, contextType, switchContext, switchWorkspace, logout } = useAccount();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const isProfessional = pathname?.startsWith("/dashboard") || contextType === "PROFESSIONAL";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -57,7 +61,20 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Aloshy Antony"
     : "Aloshy Antony";
 
-  const ownedWorkspaces = workspaces.filter((w) => w.user_role === "OWNER" || w.user_role === "ADMIN");
+  const ownedWorkspaces = workspaces.filter((w) => w.user_role === "OWNER" || w.user_role === "ADMIN" || w.user_role === "STAFF");
+
+  const handleSwitchToProfessional = (workspaceId?: string) => {
+    setDropdownOpen(false);
+    const targetWs = workspaceId || activeWorkspace?.id || ownedWorkspaces[0]?.id;
+    switchContext("PROFESSIONAL", targetWs);
+    router.push("/dashboard");
+  };
+
+  const handleSwitchToPersonal = () => {
+    setDropdownOpen(false);
+    switchContext("PERSONAL");
+    router.push("/portal");
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[#E8ECF3] bg-white/95 px-6 backdrop-blur-sm">
@@ -69,7 +86,7 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
             type="text"
             value={searchQuery}
             onChange={handleSearchChange}
-            placeholder="Search your subscriptions, invoices..."
+            placeholder={isProfessional ? "Search metrics, customers, invoices..." : "Search your subscriptions, invoices..."}
             className="w-full rounded-full border border-[#E8ECF3] bg-slate-50/70 pl-10 pr-4 py-2 text-xs text-[#0B1020] placeholder-slate-400 focus:border-[#7651F5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#7651F5]/10 transition-all"
           />
         </div>
@@ -77,6 +94,27 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
 
       {/* Right Navigation Elements */}
       <div className="flex items-center gap-3">
+        {/* Prominent Context Switch Button */}
+        {!isProfessional ? (
+          <button
+            onClick={() => handleSwitchToProfessional()}
+            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[#7651F5] to-[#4387F7] text-white text-xs font-semibold shadow-xs hover:shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+            title="Immediately open Business Management Dashboard"
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            <span>Switch to Professional</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleSwitchToPersonal}
+            className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#E8ECF3] text-slate-700 text-xs font-semibold shadow-2xs hover:bg-slate-50 hover:text-[#7651F5] transition-all cursor-pointer"
+            title="Switch to Personal Subscriptions Dashboard"
+          >
+            <UserIcon className="w-3.5 h-3.5 text-[#7651F5]" />
+            <span>Switch to Personal</span>
+          </button>
+        )}
+
         {/* Notification Bell */}
         <Link
           href="/portal/notifications"
@@ -95,7 +133,7 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2.5 p-1.5 pr-2 rounded-full hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7651F5]/20"
+            className="flex items-center gap-2.5 p-1.5 pr-2 rounded-full hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7651F5]/20 cursor-pointer"
             aria-label="User profile menu"
           >
             {/* Avatar with Initials */}
@@ -103,13 +141,13 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
               {getInitials()}
             </div>
 
-            {/* User Name & Personal Account Subtext */}
+            {/* User Name & Account Subtext */}
             <div className="hidden sm:flex flex-col text-left">
               <span className="text-xs font-bold text-[#0B1020] truncate max-w-[130px]">
                 {displayName}
               </span>
               <span className="text-[10px] text-[#64748B] -mt-0.5">
-                Personal Account
+                {isProfessional ? (activeWorkspace?.name || "Business Account") : "Personal Account"}
               </span>
             </div>
 
@@ -130,9 +168,34 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
                 <div className="text-[11px] text-[#64748B] truncate">
                   {user?.email || "user@flowgrid.com"}
                 </div>
-                <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.2 rounded-full bg-purple-50 text-[#7651F5] border border-purple-200">
-                  Personal Account
+                <span className={`inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                  isProfessional
+                    ? "bg-blue-50 text-blue-700 border-blue-200"
+                    : "bg-purple-50 text-[#7651F5] border-purple-200"
+                }`}>
+                  {isProfessional ? "Professional View" : "Personal Account"}
                 </span>
+              </div>
+
+              {/* Main Switch to Professional / Switch to Personal Action */}
+              <div className="p-2 border-b border-[#E8ECF3] bg-slate-50/50">
+                {!isProfessional ? (
+                  <button
+                    onClick={() => handleSwitchToProfessional()}
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-gradient-to-r from-[#7651F5] to-[#4387F7] text-white font-bold text-xs shadow-xs hover:opacity-95 transition-all cursor-pointer"
+                  >
+                    <Briefcase className="w-3.5 h-3.5" />
+                    <span>Switch to Professional</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSwitchToPersonal}
+                    className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white border border-[#E8ECF3] text-slate-700 font-bold text-xs shadow-2xs hover:bg-slate-50 hover:text-[#7651F5] transition-all cursor-pointer"
+                  >
+                    <UserIcon className="w-3.5 h-3.5 text-[#7651F5]" />
+                    <span>Switch to Personal</span>
+                  </button>
+                )}
               </div>
 
               <div className="py-1 text-xs">
@@ -162,21 +225,17 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
                 </Link>
               </div>
 
-              {/* Business Organization Switcher (if user owns workspaces) */}
+              {/* Business Selector (if user owns workspaces) */}
               {ownedWorkspaces.length > 0 && (
                 <div className="border-t border-[#E8ECF3] py-1 text-xs">
                   <div className="px-4 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                    Switch to Business
+                    Businesses ({ownedWorkspaces.length})
                   </div>
                   {ownedWorkspaces.slice(0, 3).map((ws) => (
                     <button
                       key={ws.id}
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        switchWorkspace(ws.id);
-                        switchContext("PROFESSIONAL", ws.id);
-                      }}
-                      className="w-full flex items-center justify-between px-4 py-1.5 text-left text-slate-700 hover:bg-purple-50 hover:text-[#7651F5] transition-colors"
+                      onClick={() => handleSwitchToProfessional(ws.id)}
+                      className="w-full flex items-center justify-between px-4 py-1.5 text-left text-slate-700 hover:bg-purple-50 hover:text-[#7651F5] transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2 truncate">
                         <Briefcase className="w-3 h-3 text-[#7651F5] shrink-0" />
@@ -197,7 +256,7 @@ export function PersonalHeader({ onSearch }: PersonalHeaderProps) {
                     setDropdownOpen(false);
                     logout();
                   }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Sign Out</span>

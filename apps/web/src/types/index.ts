@@ -365,6 +365,11 @@ export interface DashboardMetrics {
   total_outstanding_receivables: number;
   overdue_invoices_count: number;
   total_overdue_amount: number;
+  churn_rate?: number;
+  revenue_trend?: Array<{
+    month: string;
+    mrr: number;
+  }>;
   cashflow_trends: Array<{
     month: string;
     amount: number;

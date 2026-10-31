@@ -11,6 +11,7 @@ from apps.billing.engine import run_automated_billing_cycle
 from apps.billing.models import Invoice, TaxRule
 from apps.catalog.models import SubscriptionPlan
 from apps.customers.models import Customer, CustomerUserLink
+from apps.discounts.models import DiscountRule
 from apps.subscriptions.models import Subscription
 from apps.workspaces.models import (
     ApiKey,
@@ -351,6 +352,54 @@ class TestMultiTenantSaaS:
         sub_ids = [s["id"] for s in results]
         assert str(self.sub_a.id) in sub_ids
         assert str(self.sub_b.id) not in sub_ids
+
+    def test_customer_portal_offers_are_limited_to_matching_active_subscriptions(self):
+        eligible = DiscountRule.objects.create(
+            workspace=self.ws_a,
+            name="Subscriber offer",
+            code="SUBSCRIBER10",
+            discount_type=DiscountRule.DiscountType.PERCENTAGE,
+            value=Decimal("10.00"),
+            min_purchase_amount=Decimal("100.00"),
+            is_active=True,
+        )
+        DiscountRule.objects.create(
+            workspace=self.ws_a,
+            name="Inactive offer",
+            code="INACTIVE",
+            value=Decimal("25.00"),
+            is_active=False,
+        )
+        DiscountRule.objects.create(
+            workspace=self.ws_a,
+            name="Too expensive",
+            code="MINIMUM500",
+            value=Decimal("20.00"),
+            min_purchase_amount=Decimal("500.00"),
+        )
+        self.client.force_authenticate(user=self.customer_user_a)
+
+        response = self.client.get(f"/api/v1/workspaces/{self.ws_a.id}/portal/offers/")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data == [
+            {
+                "id": str(eligible.id),
+                "name": "Subscriber offer",
+                "code": "SUBSCRIBER10",
+                "discount_type": "percentage",
+                "value": "10.00",
+                "min_purchase_amount": "100.00",
+                "start_date": None,
+                "end_date": None,
+                "scope": "subscription",
+                "subscription_id": str(self.sub_a.id),
+                "subscription_number": self.sub_a.subscription_number,
+                "subscription_name": self.plan_a.name,
+                "workspace_id": str(self.ws_a.id),
+                "workspace_name": self.ws_a.name,
+            }
+        ]
 
     # 8. Idempotent Recurring Billing
     def test_idempotent_recurring_billing_cycle(self):

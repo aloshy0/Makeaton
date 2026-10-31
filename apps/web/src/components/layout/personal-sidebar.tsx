@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutGrid,
   Layers,
@@ -30,6 +30,8 @@ import {
   Check,
   Building2,
   Plus,
+  Briefcase,
+  ArrowRight,
 } from "lucide-react";
 import { useAccount } from "../../context/account-context";
 
@@ -48,11 +50,14 @@ interface NavSection {
 
 export function PersonalSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const {
     user,
     workspaces,
     activeWorkspace,
+    contextType,
     switchWorkspace,
+    switchContext,
     isSidebarCollapsed,
     toggleSidebar,
   } = useAccount();
@@ -60,6 +65,8 @@ export function PersonalSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [businessMenuOpen, setBusinessMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const isProfessional = pathname === "/dashboard" || pathname?.startsWith("/dashboard") || contextType === "PROFESSIONAL";
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -102,7 +109,7 @@ export function PersonalSidebar() {
   const canManageTeam = isOwnerOrAdmin || (perms?.can_manage_team ?? false);
   const canManageSettings = isOwnerOrAdmin || (perms?.can_manage_settings ?? false);
 
-  // 1. Personal Main Navigation (Always visible)
+  // 1. Personal Main Navigation Items
   const personalNavItems: NavItem[] = [
     { name: "Dashboard", href: "/portal", icon: LayoutGrid },
     { name: "My Subscriptions", href: "/portal/subscriptions", icon: Layers },
@@ -114,109 +121,76 @@ export function PersonalSidebar() {
     { name: "Help & Support", href: "/portal/help", icon: HelpCircle },
   ];
 
-  // 2. Dynamic Business Sections (Only when user owns or manages a business)
-  const businessSections: NavSection[] = hasBusinessAccess
+  // 2. Full Business Management Navigation (when in Professional mode)
+  const professionalNavSections: NavSection[] = [
+    {
+      title: "BUSINESS MANAGEMENT",
+      items: [
+        { name: "Dashboard", href: "/dashboard", icon: LayoutGrid, visible: true },
+        { name: "Products & Services", href: "/catalog", icon: Package, visible: canManageProducts },
+        { name: "Plans", href: "/catalog?tab=plans", icon: Layers, visible: canManageProducts },
+        { name: "Customers & Members", href: "/customers", icon: Users, visible: canManageCustomers },
+        { name: "Quotations", href: "/quotations", icon: FileCheck, visible: canManageSubscriptions },
+        { name: "Subscriptions", href: "/subscriptions", icon: Repeat, visible: canManageSubscriptions },
+        { name: "Invoices", href: "/invoices", icon: Receipt, visible: canManageInvoices },
+        { name: "Payments", href: "/payments", icon: CreditCard, visible: canRecordPayments },
+      ].filter((i) => i.visible !== false),
+    },
+    {
+      title: "OPERATIONS",
+      items: [
+        { name: "Team & Staff", href: "/staff", icon: UserCog, visible: canManageTeam },
+        { name: "Invitations", href: "/invitations", icon: Mail, visible: canManageTeam },
+      ].filter((i) => i.visible !== false),
+    },
+    {
+      title: "CONFIGURATION",
+      items: [
+        { name: "Analytics & Reports", href: "/reports", icon: BarChart3, visible: canViewReports },
+        { name: "Discounts & Offers", href: "/catalog?tab=discounts", icon: Percent, visible: canManageProducts },
+        { name: "API & Webhooks", href: "/integrations", icon: Cable, visible: canManageSettings },
+        { name: "Business Settings", href: "/settings", icon: Settings, visible: canManageSettings },
+      ].filter((i) => i.visible !== false),
+    },
+  ];
+
+  // 3. Dynamic Personal sections (when in Personal mode with business access)
+  const personalBusinessSections: NavSection[] = hasBusinessAccess
     ? [
         {
           title: "BUSINESS MANAGEMENT",
           items: [
-            {
-              name: "Products & Services",
-              href: "/catalog",
-              icon: Package,
-              visible: canManageProducts,
-            },
-            {
-              name: "Plans",
-              href: "/catalog?tab=plans",
-              icon: Layers,
-              visible: canManageProducts,
-            },
-            {
-              name: "Customers",
-              href: "/customers",
-              icon: Users,
-              visible: canManageCustomers,
-            },
-            {
-              name: "Quotations",
-              href: "/quotations",
-              icon: FileCheck,
-              visible: canManageSubscriptions,
-            },
-            {
-              name: "Subscriptions",
-              href: "/subscriptions",
-              icon: Repeat,
-              visible: canManageSubscriptions,
-            },
-            {
-              name: "Invoices",
-              href: "/invoices",
-              icon: Receipt,
-              visible: canManageInvoices,
-            },
-            {
-              name: "Payments",
-              href: "/payments",
-              icon: CreditCard,
-              visible: canRecordPayments,
-            },
+            { name: "Products & Services", href: "/catalog", icon: Package, visible: canManageProducts },
+            { name: "Plans", href: "/catalog?tab=plans", icon: Layers, visible: canManageProducts },
+            { name: "Customers", href: "/customers", icon: Users, visible: canManageCustomers },
+            { name: "Quotations", href: "/quotations", icon: FileCheck, visible: canManageSubscriptions },
+            { name: "Subscriptions", href: "/subscriptions", icon: Repeat, visible: canManageSubscriptions },
+            { name: "Invoices", href: "/invoices", icon: Receipt, visible: canManageInvoices },
+            { name: "Payments", href: "/payments", icon: CreditCard, visible: canRecordPayments },
           ].filter((i) => i.visible !== false),
         },
         {
           title: "OPERATIONS",
           items: [
-            {
-              name: "Team & Staff",
-              href: "/staff",
-              icon: UserCog,
-              visible: canManageTeam,
-            },
-            {
-              name: "Invitations",
-              href: "/invitations",
-              icon: Mail,
-              visible: canManageTeam,
-            },
+            { name: "Team & Staff", href: "/staff", icon: UserCog, visible: canManageTeam },
+            { name: "Invitations", href: "/invitations", icon: Mail, visible: canManageTeam },
           ].filter((i) => i.visible !== false),
         },
         {
           title: "CONFIGURATION",
           items: [
-            {
-              name: "Analytics & Reports",
-              href: "/reports",
-              icon: BarChart3,
-              visible: canViewReports,
-            },
-            {
-              name: "Discounts & Offers",
-              href: "/catalog?tab=discounts",
-              icon: Percent,
-              visible: canManageProducts,
-            },
-            {
-              name: "API & Webhooks",
-              href: "/integrations",
-              icon: Cable,
-              visible: canManageSettings,
-            },
-            {
-              name: "Business Settings",
-              href: "/settings",
-              icon: Settings,
-              visible: canManageSettings,
-            },
+            { name: "Analytics & Reports", href: "/reports", icon: BarChart3, visible: canViewReports },
+            { name: "Discounts & Offers", href: "/catalog?tab=discounts", icon: Percent, visible: canManageProducts },
+            { name: "API & Webhooks", href: "/integrations", icon: Cable, visible: canManageSettings },
+            { name: "Business Settings", href: "/settings", icon: Settings, visible: canManageSettings },
           ].filter((i) => i.visible !== false),
         },
       ]
     : [];
 
   const isItemActive = (href: string) => {
-    if (href === "/portal") {
-      return pathname === "/portal" || pathname === "/dashboard";
-    }
+    if (href === "/portal") return pathname === "/portal";
+    if (href === "/dashboard") return pathname === "/dashboard";
     const cleanHref = href.split("?")[0];
     return pathname === cleanHref || pathname.startsWith(cleanHref + "/");
   };
@@ -274,7 +248,7 @@ export function PersonalSidebar() {
               FlowGrid
             </span>
             <span className="text-[10px] font-semibold text-slate-400">
-              {hasBusinessAccess ? currentBusiness?.name || "Gowheels" : "Personal"}
+              {isProfessional ? (currentBusiness?.name || "Business") : "Personal"}
             </span>
           </div>
         </div>
@@ -294,10 +268,13 @@ export function PersonalSidebar() {
           isSidebarCollapsed ? "w-[72px]" : "w-[240px]"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
       >
-        {/* Brand Header */}
+        {/* Brand Header with Business Switcher */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-[#E8ECF3] shrink-0 relative" ref={menuRef}>
           <div className="flex items-center gap-2.5 overflow-hidden flex-1">
-            <Link href="/portal" className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#7651F5] to-[#4387F7] text-white flex items-center justify-center font-heading font-black text-sm shadow-md shadow-purple-500/20 shrink-0">
+            <Link
+              href={isProfessional ? "/dashboard" : "/portal"}
+              className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#7651F5] to-[#4387F7] text-white flex items-center justify-center font-heading font-black text-sm shadow-md shadow-purple-500/20 shrink-0"
+            >
               FG
             </Link>
 
@@ -306,7 +283,7 @@ export function PersonalSidebar() {
                 {hasBusinessAccess ? (
                   <button
                     onClick={() => setBusinessMenuOpen(!businessMenuOpen)}
-                    className="flex items-center gap-1.5 text-left group w-full focus:outline-none"
+                    className="flex items-center gap-1.5 text-left group w-full focus:outline-none cursor-pointer"
                     title="Switch business workspace"
                   >
                     <div className="truncate flex-1">
@@ -338,7 +315,7 @@ export function PersonalSidebar() {
           {/* Desktop Toggle Button */}
           <button
             onClick={toggleSidebar}
-            className="hidden md:flex h-7 w-7 rounded-lg border border-[#E8ECF3] bg-white hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 items-center justify-center text-slate-400 transition-all shadow-2xs ml-1"
+            className="hidden md:flex h-7 w-7 rounded-lg border border-[#E8ECF3] bg-white hover:bg-purple-50 hover:text-purple-600 hover:border-purple-200 items-center justify-center text-slate-400 transition-all shadow-2xs ml-1 cursor-pointer"
             title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
             aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
@@ -357,11 +334,11 @@ export function PersonalSidebar() {
             <X className="w-5 h-5" />
           </button>
 
-          {/* Workspace Switcher Popover */}
+          {/* Business Switcher Popover */}
           {businessMenuOpen && hasBusinessAccess && !isSidebarCollapsed && (
             <div className="absolute top-[62px] left-3 right-3 bg-white rounded-2xl border border-[#E8ECF3] shadow-xl z-50 p-2 animate-in fade-in zoom-in-95 duration-150">
               <div className="px-2 py-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                Your Businesses
+                Your Businesses ({workspaces.length})
               </div>
               <div className="space-y-1 max-h-48 overflow-y-auto mt-1">
                 {(businessWorkspaces.length > 0
@@ -373,10 +350,10 @@ export function PersonalSidebar() {
                     <button
                       key={ws.id || ws.name}
                       onClick={() => {
-                        switchWorkspace(ws);
+                        switchWorkspace(ws.id || ws);
                         setBusinessMenuOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors ${
+                      className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
                         isSelected
                           ? "bg-purple-50 text-[#7651F5] font-semibold"
                           : "hover:bg-slate-50 text-[#0B1020]"
@@ -408,61 +385,87 @@ export function PersonalSidebar() {
           )}
         </div>
 
-        {/* Scrollable Navigation List */}
+        {/* Scrollable Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1 [scrollbar-width:thin] [scrollbar-color:#E2E8F0_transparent]">
-          {/* Main Navigation (Personal Items) */}
-          <div className="space-y-1">
-            {personalNavItems.map(renderNavLink)}
-          </div>
-
-          {/* Dynamic Business Management Navigation */}
-          {hasBusinessAccess &&
-            businessSections.map((section) => {
-              if (section.items.length === 0) return null;
-
-              return (
-                <div key={section.title} className="pt-2">
-                  {/* Subtle Divider */}
-                  <div className="border-t border-[#E8ECF3] my-2 mx-1" />
-
-                  {/* Section Title */}
-                  {!isSidebarCollapsed && (
-                    <div className="px-3 pt-1 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase select-none">
-                      {section.title}
-                    </div>
-                  )}
-
-                  {/* Section Items */}
-                  <div className="space-y-1">
-                    {section.items.map(renderNavLink)}
+          {isProfessional ? (
+            /* PROFESSIONAL VIEW: Full Business Management Navigation */
+            professionalNavSections.map((section, idx) => (
+              <div key={section.title} className={idx > 0 ? "pt-2" : ""}>
+                {idx > 0 && <div className="border-t border-[#E8ECF3] my-2 mx-1" />}
+                {!isSidebarCollapsed && (
+                  <div className="px-3 pt-1 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase select-none">
+                    {section.title}
                   </div>
+                )}
+                <div className="space-y-1">
+                  {section.items.map(renderNavLink)}
                 </div>
-              );
-            })}
+              </div>
+            ))
+          ) : (
+            /* PERSONAL VIEW: Main Navigation + Dynamic Business Options */
+            <>
+              <div className="space-y-1">
+                {personalNavItems.map(renderNavLink)}
+              </div>
+
+              {hasBusinessAccess &&
+                personalBusinessSections.map((section) => {
+                  if (section.items.length === 0) return null;
+                  return (
+                    <div key={section.title} className="pt-2">
+                      <div className="border-t border-[#E8ECF3] my-2 mx-1" />
+                      {!isSidebarCollapsed && (
+                        <div className="px-3 pt-1 pb-1 text-[10px] font-bold tracking-wider text-slate-400 uppercase select-none">
+                          {section.title}
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        {section.items.map(renderNavLink)}
+                      </div>
+                    </div>
+                  );
+                })}
+            </>
+          )}
         </nav>
 
-        {/* Bottom Profile / Account Pill */}
+        {/* Bottom Switch Pill */}
         {!isSidebarCollapsed && (
           <div className="p-3 border-t border-[#E8ECF3] bg-slate-50/50">
-            <div className="p-2.5 rounded-xl bg-purple-50/60 border border-purple-100 text-[11px] text-[#64748B]">
-              <div className="font-bold text-[#7651F5] flex items-center justify-between">
-                <span>
-                  {hasBusinessAccess
-                    ? `${effectiveRole === "OWNER" ? "Business Owner" : "Staff Member"}`
-                    : "Personal Account"}
-                </span>
-                {hasBusinessAccess && (
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-[#7651F5]/10 text-[#7651F5] font-semibold">
-                    Active
-                  </span>
-                )}
-              </div>
-              <p className="text-[10px] text-slate-500 mt-0.5 leading-snug truncate">
-                {hasBusinessAccess
-                  ? currentBusiness?.name || "Gowheels"
-                  : "Track personal subscriptions & billing"}
-              </p>
-            </div>
+            {isProfessional ? (
+              <button
+                onClick={() => {
+                  switchContext("PERSONAL");
+                  router.push("/portal");
+                }}
+                className="w-full p-2.5 rounded-xl bg-white border border-[#E8ECF3] hover:border-purple-200 hover:bg-purple-50/50 text-left transition-all group shadow-2xs cursor-pointer"
+              >
+                <div className="font-bold text-xs text-[#0B1020] flex items-center justify-between group-hover:text-[#7651F5]">
+                  <span>Switch to Personal</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#7651F5] transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                  Personal subscriptions, offers & billing
+                </p>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  switchContext("PROFESSIONAL", activeWorkspace?.id);
+                  router.push("/dashboard");
+                }}
+                className="w-full p-2.5 rounded-xl bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 hover:border-purple-200 text-left transition-all group shadow-2xs cursor-pointer"
+              >
+                <div className="font-bold text-xs text-[#7651F5] flex items-center justify-between">
+                  <span>Switch to Professional</span>
+                  <Briefcase className="w-3.5 h-3.5 text-[#7651F5] transition-transform group-hover:scale-110" />
+                </div>
+                <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                  Manage {currentBusiness?.name || "business"}, MRR & staff
+                </p>
+              </button>
+            )}
           </div>
         )}
       </aside>

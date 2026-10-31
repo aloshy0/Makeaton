@@ -382,3 +382,19 @@
   - Confirmed frontend builds and passes test suite cleanly (`next build` and Vitest unit tests).
   - Pushed full-stack changes to remote repository branches as requested.
 - **Status:** PASS
+
+---
+
+### [Stage 15] Customer Subscription Offers
+
+- **Date:** 2026-10-31
+- **Actions:**
+  - Replaced the Personal Account plan storefront's placeholder tiers and simulated subscribe action with offers tied to the signed-in customer's active subscriptions.
+  - Added a customer-scoped portal offers resource that filters out inactive, expired, exhausted, above-minimum, and non-matching product offers.
+  - Added loading, error, and no-offers states and documented the endpoint in `docs/API_CATALOG.md`.
+- **Quality Checks:**
+  - Backend multi-tenant tests: 11 passed; Ruff: passed.
+  - Frontend tests: 4 passed; ESLint on edited frontend files: passed.
+  - Browser: updated page rendered, but the live API request did not return in this session, so offer-card data could not be verified in-browser.
+  - Full frontend lint/build are currently blocked by an undefined `Package` icon reference in `apps/web/src/app/dashboard/page.tsx`.
+- **Status:** Implemented.

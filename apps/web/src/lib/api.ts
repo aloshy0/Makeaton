@@ -65,6 +65,23 @@ export interface AuthenticationResponse {
   is_new_user?: boolean;
 }
 
+export interface PortalOffer {
+  id: string;
+  name: string;
+  code: string;
+  discount_type: "percentage" | "fixed";
+  value: string;
+  min_purchase_amount: string;
+  start_date: string | null;
+  end_date: string | null;
+  scope: "product" | "subscription";
+  subscription_id: string;
+  subscription_number: string;
+  subscription_name: string;
+  workspace_id: string;
+  workspace_name: string;
+}
+
 function isUuid(val: any): boolean {
   return typeof val === "string" && val.length === 36 && val.includes("-");
 }
@@ -131,6 +148,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   // Global Auth
+  getUserContexts: () =>
+    request<{
+      personal_customer_context?: {
+        linked_businesses?: Array<{ workspace_id: string; workspace_name: string }>;
+      };
+    }>("/auth/me/contexts/"),
+
   register: (data: {
     email: string;
     password: string;
@@ -899,6 +923,8 @@ export const api = {
       DUMMY_SUBSCRIPTIONS.filter((s) => s.customer === "cust-001")
     );
   },
+  getPortalOffers: (workspaceId: string) =>
+    request<PortalOffer[]>(`/workspaces/${workspaceId}/portal/offers/`),
   getPortalInvoices: (wsIdOrContext?: any) => {
     const ws = isUuid(wsIdOrContext) ? wsIdOrContext : DEFAULT_WORKSPACE_ID;
     return request<Invoice[]>(`/workspaces/${ws}/portal/invoices/`).catch(() =>

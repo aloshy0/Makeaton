@@ -108,6 +108,7 @@
 
 - `GET /api/v1/workspaces/{id}/portal/me/` — Customer profile and active customer organization details.
 - `GET /api/v1/workspaces/{id}/portal/subscriptions/` — Active and historical subscriptions assigned to customer.
+- `GET /api/v1/workspaces/{id}/portal/offers/` — Active discount offers that match the authenticated customer's active subscriptions. Returns offer details and the matching subscription; customer and workspace scoped.
 - `GET /api/v1/workspaces/{id}/portal/invoices/` — Invoices issued to customer.
 - `GET /api/v1/workspaces/{id}/portal/payments/` — Payment history for customer.
 - `POST /api/v1/workspaces/{id}/portal/subscriptions/{subscription_id}/actions/pause/` — Allowed customer self-pause.
