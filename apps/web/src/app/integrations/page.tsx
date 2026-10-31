@@ -35,7 +35,7 @@ export default function IntegrationsPage() {
 
   // Webhook creation
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
-  const [webhookUrl, setWebhookUrl] = useState("https://my-storefront.com/api/webhooks/brightloop");
+  const [webhookUrl, setWebhookUrl] = useState("https://my-storefront.com/api/webhooks/flowgrid");
   const [webhookEvents, setWebhookEvents] = useState<string[]>([
     "subscription.activated",
     "invoice.paid",
@@ -353,14 +353,14 @@ window.location.href = checkout_url; // Redirects buyer to hosted checkout`}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Brightloop signs each event payload with your webhook secret in the{" "}
-                <code className="text-indigo-400">X-Brightloop-Signature</code> header:
+                FlowGrid signs each event payload with your webhook secret in the{" "}
+                <code className="text-indigo-400">X-FlowGrid-Signature</code> header:
               </p>
               <pre className="p-4 rounded-xl bg-slate-900 border border-slate-800 font-mono text-[11px] text-emerald-300 overflow-x-auto">
                 {`import crypto from "crypto";
 
 export async function POST(req) {
-  const signature = req.headers.get("x-brightloop-signature");
+  const signature = req.headers.get("x-flowgrid-signature");
   const rawBody = await req.text();
   const expected = crypto.createHmac("sha256", process.env.WEBHOOK_SECRET).update(rawBody).digest("hex");
 

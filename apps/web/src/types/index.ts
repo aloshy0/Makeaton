@@ -25,6 +25,8 @@ export interface Workspace {
   is_active: boolean;
   user_role?: WorkspaceRole;
   active_members_count?: number;
+  description?: string;
+  last_accessed?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -45,6 +47,7 @@ export interface StaffPermission {
 export interface WorkspaceMembership {
   id: string;
   workspace: string;
+  workspace_details?: Workspace;
   user: User;
   role: WorkspaceRole;
   status: "ACTIVE" | "SUSPENDED";
@@ -54,9 +57,11 @@ export interface WorkspaceMembership {
 
 export interface StaffInvitation {
   id: string;
+  workspace?: string;
   email: string;
   role: "ADMIN" | "STAFF" | "CUSTOMER";
   token?: string;
+  invited_by?: string;
   status: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
   expires_at: string;
   created_at: string;

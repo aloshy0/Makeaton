@@ -117,7 +117,7 @@ export const api = {
   getMe: () =>
     request<User & { workspaces: Workspace[] }>("/auth/me/").catch(() => ({
       id: "usr_mock_1",
-      email: "owner@brightloop.com",
+      email: "owner@flowgrid.com",
       first_name: "Alexander",
       last_name: "Wright",
       role: "ADMIN" as const,
@@ -126,6 +126,16 @@ export const api = {
       available_workspace_slots: 3,
       created_at: new Date().toISOString(),
       workspaces: DUMMY_WORKSPACES,
+    })),
+
+  setActiveContext: (data: { context_type: string; workspace_id?: string }) =>
+    request<{ status: string; context_type: string; workspace_id?: string }>("/auth/context/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }).catch(() => ({
+      status: "success",
+      context_type: data.context_type,
+      workspace_id: data.workspace_id,
     })),
 
   // Workspaces
@@ -196,7 +206,7 @@ export const api = {
       access: "mock_jwt_access_token_prototype",
       user: {
         id: `u-${Date.now()}`,
-        email: "invited.staff@brightloop.com",
+        email: "invited.staff@flowgrid.com",
         first_name: data.first_name || "Staff",
         last_name: data.last_name || "Member",
         role: "STAFF" as const,

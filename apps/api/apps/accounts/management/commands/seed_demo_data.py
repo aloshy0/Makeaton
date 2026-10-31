@@ -38,8 +38,24 @@ class Command(BaseCommand):
         # 1. Global Users
         # --------------------------------------------------------------------------
         # Alexander Wright: Multi-Context User (Owner of ws1, Admin of ws2, Customer in ws_b)
+        # Dedicated Demo Persona: demo@flowgrid.local
+        demo_user, _ = User.objects.get_or_create(
+            email="demo@flowgrid.local",
+            defaults={
+                "first_name": "Demo",
+                "last_name": "User",
+                "role": User.Role.ADMIN,
+                "is_staff": True,
+                "is_superuser": True,
+            },
+        )
+        demo_user.set_password("FlowGrid2026!Demo")
+        demo_user.first_name = "Demo"
+        demo_user.last_name = "User"
+        demo_user.save()
+
         admin_user, _ = User.objects.get_or_create(
-            email="admin@brightloop.com",
+            email="owner@flowgrid.com",
             defaults={
                 "first_name": "Alexander",
                 "last_name": "Wright",
@@ -48,14 +64,14 @@ class Command(BaseCommand):
                 "is_superuser": True,
             },
         )
-        admin_user.set_password("BrightloopAdmin2026!")
+        admin_user.set_password("StrongPassword123!")
         admin_user.first_name = "Alexander"
         admin_user.last_name = "Wright"
         admin_user.save()
 
         # Operations Staff User
         staff_ops, _ = User.objects.get_or_create(
-            email="staff@brightloop.com",
+            email="staff@flowgrid.com",
             defaults={
                 "first_name": "Marcus",
                 "last_name": "Vance",
@@ -63,12 +79,12 @@ class Command(BaseCommand):
                 "is_staff": True,
             },
         )
-        staff_ops.set_password("BrightloopStaff2026!")
+        staff_ops.set_password("StrongPassword123!")
         staff_ops.save()
 
         # Read-Only Staff User
         staff_ro, _ = User.objects.get_or_create(
-            email="staff.ro@brightloop.com",
+            email="staff.ro@flowgrid.com",
             defaults={
                 "first_name": "Elena",
                 "last_name": "Rostova",
@@ -76,7 +92,7 @@ class Command(BaseCommand):
                 "is_staff": True,
             },
         )
-        staff_ro.set_password("BrightloopStaff2026!")
+        staff_ro.set_password("StrongPassword123!")
         staff_ro.save()
 
         # Customer User (David Miller - Acme Corp)
@@ -88,7 +104,7 @@ class Command(BaseCommand):
                 "role": User.Role.CUSTOMER,
             },
         )
-        cust_user.set_password("AcmeCustomer2026!")
+        cust_user.set_password("StrongPassword123!")
         cust_user.save()
 
         # Customer User 2 (Hank Scorpio - Globex)
@@ -122,20 +138,20 @@ class Command(BaseCommand):
         ws1, _ = Workspace.objects.get_or_create(
             id=ws1_id,
             defaults={
-                "name": "Brightloop Cloud Services",
-                "slug": "brightloop-cloud",
+                "name": "FlowGrid Cloud Technologies",
+                "slug": "flowgrid-cloud",
                 "owner": admin_user,
                 "currency": "USD",
                 "timezone": "America/New_York",
             },
         )
-        ws1.name = "Brightloop Cloud Services"
+        ws1.name = "FlowGrid Cloud Technologies"
         ws1.save()
 
         ws2, _ = Workspace.objects.get_or_create(
-            slug="brightloop-hardware",
+            slug="flowgrid-hardware",
             defaults={
-                "name": "Brightloop Hardware Labs",
+                "name": "FlowGrid Hardware Labs",
                 "owner": admin_user,
                 "currency": "EUR",
                 "timezone": "Europe/London",
@@ -252,7 +268,7 @@ class Command(BaseCommand):
         )
         CustomerUserLink.objects.get_or_create(customer=alex_cust_in_b, user=admin_user)
 
-        # Customers in Workspace 1 (Brightloop Cloud Services)
+        # Customers in Workspace 1 (FlowGrid Cloud Technologies)
         acme, _ = Customer.objects.get_or_create(
             workspace=ws1,
             email="customer@acme.com",
@@ -979,10 +995,10 @@ class Command(BaseCommand):
                 "Multi-Tenant SaaS Demo Data successfully seeded with complete business and customer separation!\n"
                 f"Workspaces created: {ws1.name} (ID: {ws1.id}), {ws2.name}, {ws_b.name}\n"
                 "Demonstration Accounts:\n"
-                "- Owner/Multi-Context: admin@brightloop.com (BrightloopAdmin2026!) [Owner ws1, Admin ws2, Customer in ws_b]\n"
-                "- Operations Staff:    staff@brightloop.com (BrightloopStaff2026!) [Staff ws1]\n"
-                "- Read-Only Staff:     staff.ro@brightloop.com (BrightloopStaff2026!) [Staff ws1]\n"
-                "- Customer 1:          customer@acme.com (AcmeCustomer2026!) [Customer ws1]\n"
+                "- Owner/Multi-Context: owner@flowgrid.com (StrongPassword123!) [Owner ws1, Admin ws2, Customer in ws_b]\n"
+                "- Operations Staff:    staff@flowgrid.com (StrongPassword123!) [Staff ws1]\n"
+                "- Read-Only Staff:     staff.ro@flowgrid.com (StrongPassword123!) [Staff ws1]\n"
+                "- Customer 1:          customer@acme.com (StrongPassword123!) [Customer ws1]\n"
                 "- Customer 2:          billing@globex.org (GlobexCustomer2026!) [Customer ws1]\n"
                 "- Independent Owner:   bob@retailstore.com (RetailVance2026!) [Owner ws_b]"
             )

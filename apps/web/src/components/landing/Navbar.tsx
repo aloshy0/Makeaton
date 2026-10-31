@@ -118,14 +118,14 @@ export function Navbar({ mode, setMode }: NavbarProps) {
         {/* Right Navigation & CTAs */}
         <div className="hidden md:flex items-center gap-6 text-[13px] font-medium">
           <Link
-            href="/dashboard"
+            href="/login"
             className="text-slate-800 hover:text-black font-semibold transition-colors px-2"
           >
             Log in
           </Link>
 
           <Link
-            href="/dashboard"
+            href="/register"
             className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-black text-white text-xs font-semibold hover:bg-slate-800 transition-all shadow-sm active:scale-95"
           >
             Sign up
@@ -195,10 +195,18 @@ export function Navbar({ mode, setMode }: NavbarProps) {
           </div>
           <div className="pt-4 flex flex-col gap-2">
             <Link
-              href="/dashboard"
-              className="w-full text-center py-2.5 rounded-full bg-black text-white text-xs font-semibold"
+              href="/register"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-center py-2.5 rounded-full bg-black text-white text-xs font-semibold shadow-xs"
             >
-              Get Started Free
+              Sign up
+            </Link>
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-center py-2.5 rounded-full border border-slate-200 bg-white text-slate-800 text-xs font-semibold"
+            >
+              Log in
             </Link>
           </div>
         </div>

@@ -115,7 +115,7 @@ export default function ApprovalsPage() {
                   <span className="font-mono text-slate-500">{appr.entity_id}</span>
                 </td>
                 <td className="px-5 py-4 text-slate-600">
-                  {appr.requested_by_email || "steve.staff@brightloop.com"}
+                  {appr.requested_by_email || "steve.staff@flowgrid.com"}
                 </td>
                 <td className="px-5 py-4 text-slate-500">
                   {new Date(appr.created_at).toLocaleString()}

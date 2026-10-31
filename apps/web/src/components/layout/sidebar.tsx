@@ -148,12 +148,12 @@ export function Sidebar() {
       <aside className="fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-800 bg-slate-950 text-slate-300">
         {/* Brand Header */}
         <div className="flex h-16 items-center gap-3 border-b border-slate-800/80 px-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20">
-            BL
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-600 text-white font-bold font-heading shadow-md shadow-purple-500/20">
+            FG
           </div>
           <div className="truncate">
-            <span className="text-sm font-semibold tracking-tight text-white block">
-              Brightloop SaaS
+            <span className="text-sm font-semibold tracking-tight text-white block font-heading">
+              FlowGrid
             </span>
             <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
               Subscription Platform

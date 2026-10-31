@@ -90,7 +90,7 @@ export default function ReportsPage() {
       link.setAttribute("href", url);
       link.setAttribute(
         "download",
-        `brightloop-financial-report-${new Date().toISOString().slice(0, 10)}.csv`
+        `flowgrid-financial-report-${new Date().toISOString().slice(0, 10)}.csv`
       );
       document.body.appendChild(link);
       link.click();
