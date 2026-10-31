@@ -40,6 +40,8 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = None  # Use email as unique identifier
     email = models.EmailField(_("email address"), unique=True, db_index=True)
+    google_sub = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    profile_picture = models.URLField(max_length=1000, blank=True)
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.CUSTOMER)
     phone = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -63,3 +65,41 @@ class User(AbstractUser):
     @property
     def is_internal_staff(self):
         return self.role in (self.Role.ADMIN, self.Role.STAFF) or self.is_staff
+
+    def get_flowgrid_plan(self):
+        from apps.workspaces.models import FlowGridPlan, FlowGridSubscription
+
+        sub = (
+            self.flowgrid_subscriptions.filter(status=FlowGridSubscription.Status.ACTIVE)
+            .select_related("plan")
+            .first()
+        )
+        if sub:
+            return sub.plan
+        basic = FlowGridPlan.objects.filter(slug="basic", is_active=True).first()
+        if not basic:
+            basic = FlowGridPlan.objects.create(
+                name="Basic",
+                slug="basic",
+                price=0,
+                max_workspaces=1,
+                max_products_per_workspace=5,
+                max_customers_per_workspace=50,
+                max_team_members=1,
+                features=["1 Business Workspace", "5 Products", "50 Customers", "1 Team Member"],
+            )
+        return basic
+
+    def get_flowgrid_subscription(self):
+        from apps.workspaces.models import FlowGridSubscription
+
+        return (
+            self.flowgrid_subscriptions.filter(status=FlowGridSubscription.Status.ACTIVE)
+            .select_related("plan")
+            .first()
+        )
+
+    def get_available_workspace_slots(self):
+        plan = self.get_flowgrid_plan()
+        owned = self.owned_workspaces.filter(is_active=True).count()
+        return max(0, plan.max_workspaces - owned)

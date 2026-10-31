@@ -23,6 +23,18 @@ class ProductViewSet(TenantScopedMixin, viewsets.ModelViewSet):
             return [IsWorkspaceAdmin()]
         return [IsWorkspaceMember()]
 
+    def perform_create(self, serializer):
+        workspace = self.workspace
+        plan = workspace.owner.get_flowgrid_plan()
+        count = Product.objects.filter(workspace=workspace).count()
+        if count >= plan.max_products_per_workspace:
+            raise exceptions.ValidationError(
+                {
+                    "error": f"Product limit reached ({plan.max_products_per_workspace} max for your {plan.name} plan). Please upgrade your FlowGrid plan to add more products."
+                }
+            )
+        return super().perform_create(serializer)
+
     @action(detail=True, methods=["get", "post"], url_path="variants")
     def variants(self, request, workspace_id, pk=None):
         product = self.get_object()

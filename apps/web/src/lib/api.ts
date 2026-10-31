@@ -17,6 +17,11 @@ import {
   WebhookEndpoint,
   Workspace,
   WorkspaceMembership,
+  FlowGridPlan,
+  FlowGridSubscription,
+  FlowGridPaymentMethod,
+  FlowGridInvoice,
+  PersonalDashboardData,
 } from "../types";
 import {
   DUMMY_API_KEYS,
@@ -35,6 +40,29 @@ import {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 const DEFAULT_WORKSPACE_ID = "aac3abe7-18b7-4c5f-a29e-786b63476459";
+let pendingRefresh: Promise<string | null> | null = null;
+
+export class ApiRequestError extends Error {
+  code?: string;
+  details: Record<string, unknown>;
+  status: number;
+
+  constructor(message: string, status: number, details: Record<string, unknown>) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.code = typeof details.code === "string" ? details.code : undefined;
+    this.details = details;
+    this.status = status;
+  }
+}
+
+export interface AuthenticationResponse {
+  status: string;
+  access: string;
+  user: User;
+  workspaces: Workspace[];
+  is_new_user?: boolean;
+}
 
 function isUuid(val: any): boolean {
   return typeof val === "string" && val.length === 36 && val.includes("-");
@@ -48,16 +76,54 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...(options.headers as Record<string, string>),
   };
 
-  if (token) {
+  const isAuthPublicEndpoint = [
+    "/auth/login/",
+    "/auth/register/",
+    "/auth/google/",
+    "/auth/token/refresh/",
+  ].some((authPath) => path.endsWith(authPath));
+
+  if (token && !isAuthPublicEndpoint) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, { ...options, headers });
+  let res = await fetch(url, { credentials: "include", ...options, headers });
+  const skipsRefresh = [
+    "/auth/login/",
+    "/auth/register/",
+    "/auth/google/",
+    "/auth/logout/",
+    "/auth/token/refresh/",
+  ].some((authPath) => path.endsWith(authPath));
+  if (res.status === 401 && !skipsRefresh && typeof window !== "undefined") {
+    pendingRefresh ??= fetch(`${API_BASE}/auth/token/refresh/`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(async (refreshResponse) => {
+        if (!refreshResponse.ok) return null;
+        const refreshed = (await refreshResponse.json()) as { access?: string };
+        if (!refreshed.access) return null;
+        window.localStorage.setItem("access_token", refreshed.access);
+        return refreshed.access;
+      })
+      .catch(() => null)
+      .finally(() => {
+        pendingRefresh = null;
+      });
+    const refreshedAccess = await pendingRefresh;
+    if (refreshedAccess) {
+      headers["Authorization"] = `Bearer ${refreshedAccess}`;
+      res = await fetch(url, { credentials: "include", ...options, headers });
+    }
+  }
   if (!res.ok) {
-    const errorBody = await res.json().catch(() => ({}));
-    throw new Error(
-      errorBody.error || errorBody.detail || `Request failed with status ${res.status}`
-    );
+    const errorBody = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const message =
+      (typeof errorBody.error === "string" && errorBody.error) ||
+      (typeof errorBody.detail === "string" && errorBody.detail) ||
+      `Request failed with status ${res.status}`;
+    throw new ApiRequestError(message, res.status, errorBody);
   }
   return res.json();
 }
@@ -71,47 +137,25 @@ export const api = {
     first_name?: string;
     last_name?: string;
   }) =>
-    request<{ access: string; user: User }>("/auth/register/", {
+    request<AuthenticationResponse>("/auth/register/", {
       method: "POST",
       body: JSON.stringify(data),
-    }).catch(() => ({
-      access: "mock_jwt_access_token_prototype",
-      user: {
-        id: "usr_mock_1",
-        email: data.email,
-        first_name: data.first_name || "Business",
-        last_name: data.last_name || "Owner",
-        role: "ADMIN" as const,
-        is_active: true,
-        owned_workspaces_count: 1,
-        available_workspace_slots: 4,
-        created_at: new Date().toISOString(),
-      },
-    })),
+    }),
 
   login: (data: { email: string; password: string }) =>
-    request<{ status: string; access: string; user: User; workspaces: Workspace[] }>(
-      "/auth/login/",
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      }
-    ).catch(() => ({
-      status: "success",
-      access: "mock_jwt_access_token_prototype",
-      user: {
-        id: "usr_mock_1",
-        email: data.email,
-        first_name: "Alexander",
-        last_name: "Wright",
-        role: "ADMIN" as const,
-        is_active: true,
-        owned_workspaces_count: 2,
-        available_workspace_slots: 3,
-        created_at: new Date().toISOString(),
-      },
-      workspaces: DUMMY_WORKSPACES,
-    })),
+    request<AuthenticationResponse>("/auth/login/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  googleLogin: (data: { code?: string; link_token?: string; password?: string }) =>
+    request<AuthenticationResponse>("/auth/google/", {
+      method: "POST",
+      headers: { "X-Requested-With": "XmlHttpRequest" },
+      body: JSON.stringify(data),
+    }),
+
+  logout: () => request<{ status: string; message: string }>("/auth/logout/", { method: "POST" }),
 
   getMe: () =>
     request<User & { workspaces: Workspace[] }>("/auth/me/").catch(() => ({
@@ -140,13 +184,109 @@ export const api = {
       workspace_id: data.workspace_id,
     })),
 
+  // FlowGrid Platform Account & Subscription
+  getPlatformPlans: () =>
+    request<FlowGridPlan[]>("/auth/platform-plans/").catch(() => [
+      {
+        id: "plan-basic",
+        name: "Basic",
+        slug: "basic",
+        price: 0,
+        currency: "USD",
+        billing_interval: "monthly",
+        max_workspaces: 1,
+        max_products_per_workspace: 5,
+        max_customers_per_workspace: 50,
+        max_team_members: 1,
+        features: ["1 Business Workspace", "5 Products", "50 Customers", "1 Team Member"],
+        is_active: true,
+      },
+      {
+        id: "plan-pro",
+        name: "Pro",
+        slug: "pro",
+        price: 49,
+        currency: "USD",
+        billing_interval: "monthly",
+        max_workspaces: 3,
+        max_products_per_workspace: 25,
+        max_customers_per_workspace: 500,
+        max_team_members: 5,
+        features: [
+          "3 Business Workspaces",
+          "25 Products",
+          "500 Customers",
+          "5 Team Members",
+          "Automated Billing",
+        ],
+        is_active: true,
+      },
+      {
+        id: "plan-business",
+        name: "Business",
+        slug: "business",
+        price: 149,
+        currency: "USD",
+        billing_interval: "monthly",
+        max_workspaces: 9999,
+        max_products_per_workspace: 9999,
+        max_customers_per_workspace: 99999,
+        max_team_members: 9999,
+        features: [
+          "Unlimited Workspaces",
+          "Unlimited Products",
+          "Unlimited Customers",
+          "Unlimited Team Members",
+          "Priority Support",
+        ],
+        is_active: true,
+      },
+    ]),
+
+  getPersonalDashboard: () => request<PersonalDashboardData>("/auth/me/personal-dashboard/"),
+
+  upgradePlatformPlan: (planSlug: string) =>
+    request<{ status: string; message: string; flowgrid_plan: FlowGridPlan }>(
+      "/auth/me/upgrade-plan/",
+      {
+        method: "POST",
+        body: JSON.stringify({ plan_slug: planSlug }),
+      }
+    ),
+
+  addPlatformPaymentMethod: (data: {
+    brand: string;
+    last4: string;
+    exp_month: number;
+    exp_year: number;
+    is_default?: boolean;
+  }) =>
+    request<FlowGridPaymentMethod>("/auth/me/payment-methods/", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  cancelPlatformSubscription: () =>
+    request<{ status: string; message: string }>("/auth/me/cancel-subscription/", {
+      method: "POST",
+    }),
+
   // Workspaces
   getWorkspaces: () =>
     request<Workspace[]>("/workspaces/")
       .then((res) => (Array.isArray(res) ? res : (res as any).results || DUMMY_WORKSPACES))
       .catch(() => DUMMY_WORKSPACES),
 
-  createWorkspace: (data: { name: string; currency?: string; timezone?: string }) =>
+  createWorkspace: (data: {
+    name: string;
+    currency?: string;
+    timezone?: string;
+    business_type?: string;
+    business_email?: string;
+    phone?: string;
+    address?: string;
+    logo_url?: string;
+  }) =>
     request<Workspace>("/workspaces/", {
       method: "POST",
       body: JSON.stringify(data),
@@ -156,6 +296,11 @@ export const api = {
       slug: data.name.toLowerCase().replace(/\s+/g, "-"),
       currency: data.currency || "USD",
       timezone: data.timezone || "America/New_York",
+      business_type: data.business_type || "SaaS & Cloud",
+      business_email: data.business_email,
+      phone: data.phone,
+      address: data.address,
+      logo_url: data.logo_url,
       is_active: true,
       user_role: "OWNER" as const,
       active_members_count: 1,

@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "django_filters",
     "drf_spectacular",
     # Domain Applications
@@ -85,6 +86,12 @@ DB_PASSWORD = os.getenv("DB_PASSWORD", "brightloop_secure_password_2026")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
 
+# Google OAuth uses the web client ID and secret only in the Django process.
+GOOGLE_CLIENT_ID = os.getenv("OAUTH2_GOOGLE_CLIENT_ID") or os.getenv("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_SECRET = os.getenv("OAUTH2_GOOGLE_CLIENT_SECRET") or os.getenv(
+    "GOOGLE_CLIENT_SECRET", ""
+)
+
 # Allow SQLite fallback if postgres is unavailable or DB_ENGINE is explicitly sqlite3
 if DB_ENGINE == "django.db.backends.sqlite3" or os.getenv("USE_SQLITE", "False").lower() in (
     "true",
@@ -139,10 +146,13 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS Configuration
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+    ).split(",")
+    if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -170,7 +180,7 @@ SIMPLE_JWT = {
     ),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.getenv("JWT_REFRESH_TOKEN_LIFETIME_DAYS", 7))),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
     "AUTH_HEADER_TYPES": ("Bearer",),

@@ -9,14 +9,110 @@
 - **Date/Time:** 2026-10-31
 - **Actions:**
   - Kept the public landing content and visual layout intact while fixing footer section navigation to target real section anchors, work with Lenis/native scrolling, and respect reduced-motion settings.
-  - Rebuilt the dashboard and reports pages around workspace-scoped API results, with explicit loading/error/empty/workspace-selection states and decimal-string CSV exports.
+  - Rebuilt the business dashboard and reports around workspace-scoped API results, with explicit loading/error/empty/workspace-selection states and decimal-string CSV exports.
   - Removed placeholder dashboard metric fallbacks and added reporting access rules for owners/admins and staff with `can_view_reports`; customers and other tenants are denied.
-  - Added backend regression coverage for reporting access, a SQLite-only local demo settings module, presentation readiness findings, and an end-user test plan.
-  - Validated frontend unit tests (4 passed), frontend lint, production build, backend lint, and backend tests (15 passed) on isolated SQLite.
-- **Readiness:** Local seeded rehearsal is supported. The configured PostgreSQL database currently rejects authentication and Redis is disconnected; the account context still has automatic hard-coded demo login behavior. See `docs/PRESENTATION_READINESS.md` before describing the system as production-ready.
-- **Status:** PASS WITH ENVIRONMENT BLOCKERS
+  - Added backend regression coverage, opt-in SQLite presentation settings, readiness findings, and an end-user test plan.
+  - Validated frontend tests (4 passed), lint, production build, backend lint, and backend tests (15 passed) on isolated SQLite.
+- **Readiness:** A local seeded rehearsal is supported. PostgreSQL credentials currently fail authentication and Redis is disconnected. The unauthenticated account context still initializes placeholder account data; verify authentication boundaries before a public/shared demo. See `docs/PRESENTATION_READINESS.md`.
+- **Status:** PASS WITH ENVIRONMENT FOLLOW-UP
+
+### [Stage 17] Teacher Demo Readiness and Role-Based Entry
+
+- **Date/Time:** 2026-10-31
+- **Actions:**
+  - Directed customer-only memberships to the personal subscription portal after password or Google sign-in; owner/admin/staff memberships continue to the workspace dashboard.
+  - Documented the two seeded presentation accounts, isolated database path, demo commands, and the difference between persisted customer records and portal sample offer/payment rows.
+  - Tested the built frontend against the isolated SQLite API in the browser: owner workspace dashboard metrics loaded from backend data; customer login opened the personal account and exposed subscription details.
+  - Verified the unchanged landing page in browser; frontend tests (4), lint, production build (35 routes), backend tests (20), and Ruff passed.
+- **Readiness:** Suitable for a local teacher demonstration with seeded data. PostgreSQL credentials and Redis/Celery remain environment follow-ups; do not present demo/sample rows as live commercial activity.
+- **Status:** PASS WITH ENVIRONMENT FOLLOW-UP
 
 ---
+
+### [Stage 12] Dynamic Business-Management Sidebar Navigation
+
+- **Date/Time:** 2026-10-31
+- **Actions:**
+  - Dynamically extended the Left Sidebar navigation (`PersonalSidebar`) based on the authenticated user's actual business memberships and granular staff permissions fetched from backend APIs.
+  - Normal User State (no business owned/managed):
+    - Displays strictly the 8 Personal Navigation items (Dashboard, My Subscriptions, Offers & Discounts, Payments & Invoices, Payment Methods, Notifications, Profile & Settings, Help & Support).
+    - Header subtitle indicates "Personal Account".
+  - Business Management State (user owns or manages at least one business):
+    - Header displays active business name (e.g. Gowheels / FlowGrid Cloud Technologies) with dropdown arrow and quick switcher.
+    - Preserves all 8 personal navigation items at the top.
+    - Appends small uppercase section headings with subtle dividers:
+      - **BUSINESS MANAGEMENT**: Products & Services (`/catalog`), Plans (`/catalog?tab=plans`), Customers (`/customers`), Quotations (`/quotations`), Subscriptions (`/subscriptions`), Invoices (`/invoices`), Payments (`/payments`).
+      - **OPERATIONS**: Team & Staff (`/staff`), Invitations (`/invitations`).
+      - **CONFIGURATION**: Analytics & Reports (`/reports`), Discounts & Offers (`/catalog`), API & Webhooks (`/integrations`), Business Settings (`/settings`).
+    - Granular staff permission filtering: staff members only see sections permitted by their backend `StaffPermission` profile (`can_manage_products`, `can_manage_customers`, `can_view_reports`, `can_manage_team`, etc.).
+    - Supported scrollable sidebar (`overflow-y-auto` with clean scrollbar) and responsive desktop collapse (72px) / mobile drawer.
+  - Preserved dashboard contents, cards, metrics, search bar, and user profile completely untouched.
+- **Verification:**
+  - Next.js production build: 35/35 routes compiled and optimized cleanly.
+  - Backend pytest: 10/10 multi-tenant and permissions tests passed.
+  - Endpoint verification: verified HTTP 200 OK and clean rendering of personal vs business navigation modes.
+- **Status:** Complete.
+
+### [Stage 11] FlowGrid Normal User / Personal Account Dashboard Redesign
+
+- **Date/Time:** 2026-10-31
+- **Actions:**
+  - Redesigned the Normal User / Personal Account Dashboard (`/portal`) to strictly adhere to the reference design.
+  - Implemented `PersonalSidebar` with exactly 8 personal navigation items: Dashboard, My Subscriptions, Offers & Discounts, Payments & Invoices, Payment Methods, Notifications, Profile & Settings, Help & Support. Removed all business owner / administrative options (Catalog, Customers, Quotations, Business Workspaces, Billing Runs, Webhooks, API Docs).
+  - Implemented `PersonalHeader` with pill search bar ("Search your subscriptions, invoices..."), unread notification indicator badge, user initials avatar, and "Personal Account" profile dropdown.
+  - Built comprehensive Personal Dashboard Overview:
+    - Welcome header: "Welcome back, [User Name]!" with subtitle and FlowGrid animated multi-color pinwheel.
+    - 4 Metric cards: Active Subscriptions, Expiring Soon, Available Offers, Total Monthly Cost.
+    - "Your Subscriptions" table with service brand icons (Notion, Figma, GitHub), plan, price, next renewal date, status badges, and interactive "Manage" modal (supporting pause, resume, cancel, and renewal actions).
+    - "Latest Offers" cards with discount badges (20% Off, Buy 2 Get 1 Free, ₹500 Cashback), expiry dates, and interactive "Apply" coupon button.
+    - "Recent Payments" table with dates, service descriptions, amounts, Paid status badges, and "View" invoice modal with printable breakdown and PDF download.
+    - "Upcoming Renewals" list with service icons, plan names, amounts, dates, and days remaining badges.
+  - Added dedicated `/portal/notifications` and `/portal/help` routes to ensure complete navigation coverage.
+  - Maintained strict separation between Personal Account views (`/portal/*`) and Business Management views (`/dashboard`, `/catalog`, `/subscriptions`, etc.) inside `AppShell`.
+- **Verification:**
+  - Next.js production build: 35/35 routes compiled and optimized successfully with 0 errors.
+  - Backend pytest: 10/10 multi-tenant and isolation tests passed.
+  - HTTP curl validation: verified HTTP 200 OK and complete markup rendering for all 10 key sections and 8 sidebar links.
+- **Status:** Complete.
+
+### [Stage 10] FlowGrid Multi-Tenant Account & Business Management System
+
+- **Date/Time:** 2026-10-31
+- **Actions:**
+  - Implemented multi-tenant personal account and business workspace system strictly distinguishing FlowGrid platform subscriptions from business customer subscriptions.
+  - Added backend models: `FlowGridPlan` (Basic, Pro, Business), `FlowGridSubscription`, `FlowGridPaymentMethod`, `FlowGridInvoice`, and extended `Workspace` with multi-tenant business fields (type, email, phone, address, logo).
+  - Enforced plan-based usage limits dynamically on the backend (workspaces quota, products per workspace, customers per workspace).
+  - Built dedicated Personal Account Dashboard (`/account`) with profile details, usage quotas indicators, business workspace management, plan switching, payment methods, and platform invoices.
+  - Added "+ Create a Business" modal with business type, email, phone, address, currency, and timezone.
+  - Updated Workspace Switcher in sidebar to support multi-workspace switching, quota limits display, and clean white FlowGrid aesthetic.
+  - Ensured data isolation across tenants using tenant-scoped queries and separate customer self-service portal (`/portal`).
+- **Verification:**
+  - Backend tests: 18/18 pytest passed (`test_multi_tenant.py`, `test_google_auth.py`, `test_brightloop_core.py`).
+  - Frontend smoke tests: 4/4 Vitest passed.
+  - Next.js build: successfully compiled and optimized all 33 routes including `/account` and `/portal`.
+  - Ruff linter: all checks passed.
+- **Status:** Complete.
+
+### [Stage 9] Arcade-inspired FlowGrid Authentication UI
+
+- **Date/Time:** 2026-10-31
+- **Actions:**
+  - Replaced the login and signup split hero/card layout with one centered, responsive FlowGrid auth form using the original inline FlowGrid mark.
+  - Added Space Grotesk typography, soft ambient color glows, the four-color animated heading pinwheel, floating labels, password visibility, validation states, animated signup fields, and the three-dot loading indicator.
+  - Kept existing login, registration, Google sign-in/account linking, forgot-password route, and personal/business routing logic connected to FlowGrid APIs.
+  - Added browser coverage for auth mode transitions and mobile horizontal overflow.
+- **Verification:** Frontend unit tests (4/4), ESLint, TypeScript, Playwright auth browser checks (2/2), backend pytest (19/19), backend Ruff, migration checks, and the production Next.js build passed. The browser tests verify login/signup mode transitions and mobile overflow. Real Google consent was not exercised in the test browser.
+- **Status:** Implemented; noted verification limits.
+
+### [Stage 8] Google Sign-In
+
+- **Date/Time:** 2026-10-31
+- **Actions:**
+  - Added Google Identity Services authorization-code sign-in to the login and registration pages.
+  - Added Django code exchange and Google ID-token verification, verified-email account creation, password-confirmed account linking, JWT access tokens, rotating HttpOnly refresh-token cookies, refresh-on-401, and refresh-token revocation on logout.
+  - Added account schema migration, environment configuration, Docker Compose wiring, setup guidance, and focused auth-flow tests.
+- **Verification:** Google auth tests 4/4 passed; frontend unit tests 4/4 passed; frontend lint and TypeScript passed; backend Ruff and migration consistency passed; both auth pages were checked in the local browser. The full backend suite has one unrelated existing workspace-quota failure. `next build` ends with a generic webpack error, although dev compilation, lint, and type-check pass.
+- **Status:** Implemented.
 
 ### [Stage 0] Repository and Requirements Audit
 
@@ -310,26 +406,4 @@
   - Fixed pnpm dependency build permissions (`allowBuilds` for `esbuild` and `unrs-resolver`), configured `.eslintrc.json`, and resolved TypeScript compilation across all 23 application routes.
   - Confirmed frontend builds and passes test suite cleanly (`next build` and Vitest unit tests).
   - Pushed full-stack changes to remote repository branches as requested.
-- **Status:** PASS
-
----
-
-### [Stage 15] Full-Stack Backend Integration & Landing Page Footer Refinement
-
-- **Date/Time:** 2026-10-31 16:00 UTC+05:30
-- **Actions:**
-  - Audited full system: Django REST Framework backend routes, authentication flows, database state machine, and frontend TanStack Query integrations.
-  - Resolved backend subscription state machine transition permitting direct activation from draft and added comprehensive exception handling preventing HTTP 500 errors.
-  - Enhanced registration endpoint to generate and return immediate JWT tokens and authenticated user payloads for seamless onboarding.
-  - Configured frontend `account-context.tsx` and `api.ts` to automatically authenticate and restore live session against backend endpoints (`/api/v1/auth/me/active-context/`, `/api/v1/auth/me/`, `/api/v1/workspaces/`).
-  - Completely refined and fixed the closing landing page footer (`FinalCtaFooterSection.tsx`):
-    - Fixed in-page smooth section scrolling targeting `#products`, `#plans` (replacing arbitrary window height multiplier), `#customers`, `#billing`, and `#analytics`.
-    - Integrated with Lenis kinetic smooth scrolling in `SmoothScrollProvider`.
-    - Updated Solutions and Resources links to functional application routes (`/subscriptions`, `/invoices`, `/payments`, `/catalog`, `/quotations`, `/reports`, `/portal`, `/integrations`, `/audit-logs`, and OpenAPI docs).
-    - Added comprehensive interactive Legal Policies modal dialog with tabbed views for Privacy Policy, Terms of Service, Cookie Settings, and Security & Compliance, eliminating all dead `#` links.
-    - Added interactive newsletter subscription box with instant client-side feedback.
-    - Added live API health telemetry indicator, social links, and smooth back-to-top trigger.
-  - Verified tests:
-    - Vitest unit tests: 4/4 passed.
-    - Pytest backend test suite: 14/14 passed.
 - **Status:** PASS

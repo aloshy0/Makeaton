@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -127,4 +129,373 @@ html.lenis, html.lenis body {
   }
 }
 
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
 
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(14px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 10s ease-in-out infinite;
+}
+
+.flowgrid-auth-page {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: #fff;
+  color: #17172e;
+  font-family: "Space Grotesk", var(--font-sans), sans-serif;
+}
+
+.flowgrid-auth-glows {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.auth-glow {
+  position: absolute;
+  display: block;
+  width: min(50vw, 620px);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  filter: blur(100px);
+  opacity: 0.25;
+}
+
+.auth-glow-blue {
+  left: -17%;
+  top: -32%;
+  background: radial-gradient(circle, rgba(76, 111, 255, 0.24), transparent 68%);
+}
+
+.auth-glow-green {
+  right: -18%;
+  top: -25%;
+  background: radial-gradient(circle, rgba(29, 184, 118, 0.2), transparent 68%);
+}
+
+.auth-glow-purple {
+  width: min(30vw, 360px);
+  left: 35%;
+  top: 28%;
+  background: radial-gradient(circle, rgba(155, 93, 229, 0.12), transparent 70%);
+}
+
+.auth-glow-cyan {
+  left: -22%;
+  bottom: -38%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 68%);
+}
+
+.auth-glow-warm {
+  right: -25%;
+  bottom: -42%;
+  background: radial-gradient(circle, rgba(255, 171, 125, 0.13), transparent 68%);
+}
+
+.flowgrid-auth-content {
+  width: min(100% - 40px, 430px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 42px 0 28px;
+}
+
+.flowgrid-auth-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #17172e;
+  text-decoration: none;
+}
+
+.flowgrid-auth-logo svg {
+  width: 24px;
+  height: 24px;
+}
+
+.flowgrid-auth-logo span {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+}
+
+.flowgrid-auth-intro {
+  width: 100%;
+  margin: 48px 0 32px;
+  text-align: center;
+}
+
+.flowgrid-auth-intro h1 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Space Grotesk", var(--font-sans), sans-serif;
+}
+
+.flowgrid-auth-intro p {
+  min-height: 26px;
+  margin: 11px auto 0;
+  max-width: 375px;
+  color: #73758a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.flowgrid-auth-period {
+  display: inline-flex;
+  width: 25px;
+  height: 25px;
+  margin-left: 5px;
+  transform-origin: center;
+  vertical-align: -1px;
+}
+
+.flowgrid-auth-period svg {
+  width: 100%;
+  height: 100%;
+}
+
+.flowgrid-auth-period .flowgrid-pinwheel {
+  animation: flowgrid-pinwheel-wind 5.2s ease-in-out 1s infinite;
+  transform-origin: center;
+}
+
+@keyframes flowgrid-pinwheel-wind {
+  0%, 72%, 100% { transform: rotate(0deg); }
+  77% { transform: rotate(-24deg); }
+  83% { transform: rotate(0deg); }
+}
+
+.flowgrid-auth-form-wrap {
+  width: 100%;
+}
+
+.flowgrid-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-name-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  overflow: hidden;
+}
+
+.auth-field-shell {
+  position: relative;
+  min-height: 57px;
+  border: 1px solid #e4e6ed;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: inset 0 1px 2px rgba(23, 23, 46, 0.035), 0 1px 2px rgba(23, 23, 46, 0.02);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.auth-field-shell:focus-within {
+  border-color: #6480f8;
+  background: #fff;
+  box-shadow: inset 0 1px 2px rgba(23, 23, 46, 0.025), 0 0 0 3px rgba(76, 111, 255, 0.11);
+}
+
+.auth-field-shell.auth-field-error,
+.auth-field-shell.auth-field-error:focus-within {
+  border-color: #ed7382;
+  box-shadow: 0 0 0 3px rgba(237, 115, 130, 0.1);
+}
+
+.auth-field-label {
+  position: absolute;
+  top: 8px;
+  left: 14px;
+  z-index: 1;
+  color: #85879a;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.105em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.auth-field-input {
+  width: 100%;
+  height: 56px;
+  padding: 23px 44px 8px 14px;
+  border: 0;
+  border-radius: inherit;
+  outline: none;
+  background: transparent;
+  color: #25263a;
+  font: 500 14px/1.2 "Space Grotesk", var(--font-sans), sans-serif;
+}
+
+.auth-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  right: 13px;
+  display: grid;
+  width: 26px;
+  height: 28px;
+  place-items: center;
+  transform: translateY(-25%);
+  color: #888a9b;
+  transition: color 160ms ease;
+}
+
+.auth-visibility-toggle:hover {
+  color: #30314c;
+}
+
+.auth-password-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-forgot-link {
+  align-self: flex-end;
+  color: #575e91;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-forgot-link:hover,
+.flowgrid-auth-switch button:hover {
+  color: #4c6fff;
+}
+
+.auth-primary-button {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
+  border-radius: 9999px;
+  background: #14142b;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(20, 20, 43, 0.14);
+  font-size: 14px;
+  font-weight: 600;
+  transition: box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.auth-primary-button:hover:not(:disabled) {
+  background: #20203d;
+  box-shadow: 0 11px 24px rgba(20, 20, 43, 0.18);
+}
+
+.auth-primary-button:disabled {
+  cursor: wait;
+  opacity: 0.84;
+}
+
+.auth-form-error {
+  margin: 0 0 16px;
+  border: 1px solid rgba(237, 115, 130, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 243, 244, 0.88);
+  padding: 11px 13px;
+  color: #b43b4d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.flowgrid-auth-switch {
+  margin: 25px 0 0;
+  color: #77798b;
+  text-align: center;
+  font-size: 12px;
+}
+
+.flowgrid-auth-switch button {
+  color: #33395d;
+  font-weight: 600;
+  transition: color 160ms ease;
+}
+
+.flowgrid-auth-footer {
+  margin: 44px 0 0;
+  color: #a1a2af;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+.auth-field-input:-webkit-autofill,
+.auth-field-input:-webkit-autofill:hover,
+.auth-field-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #25263a;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+@media (max-width: 520px) {
+  .flowgrid-auth-content {
+    width: min(100% - 36px, 430px);
+    padding-top: 30px;
+    padding-bottom: 24px;
+  }
+
+  .flowgrid-auth-intro {
+    margin-top: 38px;
+    margin-bottom: 27px;
+  }
+
+  .flowgrid-auth-intro h1 {
+    font-size: clamp(1.8rem, 7vw, 2.2rem);
+  }
+
+  .flowgrid-auth-intro p {
+    max-width: 330px;
+    font-size: 13px;
+  }
+
+  .flowgrid-auth-form {
+    gap: 13px;
+  }
+
+  .auth-name-row {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowgrid-pinwheel {
+    animation: none !important;
+  }
+
+  .auth-field-shell,
+  .auth-visibility-toggle,
+  .auth-primary-button {
+    transition: none !important;
+  }
+}

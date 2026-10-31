@@ -14,6 +14,8 @@ from apps.customers.models import Customer, CustomerUserLink
 from apps.subscriptions.models import Subscription
 from apps.workspaces.models import (
     ApiKey,
+    FlowGridPlan,
+    FlowGridSubscription,
     StaffPermission,
     WebhookDelivery,
     Workspace,
@@ -114,8 +116,21 @@ class TestMultiTenantSaaS:
             next_billing_date=timezone.now().date(),
         )
 
-    # 1. 5-Workspace Quota
+    # 1. Plan-based Workspace Quota
     def test_owner_workspace_quota_enforcement(self):
+        plan_5 = FlowGridPlan.objects.create(
+            name="Tier 5",
+            slug="tier-5",
+            price=Decimal("49.00"),
+            currency="USD",
+            max_workspaces=5,
+        )
+        FlowGridSubscription.objects.create(
+            user=self.owner_a,
+            plan=plan_5,
+            status="active",
+        )
+
         # owner_a already owns 1 workspace (ws_a). Let's create 4 more (total 5).
         for i in range(2, 6):
             Workspace.objects.create(name=f"Workspace {i}", owner=self.owner_a)

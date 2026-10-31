@@ -4,6 +4,10 @@ from apps.accounts.serializers import UserSerializer
 from apps.workspaces.models import (
     ApiKey,
     ApprovalRequest,
+    FlowGridInvoice,
+    FlowGridPaymentMethod,
+    FlowGridPlan,
+    FlowGridSubscription,
     StaffPermission,
     WebhookDelivery,
     WebhookEndpoint,
@@ -25,6 +29,7 @@ class WorkspaceMembershipSerializer(serializers.ModelSerializer):
 class WorkspaceSerializer(serializers.ModelSerializer):
     owner = UserSerializer(read_only=True)
     user_role = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
     active_members_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -36,8 +41,14 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             "owner",
             "currency",
             "timezone",
+            "business_type",
+            "business_email",
+            "phone",
+            "address",
+            "logo_url",
             "is_active",
             "user_role",
+            "permissions",
             "active_members_count",
             "created_at",
             "updated_at",
@@ -51,6 +62,47 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             return membership.role if membership else None
         return None
 
+    def get_permissions(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            membership = obj.memberships.filter(user=request.user).first()
+            if not membership:
+                return None
+            if membership.role in [WorkspaceMembership.Role.OWNER, WorkspaceMembership.Role.ADMIN]:
+                return {
+                    "can_manage_products": True,
+                    "can_manage_subscriptions": True,
+                    "can_manage_invoices": True,
+                    "can_record_payments": True,
+                    "can_manage_customers": True,
+                    "can_view_reports": True,
+                    "can_manage_team": True,
+                    "can_manage_settings": True,
+                }
+            if hasattr(membership, "permissions"):
+                p = membership.permissions
+                return {
+                    "can_manage_products": p.can_manage_products,
+                    "can_manage_subscriptions": p.can_manage_subscriptions,
+                    "can_manage_invoices": p.can_manage_invoices,
+                    "can_record_payments": p.can_record_payments,
+                    "can_manage_customers": p.can_manage_customers,
+                    "can_view_reports": p.can_view_reports,
+                    "can_manage_team": False,
+                    "can_manage_settings": False,
+                }
+            return {
+                "can_manage_products": True,
+                "can_manage_subscriptions": True,
+                "can_manage_invoices": True,
+                "can_record_payments": True,
+                "can_manage_customers": True,
+                "can_view_reports": False,
+                "can_manage_team": False,
+                "can_manage_settings": False,
+            }
+        return None
+
     def get_active_members_count(self, obj):
         return obj.memberships.filter(status=WorkspaceMembership.Status.ACTIVE).count()
 
@@ -58,16 +110,30 @@ class WorkspaceSerializer(serializers.ModelSerializer):
 class WorkspaceCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workspace
-        fields = ["id", "name", "slug", "currency", "timezone"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "currency",
+            "timezone",
+            "business_type",
+            "business_email",
+            "phone",
+            "address",
+            "logo_url",
+        ]
         read_only_fields = ["id", "slug"]
 
     def validate(self, attrs):
         user = self.context["request"].user
-        # Transactional 5-workspace limit enforcement
+        plan = user.get_flowgrid_plan()
+        max_allowed = plan.max_workspaces
         owned_count = Workspace.objects.filter(owner=user, is_active=True).count()
-        if owned_count >= 5:
+        if owned_count >= max_allowed:
             raise serializers.ValidationError(
-                {"error": "Workspace limit reached. You can own a maximum of 5 active workspaces."}
+                {
+                    "error": f"Workspace limit reached. Your {plan.name} plan allows a maximum of {max_allowed} active workspaces. Please upgrade your FlowGrid plan to create more businesses."
+                }
             )
         return attrs
 
@@ -179,3 +245,68 @@ class WebhookDeliverySerializer(serializers.ModelSerializer):
 
 class TransferOwnershipSerializer(serializers.Serializer):
     new_owner_email = serializers.EmailField(required=True)
+
+
+class FlowGridPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FlowGridPlan
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "price",
+            "currency",
+            "billing_interval",
+            "max_workspaces",
+            "max_products_per_workspace",
+            "max_customers_per_workspace",
+            "max_team_members",
+            "features",
+            "is_active",
+        ]
+
+
+class FlowGridSubscriptionSerializer(serializers.ModelSerializer):
+    plan = FlowGridPlanSerializer(read_only=True)
+
+    class Meta:
+        model = FlowGridSubscription
+        fields = [
+            "id",
+            "plan",
+            "status",
+            "start_date",
+            "renewal_date",
+            "next_billing_date",
+            "cancel_at_period_end",
+            "created_at",
+        ]
+
+
+class FlowGridPaymentMethodSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FlowGridPaymentMethod
+        fields = [
+            "id",
+            "brand",
+            "last4",
+            "exp_month",
+            "exp_year",
+            "is_default",
+            "created_at",
+        ]
+
+
+class FlowGridInvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FlowGridInvoice
+        fields = [
+            "id",
+            "invoice_number",
+            "amount",
+            "currency",
+            "status",
+            "plan_name",
+            "paid_at",
+            "created_at",
+        ]
