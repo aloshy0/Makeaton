@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Building2,
-  ShieldCheck,
   CheckCircle2,
   UserCheck,
   Sparkles,
+  Lock,
+  Mail,
+  User,
+  AlertCircle,
 } from "lucide-react";
 import { api } from "../../lib/api";
 import { useAccount } from "../../context/account-context";
@@ -64,7 +67,7 @@ export default function RegisterPage() {
         router.push("/onboarding");
       }
     } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+      setError(err?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -90,32 +93,40 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-600 text-white font-bold text-xl shadow-lg shadow-purple-600/30 mb-4 font-heading">
-          FG
-        </div>
-        <h2 className="text-2xl font-bold tracking-tight text-white font-heading">Join FlowGrid</h2>
-        <p className="mt-1 text-xs text-slate-400">
-          The unified subscription management and external billing engine
+    <div className="min-h-screen bg-[#F8F9FC] flex flex-col justify-center py-10 px-4 sm:px-6 lg:px-8">
+      {/* Brand Header */}
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-6">
+        <Link href="/" className="inline-flex items-center gap-2.5 mb-2 group">
+          <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-[#7651F5] to-[#4387F7] text-white flex items-center justify-center font-heading font-black text-base shadow-lg shadow-purple-600/25 group-hover:scale-105 transition-transform">
+            FG
+          </div>
+          <span className="font-heading font-black text-2xl tracking-tight text-[#0B1020]">
+            FlowGrid
+          </span>
+        </Link>
+        <h1 className="font-heading font-extrabold text-xl text-[#0B1020] tracking-tight">
+          Create your account
+        </h1>
+        <p className="mt-1 text-xs text-[#64748B]">
+          Join the multi-tenant subscription and recurring revenue engine
         </p>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/90 p-8 shadow-2xl backdrop-blur-sm">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white rounded-3xl border border-[#E8ECF3] p-7 sm:p-8 shadow-xl shadow-slate-200/50">
           {/* Account Type Selector */}
           <div className="mb-5">
-            <span className="text-xs font-semibold text-slate-300 block mb-2">
-              Select Your Account Path
-            </span>
-            <div className="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+            <label className="block text-[11px] font-bold text-[#64748B] uppercase tracking-wider mb-2">
+              Select Account Path
+            </label>
+            <div className="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-[#E8ECF3]">
               <button
                 type="button"
                 onClick={() => setAccountType("business")}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                   accountType === "business"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-[#7651F5] text-white shadow-xs"
+                    : "text-[#64748B] hover:text-[#0B1020]"
                 }`}
               >
                 <Building2 className="h-3.5 w-3.5" /> Business Owner
@@ -123,43 +134,44 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setAccountType("personal")}
-                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition-all ${
                   accountType === "personal"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-[#7651F5] text-white shadow-xs"
+                    : "text-[#64748B] hover:text-[#0B1020]"
                 }`}
               >
                 <UserCheck className="h-3.5 w-3.5" /> Personal Customer
               </button>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2 px-1">
+            <p className="text-[11px] text-[#64748B] mt-2 px-1">
               {accountType === "business"
                 ? "Manage workspace, catalog, recurring billing, and customer operations."
-                : "Subscribe to plans, track renewals, pay invoices, and monitor quotas."}
+                : "Discover plans, track renewals, pay invoices, and manage subscriptions."}
             </p>
           </div>
 
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
-            <span className="text-xs text-slate-400 font-medium">Quick Onboarding</span>
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#E8ECF3]">
+            <span className="text-xs text-[#64748B] font-medium">Quick testing</span>
             <button
               type="button"
               onClick={accountType === "business" ? prefillDemoBusiness : prefillDemoCustomer}
-              className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 underline"
+              className="text-xs font-bold text-[#7651F5] hover:text-[#5B3CD4] underline"
             >
               Prefill Sample Data
             </button>
           </div>
 
           {error && (
-            <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-xs text-rose-300">
-              {error}
+            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50/80 p-3.5 text-xs text-rose-700 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {accountType === "business" && (
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[11px] font-bold text-[#0B1020] uppercase tracking-wider mb-1">
                   Company / Workspace Name *
                 </label>
                 <input
@@ -168,14 +180,14 @@ export default function RegisterPage() {
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Acme Cloud Corp"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full rounded-xl border border-[#E8ECF3] bg-slate-50/50 px-3.5 py-2 text-xs text-[#0B1020] placeholder-slate-400 focus:border-[#7651F5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#7651F5]/15 font-medium"
                 />
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-[11px] font-bold text-[#0B1020] uppercase tracking-wider mb-1">
                   First Name
                 </label>
                 <input
@@ -183,23 +195,27 @@ export default function RegisterPage() {
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                  placeholder="Jane"
+                  className="w-full rounded-xl border border-[#E8ECF3] bg-slate-50/50 px-3 py-2 text-xs text-[#0B1020] placeholder-slate-400 focus:border-[#7651F5] focus:bg-white focus:outline-none font-medium"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Last Name</label>
+                <label className="block text-[11px] font-bold text-[#0B1020] uppercase tracking-wider mb-1">
+                  Last Name
+                </label>
                 <input
                   type="text"
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                  placeholder="Doe"
+                  className="w-full rounded-xl border border-[#E8ECF3] bg-slate-50/50 px-3 py-2 text-xs text-[#0B1020] placeholder-slate-400 focus:border-[#7651F5] focus:bg-white focus:outline-none font-medium"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-bold text-[#0B1020] uppercase tracking-wider mb-1">
                 Email Address
               </label>
               <input
@@ -208,23 +224,26 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={accountType === "business" ? "you@company.com" : "you@example.com"}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                className="w-full rounded-xl border border-[#E8ECF3] bg-slate-50/50 px-3.5 py-2 text-xs text-[#0B1020] placeholder-slate-400 focus:border-[#7651F5] focus:bg-white focus:outline-none font-medium"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+              <label className="block text-[11px] font-bold text-[#0B1020] uppercase tracking-wider mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                placeholder="••••••••••••"
+                className="w-full rounded-xl border border-[#E8ECF3] bg-slate-50/50 px-3.5 py-2 text-xs text-[#0B1020] placeholder-slate-400 focus:border-[#7651F5] focus:bg-white focus:outline-none font-medium"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-bold text-[#0B1020] uppercase tracking-wider mb-1">
                 Confirm Password
               </label>
               <input
@@ -232,30 +251,45 @@ export default function RegisterPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+                placeholder="••••••••••••"
+                className="w-full rounded-xl border border-[#E8ECF3] bg-slate-50/50 px-3.5 py-2 text-xs text-[#0B1020] placeholder-slate-400 focus:border-[#7651F5] focus:bg-white focus:outline-none font-medium"
               />
             </div>
 
-            {/* Checklist */}
-            <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-1 text-[11px] text-slate-400">
-              <div className="grid grid-cols-2 gap-1">
+            {/* Password Validation Grid */}
+            <div className="rounded-2xl border border-[#E8ECF3] bg-slate-50 p-3 space-y-1 text-[11px] text-[#64748B]">
+              <div className="grid grid-cols-2 gap-1.5">
                 <span
-                  className={`flex items-center gap-1 ${hasMinLength ? "text-emerald-400" : ""}`}
+                  className={`flex items-center gap-1.5 ${hasMinLength ? "text-emerald-700 font-bold" : ""}`}
                 >
-                  <CheckCircle2 className="h-3 w-3" /> 8+ Characters
+                  <CheckCircle2
+                    className={`h-3.5 w-3.5 ${hasMinLength ? "text-emerald-600" : "text-slate-300"}`}
+                  />
+                  8+ Characters
                 </span>
                 <span
-                  className={`flex items-center gap-1 ${hasUppercase ? "text-emerald-400" : ""}`}
+                  className={`flex items-center gap-1.5 ${hasUppercase ? "text-emerald-700 font-bold" : ""}`}
                 >
-                  <CheckCircle2 className="h-3 w-3" /> Uppercase Letter
+                  <CheckCircle2
+                    className={`h-3.5 w-3.5 ${hasUppercase ? "text-emerald-600" : "text-slate-300"}`}
+                  />
+                  Uppercase Letter
                 </span>
                 <span
-                  className={`flex items-center gap-1 ${hasLowercase ? "text-emerald-400" : ""}`}
+                  className={`flex items-center gap-1.5 ${hasLowercase ? "text-emerald-700 font-bold" : ""}`}
                 >
-                  <CheckCircle2 className="h-3 w-3" /> Lowercase Letter
+                  <CheckCircle2
+                    className={`h-3.5 w-3.5 ${hasLowercase ? "text-emerald-600" : "text-slate-300"}`}
+                  />
+                  Lowercase Letter
                 </span>
-                <span className={`flex items-center gap-1 ${hasSpecial ? "text-emerald-400" : ""}`}>
-                  <CheckCircle2 className="h-3 w-3" /> Special Char
+                <span
+                  className={`flex items-center gap-1.5 ${hasSpecial ? "text-emerald-700 font-bold" : ""}`}
+                >
+                  <CheckCircle2
+                    className={`h-3.5 w-3.5 ${hasSpecial ? "text-emerald-600" : "text-slate-300"}`}
+                  />
+                  Special Char
                 </span>
               </div>
             </div>
@@ -265,20 +299,20 @@ export default function RegisterPage() {
               disabled={
                 loading || !isPasswordValid || (accountType === "business" && !companyName.trim())
               }
-              className="w-full rounded-xl bg-purple-600 py-3 text-xs font-semibold text-white shadow-lg shadow-purple-600/30 hover:bg-purple-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-2 font-heading"
+              className="w-full rounded-xl bg-[#7651F5] hover:bg-[#643ee4] py-3 text-xs font-bold text-white shadow-lg shadow-purple-600/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mt-2 font-heading"
             >
               {loading
                 ? "Creating Account..."
                 : accountType === "business"
                   ? "Create Account & Business Workspace"
                   : "Create Personal Account"}
-              <ArrowRight className="h-3.5 w-3.5" />
+              <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
-          <div className="mt-5 text-center text-xs text-slate-400">
+          <div className="mt-5 text-center text-xs text-[#64748B]">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-purple-400 hover:underline">
+            <Link href="/login" className="font-bold text-[#7651F5] hover:underline">
               Sign In
             </Link>
           </div>

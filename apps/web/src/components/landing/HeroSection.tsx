@@ -40,7 +40,7 @@ interface HeroSectionProps {
 
 export function HeroSection({ mode, setMode }: HeroSectionProps) {
   const router = useRouter();
-  const { switchContext, switchWorkspace, memberships } = useAccount();
+  const { login, switchContext, switchWorkspace, memberships } = useAccount();
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const pinSectionRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -1399,13 +1399,9 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             <div className="space-y-3">
               <button
                 type="button"
-                onClick={() => {
-                  switchContext("PROFESSIONAL");
-                  if (memberships[0]?.workspace_details) {
-                    switchWorkspace(memberships[0].workspace_details);
-                  }
+                onClick={async () => {
                   setIsDemoModalOpen(false);
-                  router.push("/dashboard");
+                  await login({ email: "owner@flowgrid.com", password: "StrongPassword123!" });
                 }}
                 className="w-full text-left p-3.5 rounded-2xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/60 transition-all flex items-center justify-between group"
               >
@@ -1432,10 +1428,9 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
               <button
                 type="button"
-                onClick={() => {
-                  switchContext("PROFESSIONAL");
+                onClick={async () => {
                   setIsDemoModalOpen(false);
-                  router.push("/dashboard");
+                  await login({ email: "demo@flowgrid.local", password: "FlowGrid2026!Demo" });
                 }}
                 className="w-full text-left p-3.5 rounded-2xl border border-blue-200 bg-blue-50/40 hover:bg-blue-100/60 transition-all flex items-center justify-between group"
               >
@@ -1462,10 +1457,9 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
               <button
                 type="button"
-                onClick={() => {
-                  switchContext("PROFESSIONAL");
+                onClick={async () => {
                   setIsDemoModalOpen(false);
-                  router.push("/dashboard");
+                  await login({ email: "staff@flowgrid.com", password: "StrongPassword123!" });
                 }}
                 className="w-full text-left p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 transition-all flex items-center justify-between group"
               >
@@ -1492,10 +1486,9 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
               <button
                 type="button"
-                onClick={() => {
-                  switchContext("PERSONAL");
+                onClick={async () => {
                   setIsDemoModalOpen(false);
-                  router.push("/portal");
+                  await login({ email: "customer@acme.com", password: "StrongPassword123!" });
                 }}
                 className="w-full text-left p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all flex items-center justify-between group"
               >
