@@ -68,3 +68,7 @@ celerybeat.pid
 logs/
 *.log
 
+# Video frame reference assets
+flowgrid_video_frames/
+
+

@@ -42,7 +42,7 @@ export function Sidebar() {
       items: [
         {
           name: "Executive Dashboard",
-          href: "/",
+          href: "/dashboard",
           icon: LayoutDashboard,
           roles: ["OWNER", "ADMIN", "STAFF"],
         },
