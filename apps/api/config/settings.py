@@ -33,13 +33,17 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # Domain Applications
     "apps.accounts",
+    "apps.workspaces",
+    "apps.invitations",
     "apps.customers",
     "apps.catalog",
     "apps.quotations",
     "apps.subscriptions",
     "apps.billing",
+    "apps.discounts",
     "apps.payments",
     "apps.reporting",
+    "apps.audit",
 ]
 
 MIDDLEWARE = [

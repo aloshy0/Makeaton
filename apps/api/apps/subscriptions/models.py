@@ -1,12 +1,14 @@
 import uuid
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
 from apps.catalog.models import Product, ProductVariant, SubscriptionPlan
 from apps.customers.models import Customer
+from apps.workspaces.models import Workspace
 
 
 class Subscription(models.Model):
@@ -15,8 +17,10 @@ class Subscription(models.Model):
         QUOTATION = "quotation", "Quotation"
         CONFIRMED = "confirmed", "Confirmed"
         ACTIVE = "active", "Active"
+        PAST_DUE = "past_due", "Past Due"
         PAUSED = "paused", "Paused"
         CLOSED = "closed", "Closed"
+        EXPIRED = "expired", "Expired"
 
     class PaymentTerms(models.TextChoices):
         DUE_ON_RECEIPT = "due_on_receipt", "Due on Receipt"
@@ -25,7 +29,14 @@ class Subscription(models.Model):
         NET_60 = "net_60", "Net 60 Days"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    subscription_number = models.CharField(max_length=50, unique=True, db_index=True)
+    workspace = models.ForeignKey(
+        Workspace,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="subscriptions",
+    )
+    subscription_number = models.CharField(max_length=50, db_index=True)
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, related_name="subscriptions")
     plan = models.ForeignKey(
         SubscriptionPlan, on_delete=models.PROTECT, related_name="subscriptions"
@@ -51,63 +62,62 @@ class Subscription(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        unique_together = ("workspace", "subscription_number")
         indexes = [
-            models.Index(fields=["status", "next_billing_date"]),
-            models.Index(fields=["customer", "status"]),
+            models.Index(fields=["workspace", "subscription_number"]),
+            models.Index(fields=["workspace", "status"]),
+            models.Index(fields=["workspace", "next_billing_date"]),
         ]
+        verbose_name = "Subscription"
+        verbose_name_plural = "Subscriptions"
 
     def __str__(self):
         return f"{self.subscription_number} - {self.customer.company_name} ({self.status})"
 
     def save(self, *args, **kwargs):
         if not self.subscription_number:
-            count = Subscription.objects.count() + 1
+            count = Subscription.objects.filter(workspace=self.workspace).count() + 1
             self.subscription_number = f"SUB-{timezone.now().year}-{count:04d}"
-        if not self.next_billing_date and self.status == self.Status.ACTIVE:
+        if not self.next_billing_date and self.status in [
+            self.Status.CONFIRMED,
+            self.Status.ACTIVE,
+        ]:
             self.next_billing_date = self.start_date
         super().save(*args, **kwargs)
 
-    def calculate_totals(self):
-        lines_total = sum(line.subtotal for line in self.lines.all())
-        # Base plan cost plus product lines
-        self.subtotal = self.plan.cost + lines_total
-        # Recalculate total after tax and discount
-        self.total_amount = max(
-            Decimal("0.00"), self.subtotal + self.tax_amount - self.discount_amount
-        )
-        self.save(update_fields=["subtotal", "total_amount", "tax_amount", "discount_amount"])
-
-    def transition_to(self, target_status):
-        """
-        State Machine:
-        Draft -> Quotation -> Confirmed -> Active <-> Paused -> Closed
-        """
+    def transition_to(self, new_status, user=None, reason=""):
         valid_transitions = {
-            self.Status.DRAFT: [self.Status.QUOTATION, self.Status.CLOSED],
+            self.Status.DRAFT: [self.Status.QUOTATION, self.Status.CONFIRMED, self.Status.CLOSED],
             self.Status.QUOTATION: [self.Status.CONFIRMED, self.Status.CLOSED],
             self.Status.CONFIRMED: [self.Status.ACTIVE, self.Status.CLOSED],
-            self.Status.ACTIVE: [self.Status.PAUSED, self.Status.CLOSED],
+            self.Status.ACTIVE: [
+                self.Status.PAST_DUE,
+                self.Status.PAUSED,
+                self.Status.CLOSED,
+                self.Status.EXPIRED,
+            ],
+            self.Status.PAST_DUE: [self.Status.ACTIVE, self.Status.CLOSED],
             self.Status.PAUSED: [self.Status.ACTIVE, self.Status.CLOSED],
-            self.Status.CLOSED: [self.Status.DRAFT] if self.plan.allow_renew else [],
+            self.Status.CLOSED: [],
+            self.Status.EXPIRED: [self.Status.ACTIVE],
         }
 
-        # Policy checks from Plan
-        if target_status == self.Status.PAUSED and not self.plan.allow_pause:
-            raise ValidationError("This plan does not permit pausing.")
-        if (
-            target_status == self.Status.CLOSED
-            and self.status == self.Status.ACTIVE
-            and not self.plan.allow_early_close
-        ):
-            raise ValidationError("This plan does not permit early closure.")
+        if new_status not in valid_transitions.get(self.status, []):
+            raise ValidationError(
+                f"Invalid state transition from '{self.status}' to '{new_status}'."
+            )
 
-        if target_status not in valid_transitions.get(self.status, []):
-            raise ValidationError(f"Invalid transition from {self.status} to {target_status}.")
+        prev = self.status
+        self.status = new_status
+        self.save(update_fields=["status", "updated_at"])
 
-        self.status = target_status
-        if target_status == self.Status.ACTIVE and not self.next_billing_date:
-            self.next_billing_date = timezone.now().date()
-        self.save()
+        SubscriptionEvent.objects.create(
+            subscription=self,
+            previous_status=prev,
+            new_status=new_status,
+            changed_by=user,
+            reason=reason,
+        )
 
 
 class SubscriptionLine(models.Model):
@@ -117,16 +127,34 @@ class SubscriptionLine(models.Model):
     variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=12, decimal_places=2)
-    tax_rate = models.DecimalField(
-        max_digits=5, decimal_places=2, default=Decimal("0.00")
-    )  # e.g. 18.00%
     subtotal = models.DecimalField(max_digits=12, decimal_places=2)
 
+    class Meta:
+        verbose_name = "Subscription Line"
+        verbose_name_plural = "Subscription Lines"
+
     def save(self, *args, **kwargs):
-        base_price = self.product.sales_price
-        if self.variant:
-            base_price += self.variant.price_delta
-        self.unit_price = base_price
         self.subtotal = self.unit_price * self.quantity
         super().save(*args, **kwargs)
-        self.subscription.calculate_totals()
+
+
+class SubscriptionEvent(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name="events")
+    previous_status = models.CharField(max_length=20)
+    new_status = models.CharField(max_length=20)
+    changed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    reason = models.TextField(blank=True)
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ["-timestamp"]
+        verbose_name = "Subscription Event"
+        verbose_name_plural = "Subscription Events"
+
+    def __str__(self):
+        return (
+            f"{self.subscription.subscription_number}: {self.previous_status} -> {self.new_status}"
+        )

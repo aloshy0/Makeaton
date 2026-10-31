@@ -18,6 +18,6 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(SubscriptionPlan)
 class SubscriptionPlanAdmin(admin.ModelAdmin):
-    list_display = ("name", "code", "billing_frequency", "cost", "minimum_quantity", "is_active")
-    list_filter = ("billing_frequency", "is_active")
+    list_display = ("name", "code", "billing_interval", "base_price", "min_seats", "is_active")
+    list_filter = ("billing_interval", "is_active")
     search_fields = ("name", "code")
