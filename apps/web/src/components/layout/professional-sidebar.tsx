@@ -22,6 +22,7 @@ import {
   Building2,
   Menu,
   X,
+  User,
 } from "lucide-react";
 import { useAccount } from "../../context/account-context";
 import { WorkspaceSwitcher } from "./workspace-switcher";
@@ -135,6 +136,17 @@ const SECTIONS: NavSection[] = [
         href: "/settings",
         icon: Settings,
         roles: ["OWNER"],
+      },
+    ],
+  },
+  {
+    title: "FLOWGRID ACCOUNT",
+    items: [
+      {
+        name: "Personal Account & Plans",
+        href: "/account",
+        icon: User,
+        roles: ["OWNER", "ADMIN", "STAFF"],
       },
     ],
   },

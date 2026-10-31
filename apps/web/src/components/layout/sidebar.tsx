@@ -19,21 +19,22 @@ import {
   Cable,
   BarChart3,
   Settings,
+  Building2,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Workspace } from "../../types";
-import { DUMMY_WORKSPACES } from "../../lib/dummy-data";
+import { useAccount } from "../../context/account-context";
 import { WorkspaceSwitcher } from "./workspace-switcher";
 import { CreateWorkspaceDialog } from "./create-workspace-dialog";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(DUMMY_WORKSPACES);
-  const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(DUMMY_WORKSPACES[0]);
+  const { workspaces, activeWorkspace, switchWorkspace, user } = useAccount();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const ownedCount = workspaces.filter((w) => w.user_role === "OWNER").length;
-  const userRole = currentWorkspace?.user_role || "OWNER";
+  const userRole = activeWorkspace?.user_role || "OWNER";
+  const planMax = user?.flowgrid_plan?.max_workspaces || 3;
 
   // Categorized Navigation
   const navSections = [
@@ -131,12 +132,24 @@ export function Sidebar() {
       ],
     },
     {
-      label: "Self-Service",
+      label: "Account & FlowGrid",
       items: [
+        {
+          name: "Personal Account & Plans",
+          href: "/account",
+          icon: UserCheck,
+          roles: ["OWNER", "ADMIN", "STAFF", "CUSTOMER"],
+        },
+        {
+          name: "Workspaces Directory",
+          href: "/workspaces",
+          icon: Building2,
+          roles: ["OWNER", "ADMIN", "STAFF", "CUSTOMER"],
+        },
         {
           name: "Customer Portal",
           href: "/portal",
-          icon: UserCheck,
+          icon: Users,
           roles: ["OWNER", "ADMIN", "STAFF", "CUSTOMER"],
         },
       ],
@@ -168,8 +181,8 @@ export function Sidebar() {
           </div>
           <WorkspaceSwitcher
             workspaces={workspaces}
-            currentWorkspace={currentWorkspace}
-            onSelectWorkspace={(ws) => setCurrentWorkspace(ws)}
+            currentWorkspace={activeWorkspace}
+            onSelectWorkspace={(ws) => switchWorkspace(ws)}
             onCreateWorkspaceClick={() => setIsCreateDialogOpen(true)}
             ownedCount={ownedCount}
           />
@@ -225,8 +238,10 @@ export function Sidebar() {
         {/* Footer info */}
         <div className="p-3 border-t border-slate-800/80 text-[11px] text-slate-400">
           <div className="flex items-center justify-between">
-            <span>Owner Quota Used:</span>
-            <span className="font-semibold text-slate-300">{ownedCount} / 5</span>
+            <span>Workspaces:</span>
+            <span className="font-semibold text-slate-300">
+              {ownedCount} / {planMax < 9999 ? planMax : "Unlimited"}
+            </span>
           </div>
         </div>
       </aside>
@@ -235,11 +250,13 @@ export function Sidebar() {
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onWorkspaceCreated={(newWs) => {
-          setWorkspaces([...workspaces, newWs]);
-          setCurrentWorkspace(newWs);
+          switchWorkspace(newWs);
+          setIsCreateDialogOpen(false);
         }}
         ownedCount={ownedCount}
+        maxSlots={planMax}
       />
+
     </>
   );
 }

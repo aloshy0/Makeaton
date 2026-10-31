@@ -20,7 +20,9 @@ export function Navbar({ mode, setMode }: NavbarProps) {
         <div className="flex items-center gap-10">
           <Link href="/" className="group flex items-center gap-2.5">
             <svg
-              className="w-5 h-5 text-black transition-transform group-hover:scale-105"
+              width="20"
+              height="20"
+              className="w-5 h-5 text-black transition-transform group-hover:scale-105 shrink-0"
               viewBox="0 0 24 24"
               fill="currentColor"
             >

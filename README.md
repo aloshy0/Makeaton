@@ -1,105 +1,139 @@
-# Brightloop Software — Multi-Tenant Subscription SaaS Platform
+# FlowGrid
 
-[![CI Quality Gate](https://github.com/aloshy0/Makeaton/actions/workflows/ci.yml/badge.svg)](https://github.com/aloshy0/Makeaton/actions)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14%2B-black.svg)](https://nextjs.org/)
-[![Django](https://img.shields.io/badge/Django-5.x%2F6.x-green.svg)](https://www.djangoproject.com/)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4%2B-38bdf8.svg)](https://tailwindcss.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-336791.svg)](https://www.postgresql.org/)
+[![CI](https://github.com/aloshy0/Makeaton/actions/workflows/ci.yml/badge.svg)](https://github.com/aloshy0/Makeaton/actions)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![Django REST Framework](https://img.shields.io/badge/API-Django%20REST%20Framework-green)](https://www.django-rest-framework.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **"Run Your Subscription Business. All in One Place."**  
-> An enterprise-grade, multi-tenant SaaS platform empowering anyone to create an account, launch up to five independent subscription businesses, manage products, invite team members, bill customers idempotently, and track recurring revenue with low-latency analytics.
+**Keep your business in flow.** FlowGrid is a subscription management platform for managing products, customers, subscriptions, invoices, and payments in one place.
 
----
+## What you can do
 
-## 1. Product Vision & Architecture
+- Manage business workspaces, products, customers, and subscription plans.
+- Track subscriptions through their billing lifecycle.
+- Create invoices, record payments, and review recurring revenue.
+- Invite team members with role-based permissions.
+- Give customers a portal to view their subscriptions and invoices.
 
-The system operates as a **Multi-Tenant SaaS Modular Monolith**. Rather than hardcoding a single fixed business, users can:
+FlowGrid is built as a modular monolith: the Next.js web app and Django API live in this repository and work together as one product.
 
-- **Create a Personal Account**: Global identity across all businesses.
-- **Become a Business Creator**: Launch and own up to **five (5) independent business workspaces**, transactionally enforced at the database level.
-- **Configure Each Business Separately**: Independent currency, tax rules, discount rules, products, plans, and customer profiles.
-- **Invite Staff with Defined Permissions**: Role-based access control (`OWNER`, `ADMIN`, `STAFF`, `CUSTOMER`). Staff members operate with limited power; sensitive operations (cancellations, write-offs, custom discounts) require Admin/Owner approval.
-- **Automated Recurring Billing**: Idempotent Celery engine generating invoices with deterministic keys (`ws_{id}_sub_{id}_{date}`).
-- **Customer Self-Service Portal**: Customers log in, view their active subscriptions, download invoices, and perform permitted renewal actions.
+## Technology
 
----
+- **Web:** Next.js 14, React, TypeScript, and Tailwind CSS
+- **API:** Django REST Framework and JWT authentication
+- **Data and background work:** PostgreSQL, Redis, and Celery
+- **Tests:** Vitest, Playwright, and pytest
 
-## 2. Directory Structure
+## Run locally
 
-```text
-├── apps/
-│   ├── web/                        # Next.js 14 App Router, TypeScript, Tailwind CSS, shadcn/ui
-│   │   ├── src/app/                # Public landing, Auth, Workspace switcher, Dashboard, Portal
-│   │   ├── src/components/         # AppShell, Sidebar, Header, UI primitives
-│   │   ├── src/lib/                # Typed API client, currency formatters
-│   │   └── tests/                  # Vitest unit tests & Playwright e2e tests
-│   └── api/                        # Django 6 REST Framework modular monolith
-│       ├── config/                 # Settings, URLs, Celery app, OpenAPI
-│       └── apps/
-│           ├── accounts/           # Global user authentication, password policies
-│           ├── workspaces/         # Workspaces, memberships, 5-workspace limit enforcement
-│           ├── invitations/        # Cryptographic expiring staff invitation tokens
-│           ├── customers/          # Workspace customer profiles & portal links
-│           ├── catalog/            # Products, attribute variants (+560 delta), plans
-│           ├── quotations/         # Quotation templates, quotes, approval workflow
-│           ├── subscriptions/      # Subscription contracts & lifecycle state machine
-│           ├── billing/            # Invoices, tax rules, automated billing engine
-│           ├── discounts/          # Percentage/fixed discounts, usage limits
-│           ├── payments/           # Atomic payment recording & balance settlement
-│           ├── reporting/          # Workspace SQL aggregations (MRR, ARR, cashflow)
-│           └── audit/              # Immutable workspace audit logs
-├── docs/                           # Authoritative specifications & architecture docs
-├── infrastructure/docker/          # Dockerfile.api, Dockerfile.web
-└── docker-compose.yml              # Local multi-service orchestrator
+### Requirements
+
+- Node.js 22 or later and pnpm
+- Python 3.12 or later
+
+### 1. Configure the API
+
+From the project root:
+
+```bash
+cp .env.example .env
 ```
 
----
+For a simple local demo, add this line to the root `.env` file to use SQLite instead of PostgreSQL:
 
-## 3. Quickstart & Local Execution
+```dotenv
+USE_SQLITE=True
+```
 
-### Backend (Django API)
+Create the Python environment, install the API dependencies, set up the database, and load demo data:
 
-```powershell
+```bash
+python3 -m venv apps/api/.venv
+source apps/api/.venv/bin/activate
+pip install -r apps/api/requirements.txt
 cd apps/api
-.venv\Scripts\Activate.ps1
-$env:USE_SQLITE="True"              # Instant local SQLite fallback
 python manage.py migrate
 python manage.py seed_demo_data
-python manage.py runserver 127.0.0.1:8000
+python manage.py runserver
 ```
 
-### Frontend (Next.js Web)
+The API runs at [http://localhost:8000](http://localhost:8000). Interactive API documentation is at [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/).
 
-```powershell
-# From root or inside apps/web
+### 2. Start the web app
+
+In a second terminal, from the project root:
+
+```bash
+pnpm install
 pnpm --filter brightloop-web dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-### Full Stack with Docker
+### Demo login
 
-```powershell
+After running `seed_demo_data`, use one of these local demo accounts:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Business owner | `owner@flowgrid.com` | `StrongPassword123!` |
+| Staff member | `staff@flowgrid.com` | `StrongPassword123!` |
+| Customer portal | `customer@acme.com` | `StrongPassword123!` |
+
+These credentials are for local demonstration only. Do not use them in a deployed environment.
+
+This setup is intended for local demos. Before deployment, set unique secrets, disable Django debug mode, and remove demo accounts.
+
+## Google Sign-In (optional)
+
+Google Sign-In requires a Google OAuth Web application client. Add the client ID and secret to the root `.env` as `OAUTH2_GOOGLE_CLIENT_ID` and `OAUTH2_GOOGLE_CLIENT_SECRET`, then add the client ID to `apps/web/.env.local` as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Configure the allowed frontend origins in Google Cloud Console and restart both apps.
+
+See [Google Sign-In setup](docs/GOOGLE_SIGN_IN.md) for local and production configuration. Keep the client secret on the API; never put it in a `NEXT_PUBLIC_` variable.
+
+## Run with Docker
+
+Docker Compose starts the web app, API, PostgreSQL, Redis, and Celery services:
+
+```bash
 docker compose up --build
 ```
 
----
+In another terminal, initialize the database and demo data:
 
-## 4. Default Seeded Credentials
+```bash
+docker compose exec api python manage.py migrate
+docker compose exec api python manage.py seed_demo_data
+```
 
-- **Business Owner:** `admin@brightloop.com` / `BrightloopAdmin2026!`
-- **Staff Member:** `staff@brightloop.com` / `BrightloopStaff2026!`
-- **Customer Portal:** `customer@acme.com` / `AcmeCustomer2026!`
+Then open [http://localhost:3000](http://localhost:3000). Google Sign-In is optional; configure its environment variables before starting the services if you want to demo it.
 
----
+## Checks
 
-## 5. API & Documentation Index
+From the project root:
 
-- **Interactive Swagger UI:** [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/)
-- **API Catalog:** [`docs/API_CATALOG.md`](docs/API_CATALOG.md)
-- **Architecture Specification:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- **Database Schema:** [`docs/DATABASE_DESIGN.md`](docs/DATABASE_DESIGN.md)
-- **Role & Permission Matrix:** [`docs/API_PERMISSION_MATRIX.md`](docs/API_PERMISSION_MATRIX.md)
-- **Security Guide:** [`docs/SECURITY.md`](docs/SECURITY.md)
+```bash
+pnpm test:web
+pnpm lint:web
+pnpm build:web
+```
+
+With the API virtual environment activated:
+
+```bash
+cd apps/api
+pytest
+ruff check .
+```
+
+## Project documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Requirements](docs/REQUIREMENTS.md)
+- [API catalog](docs/API_CATALOG.md)
+- [Database design](docs/DATABASE_DESIGN.md)
+- [Roles and permissions](docs/API_PERMISSION_MATRIX.md)
+- [Google Sign-In setup](docs/GOOGLE_SIGN_IN.md)
+
+## Demo limitations
+
+Email verification and password recovery are not connected to backend endpoints yet. Do not treat their prototype screens as working email flows.

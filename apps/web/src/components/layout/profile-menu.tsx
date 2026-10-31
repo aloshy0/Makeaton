@@ -118,12 +118,12 @@ export function ProfileMenu() {
                 </div>
                 <div className="mt-1">
                   <Link
-                    href={contextType === "PERSONAL" ? "/portal/profile" : "/settings"}
+                    href="/account"
                     onClick={() => setIsOpen(false)}
                     className="text-[11px] font-medium text-[#7651F5] hover:underline flex items-center gap-1"
                   >
                     <Settings className="w-3 h-3" />
-                    <span>Account Settings</span>
+                    <span>Personal Account & Plans</span>
                   </Link>
                 </div>
               </div>

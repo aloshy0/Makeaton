@@ -24,6 +24,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AreaChart,
   Area,
@@ -56,6 +57,11 @@ import {
 } from "../../lib/dummy-data";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  React.useEffect(() => {
+    router.replace("/portal");
+  }, [router]);
+
   const queryClient = useQueryClient();
   const { activeWorkspace, workspaces } = useAccount();
 

@@ -18,6 +18,21 @@ class CustomerViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     search_fields = ["company_name", "contact_name", "email"]
     ordering_fields = ["company_name", "created_at"]
 
+    def perform_create(self, serializer):
+        from rest_framework import exceptions
+
+        workspace = self.workspace
+        plan = workspace.owner.get_flowgrid_plan()
+        count = Customer.objects.filter(workspace=workspace).count()
+        if count >= plan.max_customers_per_workspace:
+            raise exceptions.ValidationError(
+                {
+                    "error": f"Customer limit reached ({plan.max_customers_per_workspace} max for your {plan.name} plan). Please upgrade your FlowGrid plan to add more customers."
+                }
+            )
+        return super().perform_create(serializer)
+
+
 
 class PortalMeView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsWorkspaceMember]

@@ -35,9 +35,20 @@ interface AccountContextValue {
     name: string;
     currency: string;
     timezone: string;
+    business_type?: string;
+    business_email?: string;
+    phone?: string;
+    address?: string;
+    logo_url?: string;
     description?: string;
   }) => Promise<Workspace>;
-  logout: () => void;
+  setAuthenticatedAccount: (
+    user: User,
+    workspaces: Workspace[],
+    type: FlowGridContextType
+  ) => void;
+  refreshWorkspaces: () => Promise<void>;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -79,21 +90,52 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [user, setUser] = useState<User | null>(DEFAULT_USER);
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(DUMMY_WORKSPACES);
-  const [memberships] = useState<WorkspaceMembership[]>(DUMMY_MEMBERSHIPS);
-  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(DUMMY_WORKSPACES[0]);
-  const [contextType, setContextType] = useState<FlowGridContextType>(() => {
-    if (typeof window !== "undefined" && pathname?.startsWith("/portal")) {
-      return "PERSONAL";
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("access_token")) {
+      return {
+        id: "usr-aloshy",
+        email: "aloshy@flowgrid.com",
+        first_name: "Aloshy",
+        last_name: "Antony",
+        role: "CUSTOMER",
+        is_active: true,
+        owned_workspaces_count: 0,
+        available_workspace_slots: 0,
+        created_at: "2026-01-01T00:00:00Z",
+      };
     }
-    return "PROFESSIONAL";
+    return DEFAULT_USER;
   });
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("access_token")) {
+      return [];
+    }
+    return DUMMY_WORKSPACES;
+  });
+  const [memberships] = useState<WorkspaceMembership[]>(DUMMY_MEMBERSHIPS);
+  const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(() => {
+    if (typeof window !== "undefined" && !localStorage.getItem("access_token")) {
+      return null;
+    }
+    return DUMMY_WORKSPACES[0];
+  });
+  const [contextType, setContextType] = useState<FlowGridContextType>("PERSONAL");
   const [personalCustomer] = useState<PersonalCustomerProfile>(DEFAULT_PERSONAL_CUSTOMER);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const toggleSidebar = () => setIsSidebarCollapsed((prev) => !prev);
+
+  const setAuthenticatedAccount = (
+    authenticatedUser: User,
+    authenticatedWorkspaces: Workspace[],
+    type: FlowGridContextType
+  ) => {
+    setUser(authenticatedUser);
+    setWorkspaces(authenticatedWorkspaces);
+    setActiveWorkspace(authenticatedWorkspaces[0] ?? null);
+    setContextType(type);
+  };
 
   // Sync route with context
   useEffect(() => {
@@ -173,10 +215,40 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshWorkspaces = async () => {
+    try {
+      const res = await api.getWorkspaces();
+      if (Array.isArray(res)) {
+        setWorkspaces(res);
+        setActiveWorkspace((prev) => {
+          if (res.length === 0) return null;
+          const match = res.find((w) => w.id === prev?.id);
+          return match || res[0];
+        });
+      }
+    } catch {
+      // fallback
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && localStorage.getItem("access_token")) {
+      refreshWorkspaces();
+      api.getMe().then((me) => {
+        if (me && me.id) setUser(me);
+      }).catch(() => {});
+    }
+  }, []);
+
   const createWorkspace = async (data: {
     name: string;
     currency: string;
     timezone: string;
+    business_type?: string;
+    business_email?: string;
+    phone?: string;
+    address?: string;
+    logo_url?: string;
     description?: string;
   }): Promise<Workspace> => {
     setIsLoading(true);
@@ -187,18 +259,28 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           name: data.name,
           currency: data.currency,
           timezone: data.timezone,
+          business_type: data.business_type,
+          business_email: data.business_email,
+          phone: data.phone,
+          address: data.address,
+          logo_url: data.logo_url,
         });
         created.user_role = "OWNER";
         created.description = data.description;
         created.last_accessed = "Just now";
       } catch {
-        // Generate client-side workspace if backend DB is in mock mode
+        // Generate client-side workspace if offline
         created = {
           id: `ws-${Date.now()}`,
           name: data.name,
           slug: data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
           currency: data.currency,
           timezone: data.timezone,
+          business_type: data.business_type || "SaaS & Cloud",
+          business_email: data.business_email,
+          phone: data.phone,
+          address: data.address,
+          logo_url: data.logo_url,
           description: data.description || "Production workspace on FlowGrid.",
           is_active: true,
           user_role: "OWNER",
@@ -208,7 +290,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      setWorkspaces((prev) => [created, ...prev]);
+      setWorkspaces((prev) => [created, ...prev.filter((w) => w.id !== created.id)]);
       setActiveWorkspace(created);
       setContextType("PROFESSIONAL");
       return created;
@@ -217,9 +299,19 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    router.push("/login");
+
+  const logout = async () => {
+    try {
+      await api.logout();
+    } catch {
+      // Clear the local FlowGrid session even if the API is offline.
+    } finally {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("access_token");
+      }
+      setUser(null);
+      router.push("/login");
+    }
   };
 
   return (
@@ -236,6 +328,8 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         switchContext,
         switchWorkspace,
         createWorkspace,
+        setAuthenticatedAccount,
+        refreshWorkspaces,
         logout,
         isLoading,
       }}

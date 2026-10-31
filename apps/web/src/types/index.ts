@@ -3,16 +3,32 @@ export type WorkspaceRole = "OWNER" | "ADMIN" | "STAFF" | "CUSTOMER";
 export type SubscriptionStatus =
   "draft" | "quotation" | "confirmed" | "active" | "past_due" | "paused" | "closed" | "expired";
 
+export interface FlowGridPlanSummary {
+  name: string;
+  slug: string;
+  price: string;
+  currency: string;
+  billing_interval: string;
+  max_workspaces: number;
+  max_products_per_workspace: number;
+  max_customers_per_workspace: number;
+  max_team_members: number;
+  features: string[];
+}
+
 export interface User {
   id: string;
   email: string;
   first_name: string;
   last_name: string;
+  profile_picture?: string;
   role: GlobalRole;
   phone?: string;
   is_active: boolean;
   owned_workspaces_count: number;
   available_workspace_slots: number;
+  max_workspaces?: number;
+  flowgrid_plan?: FlowGridPlanSummary;
   created_at: string;
 }
 
@@ -22,8 +38,23 @@ export interface Workspace {
   slug: string;
   currency: string;
   timezone: string;
+  business_type?: string;
+  business_email?: string;
+  phone?: string;
+  address?: string;
+  logo_url?: string;
   is_active: boolean;
   user_role?: WorkspaceRole;
+  permissions?: {
+    can_manage_products?: boolean;
+    can_manage_subscriptions?: boolean;
+    can_manage_invoices?: boolean;
+    can_record_payments?: boolean;
+    can_manage_customers?: boolean;
+    can_view_reports?: boolean;
+    can_manage_team?: boolean;
+    can_manage_settings?: boolean;
+  };
   active_members_count?: number;
   description?: string;
   last_accessed?: string;
@@ -339,3 +370,81 @@ export interface DashboardMetrics {
     amount: number;
   }>;
 }
+
+export interface FlowGridPlan {
+  id: string;
+  name: string;
+  slug: string;
+  price: string | number;
+  currency: string;
+  billing_interval: string;
+  max_workspaces: number;
+  max_products_per_workspace: number;
+  max_customers_per_workspace: number;
+  max_team_members: number;
+  features: string[];
+  is_active: boolean;
+}
+
+export interface FlowGridSubscription {
+  id: string | null;
+  status: "active" | "past_due" | "canceled" | "trialing";
+  renewal_date: string;
+  next_billing_date: string;
+  cancel_at_period_end: boolean;
+}
+
+export interface FlowGridPaymentMethod {
+  id: string;
+  brand: string;
+  last4: string;
+  exp_month: number;
+  exp_year: number;
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface FlowGridInvoice {
+  id: string;
+  invoice_number: string;
+  amount: string | number;
+  currency: string;
+  status: "paid" | "open" | "void";
+  plan_name: string;
+  paid_at: string;
+  created_at: string;
+}
+
+export interface PersonalDashboardData {
+  user: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    phone?: string;
+    created_at: string;
+  };
+  flowgrid_plan: FlowGridPlan;
+  flowgrid_subscription: FlowGridSubscription;
+  usage_limits: {
+    workspaces: {
+      current: number;
+      max: number;
+      available_slots: number;
+      percentage: number;
+    };
+    products_per_workspace: {
+      max: number;
+      total_across_workspaces: number;
+    };
+    customers_per_workspace: {
+      max: number;
+      total_across_workspaces: number;
+    };
+  };
+  owned_workspaces: Workspace[];
+  payment_methods: FlowGridPaymentMethod[];
+  invoices: FlowGridInvoice[];
+}
+

@@ -21,6 +21,11 @@ class Workspace(models.Model):
     )
     currency = models.CharField(max_length=3, default="USD")
     timezone = models.CharField(max_length=50, default="UTC")
+    business_type = models.CharField(max_length=100, blank=True, default="SaaS & Cloud")
+    business_email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=50, blank=True, null=True)
+    address = models.TextField(blank=True, default="")
+    logo_url = models.URLField(max_length=500, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -35,7 +40,8 @@ class Workspace(models.Model):
 
     def clean(self):
         super().clean()
-        # Enforce maximum 5 active owned workspaces per owner
+        # Enforce plan-based active owned workspaces per owner
+        max_allowed = self._get_owner_workspace_limit()
         if (
             not self.pk or "owner_id" in self.get_dirty_fields(check_relationship=True)
             if hasattr(self, "get_dirty_fields")
@@ -48,10 +54,20 @@ class Workspace(models.Model):
                     .exclude(pk=self.pk)
                     .count()
                 )
-                if active_count >= 5:
+                if active_count >= max_allowed:
                     raise ValidationError(
-                        "Workspace limit reached. A user can own a maximum of 5 active workspaces."
+                        f"Workspace limit reached. Your FlowGrid plan allows a maximum of {max_allowed} active workspaces. Upgrade your plan to create more."
                     )
+
+    def _get_owner_workspace_limit(self):
+        if hasattr(self.owner, "get_flowgrid_plan"):
+            return self.owner.get_flowgrid_plan().max_workspaces
+        sub = getattr(self.owner, "flowgrid_subscriptions", None)
+        if sub:
+            active_sub = sub.filter(status="active").select_related("plan").first()
+            if active_sub:
+                return active_sub.plan.max_workspaces
+        return 1
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -64,17 +80,18 @@ class Workspace(models.Model):
             self.slug = slug
 
         is_new = self._state.adding
-        # Transactional 5-workspace limit enforcement
+        # Transactional plan-based workspace limit enforcement
         if is_new:
+            max_allowed = self._get_owner_workspace_limit()
             with transaction.atomic():
                 active_count = (
                     Workspace.objects.select_for_update()
                     .filter(owner=self.owner, is_active=True)
                     .count()
                 )
-                if active_count >= 5:
+                if active_count >= max_allowed:
                     raise ValidationError(
-                        "Workspace limit reached. A user can own a maximum of 5 active workspaces."
+                        f"Workspace limit reached. Your FlowGrid plan allows a maximum of {max_allowed} active workspaces. Upgrade your plan to create more."
                     )
                 super().save(*args, **kwargs)
                 # Automatically add creator as OWNER in WorkspaceMembership
@@ -293,3 +310,128 @@ class WebhookDelivery(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Webhook Delivery"
         verbose_name_plural = "Webhook Deliveries"
+
+
+class FlowGridPlan(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True, db_index=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    currency = models.CharField(max_length=3, default="USD")
+    billing_interval = models.CharField(max_length=20, default="monthly")
+    max_workspaces = models.PositiveIntegerField(default=1)
+    max_products_per_workspace = models.PositiveIntegerField(default=5)
+    max_customers_per_workspace = models.PositiveIntegerField(default=50)
+    max_team_members = models.PositiveIntegerField(default=1)
+    features = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["price"]
+        verbose_name = "FlowGrid Plan"
+        verbose_name_plural = "FlowGrid Plans"
+
+    def __str__(self):
+        return f"{self.name} (${self.price}/{self.billing_interval})"
+
+
+class FlowGridSubscription(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        PAST_DUE = "past_due", "Past Due"
+        CANCELED = "canceled", "Canceled"
+        TRIALING = "trialing", "Trialing"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="flowgrid_subscriptions",
+    )
+    plan = models.ForeignKey(
+        FlowGridPlan,
+        on_delete=models.PROTECT,
+        related_name="user_subscriptions",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+        db_index=True,
+    )
+    start_date = models.DateField(default=timezone.now)
+    renewal_date = models.DateField(null=True, blank=True)
+    next_billing_date = models.DateField(null=True, blank=True)
+    cancel_at_period_end = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "FlowGrid Subscription"
+        verbose_name_plural = "FlowGrid Subscriptions"
+
+    def __str__(self):
+        return f"{self.user.email} - {self.plan.name} ({self.status})"
+
+
+class FlowGridPaymentMethod(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="flowgrid_payment_methods",
+    )
+    brand = models.CharField(max_length=50, default="Visa")
+    last4 = models.CharField(max_length=4, default="4242")
+    exp_month = models.PositiveIntegerField(default=12)
+    exp_year = models.PositiveIntegerField(default=2028)
+    is_default = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "FlowGrid Payment Method"
+        verbose_name_plural = "FlowGrid Payment Methods"
+
+    def __str__(self):
+        return f"{self.brand} •••• {self.last4} ({self.user.email})"
+
+
+class FlowGridInvoice(models.Model):
+    class Status(models.TextChoices):
+        PAID = "paid", "Paid"
+        OPEN = "open", "Open"
+        VOID = "void", "Void"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="flowgrid_invoices",
+    )
+    subscription = models.ForeignKey(
+        FlowGridSubscription,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="invoices",
+    )
+    invoice_number = models.CharField(max_length=50, unique=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default="USD")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PAID)
+    plan_name = models.CharField(max_length=100)
+    paid_at = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "FlowGrid Platform Invoice"
+        verbose_name_plural = "FlowGrid Platform Invoices"
+
+    def __str__(self):
+        return f"{self.invoice_number} - {self.user.email} (${self.amount})"
+

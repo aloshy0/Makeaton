@@ -7,6 +7,9 @@ import { Header } from "./header";
 import { CustomerNavigation } from "./customer-navigation";
 import { useAccount } from "../../context/account-context";
 
+import { PersonalSidebar } from "./personal-sidebar";
+import { PersonalHeader } from "./personal-header";
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isSidebarCollapsed } = useAccount();
@@ -41,29 +44,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 4. Personal Customer Application Shell (/portal/*)
-  if (pathname?.startsWith("/portal")) {
-    return (
-      <div className="min-h-screen bg-[#F8F9FC] text-[#0B1020] font-sans antialiased flex flex-col">
-        <CustomerNavigation />
-        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          {children}
-        </main>
-      </div>
-    );
-  }
-
-  // 5. Professional Business Application Shell (/dashboard, /catalog, /subscriptions, etc.)
+  // 4. Authenticated Application Shell (Unified FlowGrid Dashboard & Workspace Management)
   return (
     <div className="min-h-screen bg-[#F8F9FC] font-sans text-[#0B1020] antialiased">
-      <ProfessionalSidebar />
+      <PersonalSidebar />
       <div
         className={`${
-          isSidebarCollapsed ? "md:pl-[68px]" : "md:pl-[245px]"
+          isSidebarCollapsed ? "md:pl-[72px]" : "md:pl-[240px]"
         } flex flex-col min-h-screen transition-all duration-300 ease-in-out`}
       >
-        <Header />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8 mt-14 md:mt-0">
+        <PersonalHeader />
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 mt-14 md:mt-0">
           {children}
         </main>
       </div>

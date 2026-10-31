@@ -18,6 +18,10 @@ from apps.subscriptions.models import Subscription, SubscriptionLine
 from apps.workspaces.models import (
     ApiKey,
     ApprovalRequest,
+    FlowGridInvoice,
+    FlowGridPaymentMethod,
+    FlowGridPlan,
+    FlowGridSubscription,
     StaffPermission,
     WebhookDelivery,
     WebhookEndpoint,
@@ -132,7 +136,139 @@ class Command(BaseCommand):
         tenant_b_owner.save()
 
         # --------------------------------------------------------------------------
-        # 2. Workspaces
+        # 2. FlowGrid Platform Plans & Personal Subscriptions
+        # --------------------------------------------------------------------------
+        plan_basic, _ = FlowGridPlan.objects.get_or_create(
+            slug="basic",
+            defaults={
+                "name": "Basic",
+                "price": Decimal("0.00"),
+                "currency": "USD",
+                "billing_interval": "monthly",
+                "max_workspaces": 1,
+                "max_products_per_workspace": 5,
+                "max_customers_per_workspace": 50,
+                "max_team_members": 1,
+                "features": [
+                    "1 Business Workspace",
+                    "5 Products per business",
+                    "50 Customers per business",
+                    "Basic Analytics",
+                    "1 Team Member",
+                ],
+            },
+        )
+
+        plan_pro, _ = FlowGridPlan.objects.get_or_create(
+            slug="pro",
+            defaults={
+                "name": "Pro",
+                "price": Decimal("49.00"),
+                "currency": "USD",
+                "billing_interval": "monthly",
+                "max_workspaces": 3,
+                "max_products_per_workspace": 25,
+                "max_customers_per_workspace": 500,
+                "max_team_members": 5,
+                "features": [
+                    "3 Business Workspaces",
+                    "25 Products per business",
+                    "500 Customers per business",
+                    "Advanced Analytics",
+                    "5 Team Members",
+                    "Automated Billing Engine",
+                ],
+            },
+        )
+
+        plan_business, _ = FlowGridPlan.objects.get_or_create(
+            slug="business",
+            defaults={
+                "name": "Business",
+                "price": Decimal("149.00"),
+                "currency": "USD",
+                "billing_interval": "monthly",
+                "max_workspaces": 9999,
+                "max_products_per_workspace": 9999,
+                "max_customers_per_workspace": 99999,
+                "max_team_members": 9999,
+                "features": [
+                    "Unlimited Business Workspaces",
+                    "Unlimited Products",
+                    "Unlimited Customers",
+                    "Advanced Analytics & Data Exports",
+                    "Unlimited Team Members",
+                    "Priority 24/7 Dedicated Support",
+                ],
+            },
+        )
+
+        # Assign Alexander Wright (owner@flowgrid.com) to Pro Plan (allows 3 workspaces)
+        admin_sub, _ = FlowGridSubscription.objects.get_or_create(
+            user=admin_user,
+            status=FlowGridSubscription.Status.ACTIVE,
+            defaults={
+                "plan": plan_pro,
+                "start_date": timezone.now().date() - timedelta(days=60),
+                "renewal_date": timezone.now().date() + timedelta(days=24),
+                "next_billing_date": timezone.now().date() + timedelta(days=24),
+            },
+        )
+        admin_sub.plan = plan_pro
+        admin_sub.save()
+
+        # Seed FlowGrid Payment Method for admin_user
+        FlowGridPaymentMethod.objects.get_or_create(
+            user=admin_user,
+            last4="4242",
+            defaults={
+                "brand": "Visa",
+                "exp_month": 12,
+                "exp_year": 2028,
+                "is_default": True,
+            },
+        )
+
+        # Seed FlowGrid Platform Invoices
+        FlowGridInvoice.objects.get_or_create(
+            invoice_number="FG-INV-2026-0001",
+            defaults={
+                "user": admin_user,
+                "subscription": admin_sub,
+                "amount": Decimal("49.00"),
+                "currency": "USD",
+                "status": FlowGridInvoice.Status.PAID,
+                "plan_name": "FlowGrid Pro Subscription",
+                "paid_at": timezone.now() - timedelta(days=60),
+            },
+        )
+        FlowGridInvoice.objects.get_or_create(
+            invoice_number="FG-INV-2026-0002",
+            defaults={
+                "user": admin_user,
+                "subscription": admin_sub,
+                "amount": Decimal("49.00"),
+                "currency": "USD",
+                "status": FlowGridInvoice.Status.PAID,
+                "plan_name": "FlowGrid Pro Subscription",
+                "paid_at": timezone.now() - timedelta(days=30),
+            },
+        )
+
+        # Assign tenant_b_owner to Basic Plan
+        FlowGridSubscription.objects.get_or_create(
+            user=tenant_b_owner,
+            status=FlowGridSubscription.Status.ACTIVE,
+            defaults={
+                "plan": plan_basic,
+                "start_date": timezone.now().date() - timedelta(days=15),
+                "renewal_date": timezone.now().date() + timedelta(days=15),
+                "next_billing_date": timezone.now().date() + timedelta(days=15),
+            },
+        )
+
+        # --------------------------------------------------------------------------
+        # 3. Workspaces
         # --------------------------------------------------------------------------
         ws1_id = uuid.UUID("aac3abe7-18b7-4c5f-a29e-786b63476459")
         ws1, _ = Workspace.objects.get_or_create(
@@ -143,9 +279,17 @@ class Command(BaseCommand):
                 "owner": admin_user,
                 "currency": "USD",
                 "timezone": "America/New_York",
+                "business_type": "Cloud Software & SaaS",
+                "business_email": "operations@flowgrid.com",
+                "phone": "+1 (555) 234-5678",
+                "address": "100 Innovation Way, Suite 400, San Francisco, CA 94105",
             },
         )
         ws1.name = "FlowGrid Cloud Technologies"
+        ws1.business_type = "Cloud Software & SaaS"
+        ws1.business_email = "operations@flowgrid.com"
+        ws1.phone = "+1 (555) 234-5678"
+        ws1.address = "100 Innovation Way, Suite 400, San Francisco, CA 94105"
         ws1.save()
 
         ws2, _ = Workspace.objects.get_or_create(
@@ -155,8 +299,17 @@ class Command(BaseCommand):
                 "owner": admin_user,
                 "currency": "EUR",
                 "timezone": "Europe/London",
+                "business_type": "Hardware & IoT",
+                "business_email": "labs@flowgrid.com",
+                "phone": "+1 (555) 876-5432",
+                "address": "200 Tech Boulevard, Boston, MA 02110",
             },
         )
+        ws2.business_type = "Hardware & IoT"
+        ws2.business_email = "labs@flowgrid.com"
+        ws2.phone = "+1 (555) 876-5432"
+        ws2.address = "200 Tech Boulevard, Boston, MA 02110"
+        ws2.save()
 
         ws_b, _ = Workspace.objects.get_or_create(
             slug="bobs-retail-pos",
@@ -165,8 +318,18 @@ class Command(BaseCommand):
                 "owner": tenant_b_owner,
                 "currency": "USD",
                 "timezone": "America/Chicago",
+                "business_type": "Retail & Commerce",
+                "business_email": "bob@retailstore.com",
+                "phone": "+1 (555) 998-1122",
+                "address": "45 Market Square, Chicago, IL 60601",
             },
         )
+        ws_b.business_type = "Retail & Commerce"
+        ws_b.business_email = "bob@retailstore.com"
+        ws_b.phone = "+1 (555) 998-1122"
+        ws_b.address = "45 Market Square, Chicago, IL 60601"
+        ws_b.save()
+
 
         # --------------------------------------------------------------------------
         # 3. Memberships & Permissions
