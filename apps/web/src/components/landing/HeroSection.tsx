@@ -19,7 +19,8 @@ import {
   Repeat,
   ShieldCheck,
   Sparkles,
-  Crown,
+  Rocket,
+  Briefcase,
 } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -550,12 +551,12 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         1.58
       );
 
-      // H. Pro card receives a subtle glow animation
+      // H. Pro card receives a subtle elevated shadow
       scrollTl.to(
         planCardProRef.current,
         {
-          boxShadow: "0 22px 65px -8px rgba(99,102,241,0.55), 0 0 45px rgba(99,102,241,0.32)",
-          duration: 0.3,
+          boxShadow: "0 20px 45px -10px rgba(37,99,235,0.18), 0 4px 16px rgba(37,99,235,0.06)",
+          duration: 0.30,
           ease: "power2.out",
         },
         1.68
@@ -592,7 +593,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
     <div
       ref={pinSectionRef}
       id="hero"
-      className="relative w-full min-h-screen bg-white z-20 overflow-hidden"
+      className="relative w-full min-h-screen bg-white z-20 overflow-hidden pt-20"
     >
       {/* Background Purple, Blue and Mint Ambient Lighting */}
       <div
@@ -608,33 +609,33 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         aria-hidden="true"
       />
 
-      {/* Main Pinned Viewport Stage */}
-      <div className="relative w-full h-screen flex items-center justify-center py-2 sm:py-4 overflow-hidden">
+      {/* Main Pinned Viewport Stage - Perfectly Centered in Visible Viewport Below Navbar */}
+      <div className="relative w-full h-[calc(100vh-5rem)] min-h-[640px] flex items-center justify-center overflow-hidden">
         <div
           ref={containerRef}
-          className="w-full max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 flex items-center min-h-[600px]"
+          className="w-full max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 flex items-center justify-between h-full min-h-[580px]"
         >
           {/* ================================================================ */}
           {/* SLIDE 1: Hero Layout (Left Column)                               */}
           {/* ================================================================ */}
           <div
             ref={slide1LeftRef}
-            className="absolute left-6 sm:left-10 lg:left-12 max-w-xl z-20 flex flex-col items-start space-y-6 lg:space-y-8 will-change-transform"
+            className="absolute left-6 sm:left-10 lg:left-12 top-0 bottom-0 my-auto h-fit max-w-xl xl:max-w-2xl z-20 flex flex-col items-start space-y-6 lg:space-y-8 will-change-transform"
           >
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 shadow-xs">
+            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-50 border border-slate-200/90 shadow-xs">
               <span className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
-              <span className="text-xs font-semibold text-slate-800 tracking-tight">
+              <span className="text-xs sm:text-sm font-semibold text-slate-800 tracking-tight">
                 FlowGrid 2.0
               </span>
               <span className="text-slate-300">|</span>
-              <span className="text-xs font-medium text-slate-600">
+              <span className="text-xs sm:text-sm font-medium text-slate-600">
                 Next-Gen Subscription Platform
               </span>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-[62px] xl:text-[68px] font-black tracking-[-0.035em] text-slate-950 leading-[1.06]">
+            <h1 className="text-5xl sm:text-6xl lg:text-[72px] xl:text-[78px] font-black tracking-[-0.035em] text-slate-950 leading-[1.04]">
               Keep your business <br />
               <span className="bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">
                 in flow.
@@ -642,19 +643,19 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             </h1>
 
             {/* Subtitle Description */}
-            <p className="text-base sm:text-lg text-slate-500 font-normal leading-relaxed max-w-lg">
-              Manage subscriptions, automate recurring billing and keep every payment on track. All
-              from one unified platform.
+            <p className="text-lg sm:text-xl text-slate-600 font-normal leading-relaxed max-w-xl">
+              Manage subscriptions, automate recurring billing and keep every
+              payment on track. All from one unified platform.
             </p>
 
             {/* CTAs Row */}
-            <div className="flex flex-wrap items-center gap-3.5 pt-1">
+            <div className="flex flex-wrap items-center gap-4 pt-1">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-slate-800 transition-all shadow-md active:scale-95 group"
+                className="inline-flex items-center justify-center gap-2.5 px-9 py-4 rounded-full bg-black text-white text-base font-bold hover:bg-slate-800 transition-all shadow-md active:scale-95 group"
               >
                 <span>Get started</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="w-4.5 h-4.5 transition-transform group-hover:translate-x-1" />
               </Link>
 
               <button
@@ -665,10 +666,10 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     target.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-sm font-semibold transition-all shadow-xs active:scale-95 group"
+                className="inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-base font-semibold transition-all shadow-xs active:scale-95 group"
               >
-                <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-                  <Play className="w-2.5 h-2.5 fill-slate-800 text-slate-800 ml-0.5" />
+                <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                  <Play className="w-3 h-3 fill-slate-800 text-slate-800 ml-0.5" />
                 </div>
                 <span>Watch demo</span>
               </button>
@@ -677,27 +678,33 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             {/* 3-Column Stats Row */}
             <div
               ref={statsRef}
-              className="w-full pt-8 lg:pt-10 border-t border-slate-100 grid grid-cols-3 gap-6 max-w-md"
+              className="w-full pt-8 lg:pt-9 border-t border-slate-100 grid grid-cols-3 gap-6 max-w-lg"
             >
               <div>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
+                <div className="text-3xl sm:text-4xl font-black tracking-tight text-slate-950">
                   10K+
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">Businesses</div>
+                <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
+                  Businesses
+                </div>
               </div>
 
               <div>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
+                <div className="text-3xl sm:text-4xl font-black tracking-tight text-slate-950">
                   2M+
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">Subscriptions</div>
+                <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
+                  Subscriptions
+                </div>
               </div>
 
               <div>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
+                <div className="text-3xl sm:text-4xl font-black tracking-tight text-slate-950">
                   99.9%
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">Uptime</div>
+                <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-1">
+                  Uptime
+                </div>
               </div>
             </div>
           </div>
@@ -709,17 +716,17 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             ref={slide2ContainerRef}
             id="products"
             style={{ opacity: 0, pointerEvents: "none" }}
-            className="absolute left-6 sm:left-10 lg:left-12 max-w-md lg:max-w-lg z-20 flex flex-col items-start space-y-6 will-change-transform"
+            className="absolute left-6 sm:left-10 lg:left-12 top-0 bottom-0 my-auto h-fit max-w-md lg:max-w-xl z-20 flex flex-col items-start space-y-6 will-change-transform"
           >
             {/* Pill Badge */}
             <div ref={slide2LeftRef} className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-100/70 border border-purple-200/50 text-[11px] font-bold tracking-wider uppercase text-purple-700 shadow-xs">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100/70 border border-purple-200/50 text-xs font-bold tracking-wider uppercase text-purple-700 shadow-xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" />
                 <span>ORGANIZE PRODUCTS</span>
               </div>
 
               {/* Main Headline */}
-              <h2 className="text-3xl sm:text-4xl lg:text-[54px] font-extrabold tracking-[-0.035em] text-slate-950 leading-[1.08]">
+              <h2 className="text-4xl sm:text-5xl lg:text-[62px] xl:text-[68px] font-black tracking-[-0.035em] text-slate-950 leading-[1.06]">
                 Everything you sell. <br />
                 In{" "}
                 <span className="bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">
@@ -728,9 +735,9 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               </h2>
 
               {/* Subtitle Description */}
-              <p className="text-sm sm:text-base text-slate-500 font-normal leading-relaxed max-w-md">
-                Add your products, organize your services and manage pricing effortlessly. Build the
-                foundation for your subscription business with FlowGrid.
+              <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-lg">
+                Add your products, organize your services and manage pricing effortlessly.
+                Build the foundation for your subscription business with FlowGrid.
               </p>
             </div>
 
@@ -738,14 +745,14 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             <div ref={highlightsRef} className="space-y-4 pt-1 w-full">
               {/* Highlight 1: Organize Products */}
               <div className="flex items-start gap-3.5 group">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-100/80 text-purple-600 flex items-center justify-center shrink-0 shadow-2xs">
-                  <Box className="w-5 h-5 text-[#8b5cf6] stroke-[2.2]" />
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100/80 text-purple-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Box className="w-5.5 h-5.5 text-[#8b5cf6] stroke-[2.2]" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
                     Organize Products
                   </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
                     Manage all your physical and digital products in one place.
                   </p>
                 </div>
@@ -753,14 +760,14 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
               {/* Highlight 2: Flexible Pricing */}
               <div className="flex items-start gap-3.5 group">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs">
-                  <Tag className="w-5 h-5 text-[#3b82f6] stroke-[2.2]" />
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Tag className="w-5.5 h-5.5 text-[#3b82f6] stroke-[2.2]" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
                     Flexible Pricing
                   </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
                     Set sales prices, costs and product variants with ease.
                   </p>
                 </div>
@@ -768,14 +775,14 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
               {/* Highlight 3: Subscription Ready */}
               <div className="flex items-start gap-3.5 group">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
-                  <Layers className="w-5 h-5 text-[#10b981] stroke-[2.2]" />
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Layers className="w-5.5 h-5.5 text-[#10b981] stroke-[2.2]" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
                     Subscription Ready
                   </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
                     Turn your products into flexible subscription plans.
                   </p>
                 </div>
@@ -788,7 +795,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           {/* ================================================================ */}
           <div
             ref={illustrationWrapperRef}
-            className="ml-auto relative flex items-center justify-center will-change-transform z-30"
+            className="ml-auto relative flex items-center justify-center will-change-transform z-30 my-auto"
           >
             {/* 3D Perspective Box */}
             <div
@@ -887,13 +894,13 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                 />
 
                 {/* Header: Title + Add Product Action */}
-                <div className="flex items-center justify-between pb-3 relative z-10">
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                <div className="flex items-center justify-between pb-3.5 relative z-10">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                     Products
                   </h3>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#6366f1] hover:bg-indigo-600 text-white text-xs font-semibold shadow-xs transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6366f1] hover:bg-indigo-600 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>Add product</span>
@@ -902,27 +909,25 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
                 {/* Search Field */}
                 <div className="relative z-10 mb-4">
-                  <div className="flex items-center gap-2 bg-slate-50/90 border border-slate-200/60 rounded-xl px-3 py-1.5 text-xs text-slate-400 shadow-inner">
-                    <Search className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-[11px] text-slate-400 font-normal">
-                      Search products...
-                    </span>
+                  <div className="flex items-center gap-2 bg-slate-50/90 border border-slate-200/60 rounded-xl px-3.5 py-2 text-xs text-slate-400 shadow-inner">
+                    <Search className="w-4 h-4 text-slate-400" />
+                    <span className="text-xs text-slate-400 font-normal">Search products...</span>
                   </div>
                 </div>
 
                 {/* Product Entries List */}
                 <div ref={productRowsRef} className="space-y-2.5 relative z-10">
                   {/* Entry 1: Cloud Software */}
-                  <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                        <Laptop className="w-4 h-4 text-[#8b5cf6]" />
+                  <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                        <Laptop className="w-4.5 h-4.5 text-[#8b5cf6]" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-slate-900 leading-tight">
+                        <div className="text-sm font-bold text-slate-900 leading-tight">
                           Cloud Software
                         </div>
-                        <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                        <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
                           Software
                         </div>
                       </div>
@@ -930,27 +935,27 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-xs font-bold text-slate-900 font-mono">₹999</span>
-                        <span className="text-[10px] text-slate-400 font-normal"> /month</span>
+                        <span className="text-sm font-bold text-slate-900 font-mono">₹999</span>
+                        <span className="text-xs text-slate-400 font-normal"> /month</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/60">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100/60">
                         Active
                       </span>
-                      <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
+                      <MoreHorizontal className="w-4 h-4 text-slate-300" />
                     </div>
                   </div>
 
                   {/* Entry 2: Gym Membership */}
-                  <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                        <Dumbbell className="w-4 h-4 text-[#3b82f6]" />
+                  <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <Dumbbell className="w-4.5 h-4.5 text-[#3b82f6]" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-slate-900 leading-tight">
+                        <div className="text-sm font-bold text-slate-900 leading-tight">
                           Gym Membership
                         </div>
-                        <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                        <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
                           Service
                         </div>
                       </div>
@@ -958,27 +963,27 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-xs font-bold text-slate-900 font-mono">₹500</span>
-                        <span className="text-[10px] text-slate-400 font-normal"> /month</span>
+                        <span className="text-sm font-bold text-slate-900 font-mono">₹500</span>
+                        <span className="text-xs text-slate-400 font-normal"> /month</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/60">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100/60">
                         Active
                       </span>
-                      <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
+                      <MoreHorizontal className="w-4 h-4 text-slate-300" />
                     </div>
                   </div>
 
                   {/* Entry 3: Online Course */}
-                  <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                        <GraduationCap className="w-4 h-4 text-[#10b981]" />
+                  <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <GraduationCap className="w-4.5 h-4.5 text-[#10b981]" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-slate-900 leading-tight">
+                        <div className="text-sm font-bold text-slate-900 leading-tight">
                           Online Course
                         </div>
-                        <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                        <div className="text-xs text-slate-400 font-medium leading-tight mt-0.5">
                           Education
                         </div>
                       </div>
@@ -986,13 +991,13 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-xs font-bold text-slate-900 font-mono">₹1,499</span>
-                        <span className="text-[10px] text-slate-400 font-normal"> /month</span>
+                        <span className="text-sm font-bold text-slate-900 font-mono">₹1,499</span>
+                        <span className="text-xs text-slate-400 font-normal"> /month</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/60">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100/60">
                         Active
                       </span>
-                      <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
+                      <MoreHorizontal className="w-4 h-4 text-slate-300" />
                     </div>
                   </div>
                 </div>
@@ -1003,20 +1008,20 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               {/* ------------------------------------------------------------ */}
               <div
                 ref={notif1Ref}
-                className="absolute top-2 sm:top-6 -left-2 sm:-left-6 z-30 bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl p-3 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3 will-change-transform max-w-[240px] sm:max-w-[270px]"
+                className="absolute top-2 sm:top-6 -left-2 sm:-left-6 z-30 bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl p-3.5 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5 will-change-transform max-w-[260px] sm:max-w-[290px]"
               >
-                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                  <Box className="w-4 h-4 text-[#8b5cf6]" />
+                <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <Box className="w-4.5 h-4.5 text-[#8b5cf6]" />
                 </div>
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 leading-tight">
+                  <div className="text-sm font-bold text-slate-900 leading-tight">
                     Product Created
                   </div>
-                  <div className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                  <div className="text-xs text-slate-500 font-medium leading-tight mt-0.5">
                     Cloud Software added successfully
                   </div>
                 </div>
-                <span className="w-2 h-2 rounded-full bg-[#8b5cf6] shadow-[0_0_6px_rgba(139,92,246,0.6)] ml-auto shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] shadow-[0_0_6px_rgba(139,92,246,0.6)] ml-auto shrink-0" />
               </div>
 
               {/* ------------------------------------------------------------ */}
@@ -1024,20 +1029,20 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               {/* ------------------------------------------------------------ */}
               <div
                 ref={notif2Ref}
-                className="absolute bottom-6 sm:bottom-10 left-2 sm:left-6 z-30 bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl p-3 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3 will-change-transform max-w-[210px] sm:max-w-[240px]"
+                className="absolute bottom-6 sm:bottom-10 left-2 sm:left-6 z-30 bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl p-3.5 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5 will-change-transform max-w-[230px] sm:max-w-[260px]"
               >
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 text-[#3b82f6]" />
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <FileText className="w-4.5 h-4.5 text-[#3b82f6]" />
                 </div>
                 <div className="pr-2">
-                  <div className="text-xs font-bold text-slate-900 leading-tight">
+                  <div className="text-sm font-bold text-slate-900 leading-tight">
                     Pricing Updated
                   </div>
-                  <div className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                  <div className="text-xs text-slate-500 font-medium leading-tight mt-0.5">
                     Set sales prices & costs
                   </div>
                 </div>
-                <span className="w-2 h-2 rounded-full bg-[#3b82f6] shadow-[0_0_6px_rgba(59,130,246,0.6)] ml-auto shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6] shadow-[0_0_6px_rgba(59,130,246,0.6)] ml-auto shrink-0" />
               </div>
 
               {/* ------------------------------------------------------------ */}
@@ -1056,27 +1061,27 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           <div
             ref={slide3ContainerRef}
             id="plans"
-            className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1240px] mx-auto will-change-transform pointer-events-none"
+            className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-2 max-w-[1240px] mx-auto will-change-transform pointer-events-none"
           >
             {/* Top Centered Notification: "Ready for Plans" (Travels from Slide 2) */}
             <div className="relative z-40 flex flex-col items-center">
               <div
                 ref={readyForPlansCardRef}
                 style={{ opacity: 0 }}
-                className="bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl sm:rounded-3xl px-5 py-2.5 sm:py-3 shadow-[0_12px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5 max-w-[320px] will-change-transform select-none"
+                className="bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl sm:rounded-3xl px-6 py-3 sm:py-3.5 shadow-[0_12px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5 max-w-[340px] will-change-transform select-none"
               >
-                <div className="w-8 h-8 rounded-full bg-emerald-400 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <Check className="w-4 h-4 stroke-[3]" />
+                <div className="w-9 h-9 rounded-full bg-emerald-400 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Check className="w-4.5 h-4.5 stroke-[3]" />
                 </div>
                 <div className="text-left pr-1">
-                  <div className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
+                  <div className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
                     Ready for Plans
                   </div>
-                  <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
+                  <div className="text-xs text-slate-500 font-medium leading-tight mt-0.5">
                     Turn products into subscription plans
                   </div>
                 </div>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] ml-auto shrink-0 self-start mt-0.5" />
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] ml-auto shrink-0 self-start mt-0.5" />
               </div>
 
               {/* S-curved Mint Connecting Spline with terminal dot */}
@@ -1112,13 +1117,13 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               className="relative z-10 flex flex-col items-center text-center max-w-2xl px-2"
             >
               {/* Badge: SUBSCRIPTION PLANS */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f3e8ff] border border-[#e9d5ff] text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-[#7c3aed] shadow-xs mb-2.5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f3e8ff] border border-[#e9d5ff] text-[11px] sm:text-xs font-bold tracking-wider uppercase text-[#7c3aed] shadow-xs mb-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#7c3aed]" />
                 <span>SUBSCRIPTION PLANS</span>
               </div>
 
               {/* Heading */}
-              <h2 className="text-3xl sm:text-4xl lg:text-[44px] xl:text-[48px] font-black tracking-[-0.035em] text-slate-950 leading-[1.08]">
+              <h2 className="text-4xl sm:text-5xl lg:text-[52px] xl:text-[58px] font-black tracking-[-0.035em] text-slate-950 leading-[1.06]">
                 Plans that fit <br />
                 <span className="bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">
                   your business.
@@ -1126,9 +1131,8 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               </h2>
 
               {/* Description */}
-              <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed text-center max-w-xl mt-2.5">
-                Turn your products into flexible subscription plans.{" "}
-                <br className="hidden sm:inline" />
+              <p className="text-sm sm:text-base text-slate-600 font-normal leading-relaxed text-center max-w-xl mt-2.5">
+                Turn your products into flexible subscription plans. <br className="hidden sm:inline" />
                 Set pricing, choose billing cycles and define the terms that work for your business.
               </p>
             </div>
@@ -1137,7 +1141,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             <div
               ref={billingToggleRef}
               style={{ opacity: 0 }}
-              className="relative z-10 inline-flex items-center p-1 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-inner mt-4 sm:mt-5 mb-5 sm:mb-6"
+              className="relative z-10 inline-flex items-center p-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-inner mt-4 sm:mt-5 mb-5 sm:mb-6"
             >
               {(["daily", "weekly", "monthly", "yearly"] as const).map((cycle) => {
                 const isActive = billingCycle === cycle;
@@ -1152,10 +1156,10 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     key={cycle}
                     type="button"
                     onClick={() => setBillingCycle(cycle)}
-                    className={`relative px-4 sm:px-5 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer ${
+                    className={`relative px-5 sm:px-6 py-2 rounded-full text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
                       isActive
                         ? "bg-white text-slate-900 font-bold shadow-sm"
-                        : "text-slate-500 font-medium hover:text-slate-800"
+                        : "text-slate-500 font-semibold hover:text-slate-800"
                     }`}
                   >
                     <span>{labels[cycle]}</span>
@@ -1173,84 +1177,50 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               <div
                 ref={planCardBasicRef}
                 style={{ opacity: 0 }}
-                className="rounded-[26px] sm:rounded-[28px] bg-[#0e121a] border border-white/10 p-6 sm:p-7 flex flex-col justify-between shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/20 group relative"
+                className="rounded-[28px] sm:rounded-[32px] bg-white border border-slate-200/90 p-6 sm:p-7 flex flex-col justify-between shadow-[0_10px_30px_-5px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-300 group relative text-left"
               >
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-2">Basic</h3>
-                  <div className="flex items-baseline gap-1.5 mb-2">
-                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">
-                      {planPrices.basic[billingCycle]}
-                    </span>
-                    <span className="text-xs text-slate-400 font-normal">
-                      /{intervalLabels[billingCycle]}
-                    </span>
+                  {/* Top: Icon + Plan Name */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700 shrink-0">
+                      <Box className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-base font-bold text-slate-900">Basic</span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-normal mb-5">
+
+                  <h3 className="text-2xl sm:text-[26px] font-black text-slate-950 tracking-tight mb-1">
+                    Get started
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 leading-normal mb-4">
                     Essential tools to get started.
                   </p>
 
-                  <div className="border-t border-white/10 my-4" />
-
-                  <ul className="space-y-3 mb-6">
-                    {["1 Product", "Basic Features", "Email Support"].map((feat) => (
-                      <li
-                        key={feat}
-                        className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium"
-                      >
-                        <div className="w-5 h-5 rounded-full bg-[#352758] border border-[#7c3aed]/40 text-[#c084fc] flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </div>
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <button
-                  type="button"
-                  className="w-full py-2.5 px-4 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/5 text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer"
-                >
-                  Choose Basic
-                </button>
-              </div>
-
-              {/* Card 2: Pro (HIGHLIGHTED) */}
-              <div
-                ref={planCardProRef}
-                style={{ opacity: 0 }}
-                className="relative rounded-[26px] sm:rounded-[28px] bg-gradient-to-b from-[#131742] via-[#0b0e27] to-[#070919] border-2 border-[#6366f1] p-6 sm:p-7 flex flex-col justify-between shadow-[0_20px_55px_-10px_rgba(99,102,241,0.5),0_0_35px_rgba(99,102,241,0.25)] md:-translate-y-2.5 z-20 transition-all duration-300 group"
-              >
-                {/* Floating "Most Popular" Badge */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-[#6366f1] via-[#7c3aed] to-[#8b5cf6] text-white text-[10px] font-bold tracking-wide uppercase shadow-[0_4px_12px_rgba(124,58,237,0.4)]">
-                    <Crown className="w-3 h-3 fill-white" />
-                    <span>Most Popular</span>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-2">Pro</h3>
-                  <div className="flex items-baseline gap-1.5 mb-2">
-                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">
-                      {planPrices.pro[billingCycle]}
+                  <div className="flex items-baseline gap-1.5 mb-5">
+                    <span className="text-4xl sm:text-5xl font-black text-slate-950 tracking-tight font-sans">
+                      {planPrices.basic[billingCycle]}
                     </span>
-                    <span className="text-xs text-slate-400 font-normal">
+                    <span className="text-sm sm:text-base text-slate-400 font-normal">
                       /{intervalLabels[billingCycle]}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-normal mb-5">
-                    Everything you need to grow.
-                  </p>
 
-                  <div className="border-t border-white/10 my-4" />
+                  <button
+                    type="button"
+                    className="w-full py-3 px-5 rounded-full border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm sm:text-base font-bold transition-all shadow-2xs cursor-pointer mb-5"
+                  >
+                    Choose Basic
+                  </button>
 
-                  <ul className="space-y-3 mb-6">
-                    {["Up to 10 Products", "Advanced Features", "Priority Support"].map((feat) => (
-                      <li
-                        key={feat}
-                        className="flex items-center gap-3 text-xs sm:text-sm text-white font-medium"
-                      >
-                        <div className="w-5 h-5 rounded-full bg-[#3d2c6e] border border-[#8b5cf6]/50 text-[#c084fc] flex items-center justify-center shrink-0">
+                  <div className="border-t border-slate-100 mb-5" />
+
+                  <ul className="space-y-3">
+                    {[
+                      "1 Product",
+                      "Basic Features",
+                      "Email Support",
+                    ].map((feat) => (
+                      <li key={feat} className="flex items-center gap-3 text-sm sm:text-[15px] text-slate-700 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                           <Check className="w-3 h-3 stroke-[3]" />
                         </div>
                         <span>{feat}</span>
@@ -1258,60 +1228,125 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     ))}
                   </ul>
                 </div>
+              </div>
 
-                <button
-                  type="button"
-                  className="w-full py-2.5 px-4 rounded-full bg-white hover:bg-slate-100 text-slate-950 text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-98 cursor-pointer"
-                >
-                  Choose Pro
-                </button>
+              {/* Card 2: Pro (HIGHLIGHTED - RECOMMENDED) */}
+              <div
+                ref={planCardProRef}
+                style={{ opacity: 0 }}
+                className="relative rounded-[28px] sm:rounded-[32px] bg-[#f5f8ff] border-2 border-[#3b82f6] p-6 sm:p-7 flex flex-col justify-between shadow-[0_20px_45px_-10px_rgba(37,99,235,0.18),0_4px_16px_rgba(37,99,235,0.06)] md:-translate-y-2 z-20 transition-all duration-300 group text-left"
+              >
+                <div>
+                  {/* Top: Icon + Plan Name + RECOMMENDED Badge */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-100/80 flex items-center justify-center text-[#2563eb] shrink-0">
+                        <Rocket className="w-5 h-5 stroke-[2.2]" />
+                      </div>
+                      <span className="text-base font-bold text-slate-900">Pro</span>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-100/90 text-[#1d4ed8] text-[10px] font-bold tracking-wider uppercase">
+                      RECOMMENDED
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl sm:text-[26px] font-black text-slate-950 tracking-tight mb-1">
+                    Grow with confidence
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 leading-normal mb-4">
+                    Everything you need to grow.
+                  </p>
+
+                  <div className="flex items-baseline gap-1.5 mb-5">
+                    <span className="text-4xl sm:text-5xl font-black text-slate-950 tracking-tight font-sans">
+                      {planPrices.pro[billingCycle]}
+                    </span>
+                    <span className="text-sm sm:text-base text-slate-500 font-normal">
+                      /{intervalLabels[billingCycle]}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="w-full py-3 px-5 rounded-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm sm:text-base font-bold shadow-md hover:shadow-lg transition-all active:scale-98 cursor-pointer mb-5"
+                  >
+                    Choose Pro
+                  </button>
+
+                  <div className="border-t border-blue-200/50 mb-5" />
+
+                  <ul className="space-y-3">
+                    {[
+                      "Up to 10 Products",
+                      "Advanced Features",
+                      "Priority Support",
+                    ].map((feat) => (
+                      <li key={feat} className="flex items-center gap-3 text-sm sm:text-[15px] text-slate-800 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
               {/* Card 3: Business */}
               <div
                 ref={planCardBusinessRef}
                 style={{ opacity: 0 }}
-                className="rounded-[26px] sm:rounded-[28px] bg-[#0e121a] border border-white/10 p-6 sm:p-7 flex flex-col justify-between shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/20 group relative"
+                className="rounded-[28px] sm:rounded-[32px] bg-white border border-slate-200/90 p-6 sm:p-7 flex flex-col justify-between shadow-[0_10px_30px_-5px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.08)] transition-all duration-300 group relative text-left"
               >
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-2">Business</h3>
-                  <div className="flex items-baseline gap-1.5 mb-2">
-                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">
-                      {planPrices.business[billingCycle]}
-                    </span>
-                    <span className="text-xs text-slate-400 font-normal">
-                      /{intervalLabels[billingCycle]}
-                    </span>
+                  {/* Top: Icon + Plan Name */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-[#4f46e5] shrink-0">
+                      <Briefcase className="w-5 h-5 stroke-[2.2]" />
+                    </div>
+                    <span className="text-base font-bold text-slate-900">Business</span>
                   </div>
-                  <p className="text-xs text-slate-400 leading-normal mb-5">
+
+                  <h3 className="text-2xl sm:text-[26px] font-black text-slate-950 tracking-tight mb-1">
+                    Built for scale
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 leading-normal mb-4">
                     Built for large businesses.
                   </p>
 
-                  <div className="border-t border-white/10 my-4" />
+                  <div className="flex items-baseline gap-1.5 mb-5">
+                    <span className="text-4xl sm:text-5xl font-black text-slate-950 tracking-tight font-sans">
+                      {planPrices.business[billingCycle]}
+                    </span>
+                    <span className="text-sm sm:text-base text-slate-400 font-normal">
+                      /{intervalLabels[billingCycle]}
+                    </span>
+                  </div>
 
-                  <ul className="space-y-3 mb-6">
-                    {["Unlimited Products", "Advanced Features", "Dedicated Support"].map(
-                      (feat) => (
-                        <li
-                          key={feat}
-                          className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium"
-                        >
-                          <div className="w-5 h-5 rounded-full bg-[#352758] border border-[#7c3aed]/40 text-[#c084fc] flex items-center justify-center shrink-0">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                          <span>{feat}</span>
-                        </li>
-                      )
-                    )}
+                  <button
+                    type="button"
+                    className="w-full py-3 px-5 rounded-full border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-sm sm:text-base font-bold transition-all shadow-2xs cursor-pointer mb-5"
+                  >
+                    Choose Business
+                  </button>
+
+                  <div className="border-t border-slate-100 mb-5" />
+
+                  <ul className="space-y-3">
+                    {[
+                      "Unlimited Products",
+                      "Advanced Features",
+                      "Dedicated Support",
+                    ].map((feat) => (
+                      <li key={feat} className="flex items-center gap-3 text-sm sm:text-[15px] text-slate-700 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
-
-                <button
-                  type="button"
-                  className="w-full py-2.5 px-4 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/5 text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer"
-                >
-                  Choose Business
-                </button>
               </div>
             </div>
           </div>
