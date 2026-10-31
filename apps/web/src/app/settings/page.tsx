@@ -31,11 +31,11 @@ export default function WorkspaceSettingsPage() {
   const [activeTab, setActiveTab] = useState<"general" | "danger">("general");
 
   // Form states
-  const [name, setName] = useState("Brightloop Cloud Services");
-  const [slug, setSlug] = useState("brightloop-cloud");
+  const [name, setName] = useState("FlowGrid Cloud Services");
+  const [slug, setSlug] = useState("flowgrid-cloud");
   const [currency, setCurrency] = useState("USD");
   const [timezone, setTimezone] = useState("America/New_York");
-  const [billingEmail, setBillingEmail] = useState("billing@brightloop.com");
+  const [billingEmail, setBillingEmail] = useState("billing@flowgrid.com");
   const [taxId, setTaxId] = useState("US-94-8291044");
 
   // Danger zone states
@@ -186,7 +186,7 @@ export default function WorkspaceSettingsPage() {
                     Workspace URL Slug
                   </label>
                   <div className="flex items-center rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                    <span className="text-slate-400">brightloop.saas/</span>
+                    <span className="text-slate-400">flowgrid.io/</span>
                     <input
                       type="text"
                       value={slug}

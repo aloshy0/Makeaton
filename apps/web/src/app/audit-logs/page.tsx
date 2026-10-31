@@ -251,7 +251,7 @@ export default function AuditLogsPage() {
 
               <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-[11px] text-slate-600">
                 <span className="font-semibold text-slate-800">Tamper Seal:</span> This record is
-                verified by Brightloop cryptographically signed log stream. Alterations are rejected
+                verified by FlowGrid cryptographically signed log stream. Alterations are rejected
                 at the database level.
               </div>
             </div>

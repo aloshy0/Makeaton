@@ -80,8 +80,8 @@ export default function HostedCheckoutPage() {
             Payment Verified & Subscribed
           </Badge>
 
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">
-            Welcome to Brightloop Cloud!
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 mb-2 font-heading">
+            Welcome to FlowGrid Cloud!
           </h2>
 
           <p className="text-sm text-slate-600 mb-6">
@@ -133,11 +133,11 @@ export default function HostedCheckoutPage() {
         {/* Header Bar */}
         <div className="flex items-center justify-between pb-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold shadow-md shadow-indigo-500/20">
-              BL
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white font-bold font-heading shadow-md shadow-purple-500/20">
+              FG
             </div>
             <div>
-              <span className="text-sm font-bold text-slate-900 block">Brightloop Software</span>
+              <span className="text-sm font-bold text-slate-900 block font-heading">FlowGrid</span>
               <span className="text-xs text-slate-500">Secure Hosted Checkout Session</span>
             </div>
           </div>
@@ -213,7 +213,7 @@ export default function HostedCheckoutPage() {
               </div>
               <p>
                 Session <span className="font-mono text-slate-700">{sessionId}</span> is protected
-                by Brightloop’s multi-tenant isolation engine. No cross-organization leakage.
+                by FlowGrid’s multi-tenant isolation engine. No cross-organization leakage.
               </p>
             </div>
           </div>

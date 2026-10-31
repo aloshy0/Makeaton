@@ -33,7 +33,7 @@ export default function StaffPage() {
 
   const handlePrefill = () => {
     const id = Math.floor(Math.random() * 900) + 100;
-    setEmail(`operator${id}@brightloop.com`);
+    setEmail(`operator${id}@flowgrid.com`);
     setRole("STAFF");
   };
 
@@ -259,7 +259,7 @@ export default function StaffPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="teammate@brightloop.com"
+                    placeholder="teammate@flowgrid.com"
                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none"
                   />
                 </div>

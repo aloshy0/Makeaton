@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, KeyRound, ShieldCheck, ArrowRight, UserCheck } from "lucide-react";
 import { api } from "../../lib/api";
+import { useAccount } from "../../context/account-context";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("owner@brightloop.com");
+  const { switchContext } = useAccount();
+  const [email, setEmail] = useState("owner@flowgrid.com");
   const [password, setPassword] = useState("StrongPassword123!");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,13 @@ export default function LoginPage() {
       if (res.access && typeof window !== "undefined") {
         localStorage.setItem("access_token", res.access);
       }
-      router.push("/");
+      if (email.toLowerCase().includes("customer")) {
+        switchContext("PERSONAL");
+        router.push("/portal");
+      } else {
+        switchContext("PROFESSIONAL");
+        router.push("/dashboard");
+      }
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please try again.");
     } finally {
@@ -38,10 +46,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold text-xl shadow-lg shadow-indigo-600/30 mb-4">
-          BL
+        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-purple-600 text-white font-bold text-xl shadow-lg shadow-purple-600/30 mb-4 font-heading">
+          FG
         </div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Sign in to Brightloop SaaS</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-white font-heading">
+          Sign in to FlowGrid
+        </h2>
         <p className="mt-1 text-xs text-slate-400">
           Multi-tenant subscription management and external billing engine
         </p>
@@ -98,24 +108,24 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <button
                 type="button"
-                onClick={() => handleDemoLogin("owner@brightloop.com")}
-                className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 text-left hover:border-indigo-500 hover:text-indigo-300 transition-colors"
+                onClick={() => handleDemoLogin("owner@flowgrid.com")}
+                className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 text-left hover:border-purple-500 hover:text-purple-300 transition-colors"
               >
                 <span className="font-semibold text-slate-200 block">Workspace Owner</span>
                 <span className="text-[10px] text-slate-500">Full Business Authority</span>
               </button>
               <button
                 type="button"
-                onClick={() => handleDemoLogin("admin@brightloop.com")}
-                className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 text-left hover:border-indigo-500 hover:text-indigo-300 transition-colors"
+                onClick={() => handleDemoLogin("admin@flowgrid.com")}
+                className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 text-left hover:border-purple-500 hover:text-purple-300 transition-colors"
               >
                 <span className="font-semibold text-slate-200 block">Administrator</span>
                 <span className="text-[10px] text-slate-500">Operations & Staff</span>
               </button>
               <button
                 type="button"
-                onClick={() => handleDemoLogin("staff@brightloop.com")}
-                className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 text-left hover:border-indigo-500 hover:text-indigo-300 transition-colors"
+                onClick={() => handleDemoLogin("staff@flowgrid.com")}
+                className="rounded-lg border border-slate-800 bg-slate-950/60 p-2 text-left hover:border-purple-500 hover:text-purple-300 transition-colors"
               >
                 <span className="font-semibold text-slate-200 block">Internal Staff</span>
                 <span className="text-[10px] text-slate-500">Approval Protected</span>

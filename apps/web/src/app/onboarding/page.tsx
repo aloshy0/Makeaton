@@ -86,9 +86,9 @@ export default function OnboardingPage() {
                 Create Your Independent Business Workspace
               </h2>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Brightloop operates as a multi-tenant SaaS platform. Each workspace operates in
-                total data isolation with its own products, subscription plans, staff members,
-                automated invoices, and external API credentials.
+                FlowGrid operates as a multi-tenant SaaS platform. Each workspace operates in total
+                data isolation with its own products, subscription plans, staff members, automated
+                invoices, and external API credentials.
               </p>
               <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-2 text-xs text-slate-300">
                 <div className="flex items-center gap-2 text-indigo-400 font-semibold">

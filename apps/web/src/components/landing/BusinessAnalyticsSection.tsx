@@ -27,10 +27,10 @@ export function BusinessAnalyticsSection() {
   const lineChartPathRef = useRef<SVGPathElement>(null);
   const distBarRef = useRef<HTMLDivElement>(null);
   const paymentTransferPillRef = useRef<HTMLDivElement>(null);
-  const mrrCounterRef = useRef<HTMLSpanElement>(null);
-  const subsCounterRef = useRef<HTMLSpanElement>(null);
-  const paymentsCounterRef = useRef<HTMLSpanElement>(null);
-  const invoicesCounterRef = useRef<HTMLSpanElement>(null);
+  const mrrCounterRef = useRef<HTMLDivElement>(null);
+  const subsCounterRef = useRef<HTMLDivElement>(null);
+  const paymentsCounterRef = useRef<HTMLDivElement>(null);
+  const invoicesCounterRef = useRef<HTMLDivElement>(null);
   const notif1Ref = useRef<HTMLDivElement>(null);
   const notif2Ref = useRef<HTMLDivElement>(null);
   const splineRef = useRef<SVGPathElement>(null);

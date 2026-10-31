@@ -145,8 +145,8 @@ export function FinalCtaFooterSection() {
             {/* CTA Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white text-slate-950 text-sm font-bold hover:bg-slate-100 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] active:scale-95 group cursor-pointer"
+                href="/register"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-white text-slate-950 text-sm font-bold hover:bg-slate-100 transition-all shadow-[0_10px_30px_rgba(255,255,255,0.2)] active:scale-95 group cursor-pointer font-heading"
               >
                 <span>Get Started</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -355,7 +355,7 @@ export function FinalCtaFooterSection() {
               <ul className="space-y-2 text-xs text-slate-400">
                 <li>
                   <Link
-                    href="/dashboard"
+                    href="/login"
                     className="hover:text-white transition-colors font-semibold text-white"
                   >
                     Login
@@ -363,7 +363,7 @@ export function FinalCtaFooterSection() {
                 </li>
                 <li>
                   <Link
-                    href="/dashboard"
+                    href="/register"
                     className="hover:text-white transition-colors font-semibold text-white"
                   >
                     Sign up

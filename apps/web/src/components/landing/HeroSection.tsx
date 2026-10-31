@@ -20,7 +20,14 @@ import {
   ShieldCheck,
   Sparkles,
   Crown,
+  UserCheck,
+  Building2,
+  Users,
+  Compass,
+  X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAccount } from "../../context/account-context";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -30,6 +37,9 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ mode, setMode }: HeroSectionProps) {
+  const router = useRouter();
+  const { switchContext, switchWorkspace, memberships } = useAccount();
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const pinSectionRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -643,19 +653,28 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
             {/* Subtitle Description */}
             <p className="text-base sm:text-lg text-slate-500 font-normal leading-relaxed max-w-lg">
-              Manage subscriptions, automate recurring billing and keep every payment on track. All
-              from one unified platform.
+              Manage subscriptions, recurring billing, products, customers and payments from one
+              connected platform.
             </p>
 
             {/* CTAs Row */}
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-slate-800 transition-all shadow-md active:scale-95 group"
+                href="/register"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-slate-800 transition-all shadow-md active:scale-95 group font-heading"
               >
-                <span>Get started</span>
+                <span>Get Started</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
+
+              <button
+                type="button"
+                onClick={() => setIsDemoModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-sm font-semibold transition-all shadow-xs active:scale-95 group"
+              >
+                <Compass className="w-4 h-4 text-purple-600" />
+                <span>Explore Demo</span>
+              </button>
 
               <button
                 type="button"
@@ -665,12 +684,12 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     target.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-sm font-semibold transition-all shadow-xs active:scale-95 group"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-sm font-semibold transition-all shadow-xs active:scale-95 group"
               >
                 <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
                   <Play className="w-2.5 h-2.5 fill-slate-800 text-slate-800 ml-0.5" />
                 </div>
-                <span>Watch demo</span>
+                <span>Watch Demo</span>
               </button>
             </div>
 
@@ -1317,6 +1336,159 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           </div>
         </div>
       </div>
+
+      {/* Explore Demo Modal */}
+      {isDemoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="relative w-full max-w-lg rounded-3xl bg-white p-7 sm:p-8 shadow-2xl border border-slate-100">
+            <button
+              onClick={() => setIsDemoModalOpen(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-slate-800 p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
+                Live Prototype Demo
+              </span>
+            </div>
+
+            <h3 className="text-xl font-heading font-extrabold text-[#0B1020]">
+              Explore FlowGrid Environment
+            </h3>
+            <p className="text-xs text-[#64748B] mt-1 mb-6">
+              Select an account persona below to instantly experience FlowGrid without manual
+              registration.
+            </p>
+
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => {
+                  switchContext("PROFESSIONAL");
+                  if (memberships[0]?.workspace_details) {
+                    switchWorkspace(memberships[0].workspace_details);
+                  }
+                  setIsDemoModalOpen(false);
+                  router.push("/dashboard");
+                }}
+                className="w-full text-left p-3.5 rounded-2xl border border-purple-200 bg-purple-50/50 hover:bg-purple-100/60 transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shadow-xs">
+                    <Crown className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading font-bold text-sm text-[#0B1020]">
+                        Workspace Owner
+                      </span>
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                        Full Authority
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-0.5">
+                      Financial KPIs, billing cycles, quotas, and business settings
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-purple-600 transition-transform group-hover:translate-x-1 shrink-0 ml-2" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  switchContext("PROFESSIONAL");
+                  setIsDemoModalOpen(false);
+                  router.push("/dashboard");
+                }}
+                className="w-full text-left p-3.5 rounded-2xl border border-blue-200 bg-blue-50/40 hover:bg-blue-100/60 transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading font-bold text-sm text-[#0B1020]">
+                        Administrator
+                      </span>
+                      <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                        Operations
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-0.5">
+                      Manage catalog, issue quotations, review invoices & staff
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-blue-600 transition-transform group-hover:translate-x-1 shrink-0 ml-2" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  switchContext("PROFESSIONAL");
+                  setIsDemoModalOpen(false);
+                  router.push("/dashboard");
+                }}
+                className="w-full text-left p-3.5 rounded-2xl border border-slate-200 bg-slate-50/70 hover:bg-slate-100 transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-slate-800 text-white flex items-center justify-center shadow-xs">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading font-bold text-sm text-[#0B1020]">
+                        Operational Staff
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-700 bg-slate-200 px-2 py-0.5 rounded-full">
+                        Task Scoped
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-0.5">
+                      Assigned subscriptions, customers, and approval requests
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-slate-600 transition-transform group-hover:translate-x-1 shrink-0 ml-2" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  switchContext("PERSONAL");
+                  setIsDemoModalOpen(false);
+                  router.push("/portal");
+                }}
+                className="w-full text-left p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-100/60 transition-all flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading font-bold text-sm text-[#0B1020]">
+                        Personal Customer
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                        Self-Service
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#64748B] mt-0.5">
+                      Active subscriptions, remaining quota gauges, renewals & receipts
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-emerald-600 transition-transform group-hover:translate-x-1 shrink-0 ml-2" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -16,7 +16,25 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-sans)", "Inter", "sans-serif"],
+        heading: ["var(--font-heading)", "Manrope", "sans-serif"],
+      },
       colors: {
+        flowgrid: {
+          bg: "#FFFFFF",
+          soft: "#F8F9FC",
+          text: "#0B1020",
+          muted: "#64748B",
+          border: "#E8ECF3",
+          purple: "#7651F5",
+          blue: "#4387F7",
+          cyan: "#11B9D4",
+          success: "#12A879",
+          warning: "#D99028",
+          error: "#DC5555",
+          nav: "#111827",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

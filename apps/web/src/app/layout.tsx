@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { Providers } from "../components/providers";
 import { AppShell } from "../components/layout/app-shell";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-heading" });
 
 export const metadata: Metadata = {
   title: "FlowGrid — Keep your business in flow.",
@@ -18,8 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased bg-slate-50 text-slate-800">
+    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
+      <body className="font-sans antialiased bg-[#F8F9FC] text-[#0B1020]">
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>
