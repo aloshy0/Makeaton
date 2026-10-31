@@ -6,6 +6,9 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    owned_workspaces_count = serializers.SerializerMethodField()
+    available_workspace_slots = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
@@ -16,9 +19,18 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "phone",
             "is_active",
+            "owned_workspaces_count",
+            "available_workspace_slots",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+    def get_owned_workspaces_count(self, obj):
+        return obj.owned_workspaces.filter(is_active=True).count()
+
+    def get_available_workspace_slots(self, obj):
+        count = self.get_owned_workspaces_count(obj)
+        return max(0, 5 - count)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -30,22 +42,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ["email", "password", "first_name", "last_name", "phone", "company_name"]
 
     def create(self, validated_data):
-        company_name = validated_data.pop("company_name", "")
+        company_name = validated_data.pop("company_name", "").strip()
         password = validated_data.pop("password")
         user = User.objects.create_user(role=User.Role.CUSTOMER, **validated_data)
         user.set_password(password)
         user.save()
 
-        # Automatically create customer profile
-        from apps.customers.models import Customer
+        # If business name supplied during "Start Your Business", bootstrap initial workspace
+        if company_name:
+            from apps.workspaces.models import Workspace
 
-        Customer.objects.create(
-            user=user,
-            email=user.email,
-            company_name=company_name or f"{user.first_name}'s Account"
-            if user.first_name
-            else user.email,
-            contact_name=f"{user.first_name} {user.last_name}".strip() or user.email,
-            phone=user.phone or "",
-        )
+            Workspace.objects.create(
+                name=company_name,
+                owner=user,
+            )
+
         return user

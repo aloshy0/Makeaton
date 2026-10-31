@@ -10,32 +10,50 @@ export type BadgeVariant =
   | "closed"
   | "cancelled"
   | "overdue"
+  | "past_due"
+  | "expired"
   | "paid"
-  | "outline";
+  | "outline"
+  | "secondary"
+  | "danger"
+  | "warning"
+  | "success";
 
 const variantStyles: Record<BadgeVariant, string> = {
   active: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+  success: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
   confirmed: "bg-blue-50 text-blue-700 border-blue-200/80",
   quotation: "bg-indigo-50 text-indigo-700 border-indigo-200/80",
   draft: "bg-slate-100 text-slate-700 border-slate-200/80",
+  secondary: "bg-slate-100 text-slate-700 border-slate-200/80",
   paused: "bg-amber-50 text-amber-700 border-amber-200/80",
+  warning: "bg-amber-50 text-amber-700 border-amber-200/80",
   closed: "bg-slate-100 text-slate-600 border-slate-200/80",
   cancelled: "bg-slate-100 text-slate-600 border-slate-200/80",
   overdue: "bg-rose-50 text-rose-700 border-rose-200/80",
+  past_due: "bg-rose-50 text-rose-700 border-rose-200/80",
+  expired: "bg-slate-100 text-slate-600 border-slate-200/80",
+  danger: "bg-rose-50 text-rose-700 border-rose-200/80",
   paid: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
   outline: "text-slate-700 border-slate-200 bg-transparent",
 };
 
 const dotColors: Record<BadgeVariant, string> = {
   active: "bg-emerald-500",
+  success: "bg-emerald-500",
   paid: "bg-emerald-500",
   confirmed: "bg-blue-500",
   quotation: "bg-indigo-500",
   draft: "bg-slate-400",
+  secondary: "bg-slate-400",
   paused: "bg-amber-500",
+  warning: "bg-amber-500",
   closed: "bg-slate-400",
   cancelled: "bg-slate-400",
   overdue: "bg-rose-500",
+  past_due: "bg-rose-500",
+  expired: "bg-slate-400",
+  danger: "bg-rose-500",
   outline: "bg-slate-400",
 };
 
@@ -44,7 +62,13 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   withDot?: boolean;
 }
 
-export function Badge({ className, variant = "draft", withDot = true, children, ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant = "draft",
+  withDot = true,
+  children,
+  ...props
+}: BadgeProps) {
   const currentVariant = variant || "draft";
   const styles = variantStyles[currentVariant] || variantStyles.draft;
   const dotColor = dotColors[currentVariant] || dotColors.draft;

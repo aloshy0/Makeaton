@@ -12,6 +12,10 @@ import {
   Receipt,
   CheckCircle2,
   X,
+  Building2,
+  ShieldCheck,
+  Sparkles,
+  Layers,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -31,32 +35,49 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/card";
 import { Invoice } from "../types";
+import { CreateWorkspaceDialog } from "../components/layout/create-workspace-dialog";
 
 export default function DashboardPage() {
   const queryClient = useQueryClient();
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(
+    "aac3abe7-18b7-4c5f-a29e-786b63476459"
+  );
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<"register" | "login">("register");
+
+  // Auth form state
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authCompanyName, setAuthCompanyName] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+
+  // Modal payment state
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState("credit_card");
 
+  // Fetch metrics for the active workspace
   const { data: metrics, isLoading: metricsLoading } = useQuery({
-    queryKey: ["dashboardMetrics"],
-    queryFn: api.getDashboard,
+    queryKey: ["dashboardMetrics", activeWorkspaceId],
+    queryFn: () => api.getDashboard(activeWorkspaceId),
     refetchInterval: 15000,
   });
 
   const { data: subscriptions = [], isLoading: subsLoading } = useQuery({
-    queryKey: ["subscriptions", "recent"],
-    queryFn: () => api.getSubscriptions(),
+    queryKey: ["subscriptions", activeWorkspaceId],
+    queryFn: () => api.getSubscriptions(activeWorkspaceId),
   });
 
   const { data: overdueInvoices = [] } = useQuery({
-    queryKey: ["invoices", "overdue"],
-    queryFn: () => api.getInvoices(true),
+    queryKey: ["invoices", "overdue", activeWorkspaceId],
+    queryFn: () => api.getInvoices(activeWorkspaceId, true),
   });
 
   const paymentMutation = useMutation({
     mutationFn: (data: { invoice: string; amount: string; payment_method: string }) =>
-      api.recordPayment(data),
+      api.recordPayment(activeWorkspaceId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dashboardMetrics"] });
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
@@ -65,386 +86,502 @@ export default function DashboardPage() {
     },
   });
 
-  const handleRecordPayment = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInvoice || !paymentAmount) return;
-    paymentMutation.mutate({
-      invoice: selectedInvoice.id,
-      amount: paymentAmount,
-      payment_method: paymentMethod,
-    });
+    setAuthError(null);
+    setAuthSuccess(null);
+
+    try {
+      if (authMode === "register") {
+        await api.register({
+          email: authEmail,
+          password: authPassword,
+          company_name: authCompanyName,
+        });
+        setAuthSuccess("Account created successfully! Your workspace has been initialized.");
+      } else {
+        const res = await api.login({
+          email: authEmail,
+          password: authPassword,
+        });
+        setAuthSuccess(`Welcome back, ${res.user.first_name || res.user.email}!`);
+      }
+    } catch (err: any) {
+      setAuthError(err.message || "Authentication failed. Check your credentials.");
+    }
   };
 
-  const kpis = metrics?.kpis;
+  const handleQuickLogin = (email: string, pass: string) => {
+    setAuthEmail(email);
+    setAuthPassword(pass);
+    setAuthMode("login");
+  };
 
   return (
-    <div className="space-y-8">
-      {/* Top Banner / Welcome */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Subscription Operations Overview
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Real-time telemetry, revenue recognition, and invoice collection status.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/subscriptions">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <span>View All Subscriptions</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
-        </div>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* 1. Official Multi-Tenant Hero Section */}
+      <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 p-6 sm:p-8 shadow-2xl">
+        <div className="relative z-10 max-w-3xl space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-400 border border-indigo-500/20">
+              <Sparkles className="h-3.5 w-3.5" />
+              Multi-Tenant SaaS Platform
+            </span>
+            <span className="rounded-full bg-slate-800/80 px-2.5 py-0.5 text-xs text-slate-300">
+              5 Workspaces per Creator
+            </span>
+            <span className="rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 px-2.5 py-0.5 text-xs">
+              Idempotent Engine
+            </span>
+          </div>
 
-      {/* Financial KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
+            Run Your Subscription Business. All in One Place.
+          </h1>
+
+          <p className="text-sm leading-relaxed text-slate-300 sm:text-base">
+            Launch and operate up to five independent subscription business workspaces. Configure
+            products, attribute variants, and recurring billing plans, invite staff with permission
+            guardrails, and collect automated revenue with sub-2-second insights.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              onClick={() => {
+                setAuthMode("register");
+                setIsAuthModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition-all hover:bg-indigo-500 hover:shadow-indigo-600/50"
+            >
+              <Building2 className="h-4 w-4" />
+              Start Your Business
+            </button>
+
+            <button
+              onClick={() => {
+                setAuthMode("login");
+                setIsAuthModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 py-3 text-sm font-semibold text-slate-200 transition-colors hover:bg-slate-700 hover:text-white"
+            >
+              Sign In
+            </button>
+
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-500/30 bg-indigo-950/30 px-4 py-3 text-sm font-medium text-indigo-300 hover:bg-indigo-900/40"
+            >
+              + Create New Workspace
+            </button>
+          </div>
+        </div>
+
+        {/* Workspace Context Ribbon */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/80 pt-4 text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400">Active Workspace:</span>
+            <span className="font-bold text-white">Brightloop Cloud Services</span>
+            <span className="rounded bg-indigo-500/20 px-2 py-0.5 text-[10px] font-semibold text-indigo-300">
+              OWNER (Alexander)
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div>
+              Creator Slots: <strong className="text-indigo-400 font-semibold">2 of 5</strong> used
+            </div>
+            <div>
+              Response SLA: <strong className="text-emerald-400 font-semibold">&lt; 2.0s</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Executive KPI Summary Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Monthly Recurring Revenue"
-          value={metricsLoading ? "..." : formatCurrency(kpis?.mrr)}
-          subtitle="ARR: "
-          trend={{ value: `${formatCurrency(kpis?.arr)} annualized`, isPositive: true }}
-          icon={<DollarSign className="h-4 w-4" />}
-          highlight
+          value={metrics ? formatCurrency(metrics.mrr) : "$0.00"}
+          subtitle="Active monthly run-rate"
+          icon={<DollarSign className="h-5 w-5 text-indigo-400" />}
+          trend={{ value: "+12.4%", label: "vs last month", isPositive: true }}
+          loading={metricsLoading}
         />
-
+        <StatCard
+          title="Annual Recurring Revenue"
+          value={metrics ? formatCurrency(metrics.arr) : "$0.00"}
+          subtitle="12-month projection"
+          icon={<TrendingUp className="h-5 w-5 text-emerald-400" />}
+          loading={metricsLoading}
+        />
         <StatCard
           title="Active Subscriptions"
-          value={metricsLoading ? "..." : (kpis?.active_subscriptions ?? 0)}
-          subtitle={`Out of ${kpis?.total_subscriptions ?? 0} total contracted`}
-          icon={<Repeat className="h-4 w-4" />}
+          value={metrics?.active_subscriptions ?? 0}
+          subtitle={`Across ${metrics?.total_subscriptions ?? 0} total contracts`}
+          icon={<Repeat className="h-5 w-5 text-sky-400" />}
+          loading={metricsLoading}
         />
-
         <StatCard
-          title="Total Collected Revenue"
-          value={metricsLoading ? "..." : formatCurrency(kpis?.total_revenue_collected)}
-          subtitle="Settled & reconciled"
-          trend={{ value: "+99.2% match", isPositive: true }}
-          icon={<CreditCard className="h-4 w-4" />}
-        />
-
-        <StatCard
-          title="Overdue Outstanding"
-          value={metricsLoading ? "..." : formatCurrency(kpis?.overdue_amount)}
-          subtitle={`${kpis?.overdue_invoices_count ?? 0} invoices requiring chase`}
-          trend={
-            (kpis?.overdue_invoices_count ?? 0) > 0
-              ? { value: "Action Required", isPositive: false }
-              : { value: "All Caught Up", isPositive: true }
-          }
-          icon={<AlertTriangle className="h-4 w-4" />}
+          title="Overdue Receivables"
+          value={metrics ? formatCurrency(metrics.total_overdue_amount) : "$0.00"}
+          subtitle={`${metrics?.overdue_invoices_count ?? 0} overdue invoices`}
+          icon={<AlertTriangle className="h-5 w-5 text-rose-400" />}
+          variant={metrics && metrics.total_overdue_amount > 0 ? "warning" : "default"}
+          loading={metricsLoading}
         />
       </div>
 
-      {/* Revenue Trend Chart & Lifecycle Distribution */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 3. Analytics Chart & Overdue Alerts */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Cashflow Trends */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Revenue Recognition & Cash Flow</CardTitle>
+                <CardTitle>Cash Flow & Collected Revenue</CardTitle>
                 <CardDescription>
-                  Monthly collections trajectory across all billing cycles
+                  Reconciled payments processed over the past 6 months
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                <TrendingUp className="h-3.5 w-3.5" />
-                <span>Healthy Cashflow</span>
-              </div>
+              <Badge variant="outline" className="border-indigo-500/30 text-indigo-400">
+                Live SQL Aggregation
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-[280px] w-full pt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={metrics?.revenue_trend || []}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: "#64748b", fontSize: 12 }}
-                    tickFormatter={(v) => `$${v}`}
-                  />
-                  <Tooltip
-                    formatter={(val: number) => [formatCurrency(val), "Revenue"]}
-                    contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "#1e293b",
-                      borderRadius: "8px",
-                      color: "#fff",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#4f46e5"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#revenueGrad)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="h-72 w-full">
+              {metrics?.cashflow_trends ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={metrics.cashflow_trends}>
+                    <defs>
+                      <linearGradient id="cashflowGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis dataKey="month" stroke="#64748b" fontSize={12} tickLine={false} />
+                    <YAxis
+                      stroke="#64748b"
+                      fontSize={12}
+                      tickLine={false}
+                      tickFormatter={(val) => `$${val}`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        borderColor: "#334155",
+                        borderRadius: "8px",
+                      }}
+                      formatter={(value: any) => [`$${value}`, "Collected Revenue"]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="#6366f1"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#cashflowGrad)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-slate-500">
+                  Loading telemetry...
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Subscription Lifecycle Distribution */}
+        {/* Real-Time Overdue Watchlist */}
         <Card>
           <CardHeader>
-            <CardTitle>Lifecycle Status Matrix</CardTitle>
-            <CardDescription>Current state of subscription pipeline</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-2">
-            {[
-              {
-                label: "Active Billing",
-                count: metrics?.status_distribution.active ?? 0,
-                variant: "active" as const,
-              },
-              {
-                label: "Pending Quotations",
-                count: metrics?.status_distribution.quotation ?? 0,
-                variant: "quotation" as const,
-              },
-              {
-                label: "Paused Subscriptions",
-                count: metrics?.status_distribution.paused ?? 0,
-                variant: "paused" as const,
-              },
-              {
-                label: "Closed / Terminated",
-                count: metrics?.status_distribution.closed ?? 0,
-                variant: "closed" as const,
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100"
-              >
-                <div className="flex items-center gap-2">
-                  <Badge variant={item.variant} withDot={false}>
-                    {item.label}
-                  </Badge>
-                </div>
-                <span className="font-mono text-sm font-bold text-slate-900">{item.count}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Two Column Section: Overdue Invoices Alert & Recent Subscriptions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Overdue Invoices */}
-        <Card className="border-rose-200/80 bg-white">
-          <CardHeader className="border-b border-rose-100 bg-rose-50/30">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-rose-600" />
-                <CardTitle className="text-rose-950">Overdue Invoices Requiring Chase</CardTitle>
-              </div>
-              <Badge variant="overdue">{overdueInvoices.length} Overdue</Badge>
+              <CardTitle className="text-base">Overdue Invoices</CardTitle>
+              <Badge variant="danger">{overdueInvoices.length} Attention</Badge>
             </div>
+            <CardDescription>Invoices with open balances past due date</CardDescription>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="space-y-3">
             {overdueInvoices.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
-                <CheckCircle2 className="h-6 w-6 text-emerald-500 mx-auto mb-2" />
-                No overdue invoices. All accounts receivable are settled.
+              <div className="flex flex-col items-center justify-center py-8 text-center text-slate-500">
+                <CheckCircle2 className="h-10 w-10 text-emerald-500/50 mb-2" />
+                <p className="text-sm font-medium text-slate-300">All Accounts Settled</p>
+                <p className="text-xs">No overdue receivables in this workspace.</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
-                {overdueInvoices.map((inv) => (
-                  <div
-                    key={inv.id}
-                    className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-slate-900">
-                          {inv.invoice_number}
-                        </span>
-                        <span className="text-xs text-slate-600 font-medium">
-                          {inv.customer_details?.company_name}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">
-                        Due: {formatDate(inv.due_date)} • Balance:{" "}
-                        <span className="text-rose-600 font-semibold">
-                          {formatCurrency(inv.outstanding_balance)}
-                        </span>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
+              overdueInvoices.slice(0, 4).map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between rounded-lg border border-slate-800/80 bg-slate-900/50 p-3 text-xs"
+                >
+                  <div>
+                    <span className="font-semibold text-slate-200 block">
+                      {inv.customer_details?.company_name || "Customer"}
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {inv.invoice_number} • Due {formatDate(inv.due_date)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold text-rose-400 block">
+                      {formatCurrency(inv.outstanding_balance)}
+                    </span>
+                    <button
                       onClick={() => {
                         setSelectedInvoice(inv);
                         setPaymentAmount(inv.outstanding_balance);
                       }}
-                      className="text-xs border-rose-200 text-rose-700 hover:bg-rose-50"
+                      className="text-[10px] text-indigo-400 hover:text-indigo-300 underline font-medium"
                     >
-                      Record Payment
-                    </Button>
+                      Record Pay
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Subscriptions */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Subscriptions</CardTitle>
-              <Link
-                href="/subscriptions"
-                className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
-              >
-                View all &rarr;
-              </Link>
-            </div>
-            <CardDescription>Latest contracted accounts and state progression</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {subsLoading ? (
-              <div className="p-6 text-center text-sm text-slate-400">Loading subscriptions...</div>
-            ) : subscriptions.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
-                No subscriptions created yet.
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {subscriptions.slice(0, 5).map((sub) => (
-                  <div
-                    key={sub.id}
-                    className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-slate-900">
-                          {sub.subscription_number}
-                        </span>
-                        <Badge variant={sub.status}>{sub.status}</Badge>
-                      </div>
-                      <div className="text-[11px] text-slate-500 mt-1">
-                        {sub.customer_details?.company_name} • Plan: {sub.plan_details?.name}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-xs font-bold text-slate-900">
-                        {formatCurrency(sub.total_amount)}
-                      </div>
-                      <div className="text-[10px] text-slate-400">
-                        {sub.plan_details?.billing_frequency}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <Link
+              href="/invoices"
+              className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 pt-2"
+            >
+              <span>View All Invoices</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </CardContent>
         </Card>
       </div>
 
-      {/* Record Payment Dialog */}
-      {selectedInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl border border-slate-200 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <Receipt className="h-5 w-5 text-indigo-600" />
-                <h3 className="text-base font-semibold text-slate-900">Record Incoming Payment</h3>
+      {/* 4. Active Subscriptions List */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Active Subscriptions</CardTitle>
+              <CardDescription>Live contracts in workspace</CardDescription>
+            </div>
+            <Link href="/subscriptions">
+              <Button variant="outline" size="sm">
+                View All Contracts
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-slate-800 text-[10px] uppercase tracking-wider text-slate-400">
+                <tr>
+                  <th className="pb-3 font-semibold">Contract</th>
+                  <th className="pb-3 font-semibold">Customer</th>
+                  <th className="pb-3 font-semibold">Plan</th>
+                  <th className="pb-3 font-semibold">Billing Frequency</th>
+                  <th className="pb-3 font-semibold">Next Invoice</th>
+                  <th className="pb-3 font-semibold">Recurring Total</th>
+                  <th className="pb-3 font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                {subsLoading ? (
+                  <tr>
+                    <td colSpan={7} className="py-6 text-center text-slate-500">
+                      Loading subscriptions...
+                    </td>
+                  </tr>
+                ) : subscriptions.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-6 text-center text-slate-500">
+                      No subscriptions found in this workspace.
+                    </td>
+                  </tr>
+                ) : (
+                  subscriptions.slice(0, 5).map((sub) => (
+                    <tr key={sub.id} className="hover:bg-slate-900/40">
+                      <td className="py-3 font-mono font-medium text-indigo-400">
+                        {sub.subscription_number}
+                      </td>
+                      <td className="py-3 font-medium text-white">
+                        {sub.customer_details?.company_name || "Enterprise"}
+                      </td>
+                      <td className="py-3">{sub.plan_details?.name || "Tier"}</td>
+                      <td className="py-3 capitalize">
+                        {sub.plan_details?.billing_interval || "Monthly"}
+                      </td>
+                      <td className="py-3">{formatDate(sub.next_billing_date)}</td>
+                      <td className="py-3 font-semibold text-white">
+                        {formatCurrency(sub.total_amount)}
+                      </td>
+                      <td className="py-3">
+                        <Badge
+                          variant={
+                            sub.status === "active"
+                              ? "success"
+                              : sub.status === "paused"
+                                ? "warning"
+                                : "secondary"
+                          }
+                        >
+                          {sub.status.toUpperCase()}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Auth Modal (Start Your Business / Sign In) */}
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-base font-semibold text-white">
+                  {authMode === "register"
+                    ? "Start Your Subscription Business"
+                    : "Sign In to Your Workspace"}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {authMode === "register"
+                    ? "Create an account and launch your first workspace"
+                    : "Access your business workspaces and operations"}
+                </p>
               </div>
               <button
-                onClick={() => setSelectedInvoice(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                onClick={() => setIsAuthModalOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleRecordPayment} className="mt-4 space-y-4">
-              <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">Invoice</label>
-                <div className="mt-1 font-mono text-sm font-semibold text-slate-900">
-                  {selectedInvoice.invoice_number} ({selectedInvoice.customer_details?.company_name}
-                  )
-                </div>
-                <div className="text-xs text-slate-500 mt-0.5">
-                  Outstanding:{" "}
-                  <span className="font-semibold text-rose-600">
-                    {formatCurrency(selectedInvoice.outstanding_balance)}
-                  </span>
-                </div>
+            {/* Quick Demo Login Helpers */}
+            <div className="my-3 rounded-lg bg-slate-950/70 p-3 border border-slate-800">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block mb-1.5">
+                Quick-Fill Demonstration Accounts:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin("admin@brightloop.com", "BrightloopAdmin2026!")}
+                  className="rounded bg-indigo-600/20 px-2 py-1 text-[11px] text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30"
+                >
+                  Admin Owner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin("staff@brightloop.com", "BrightloopStaff2026!")}
+                  className="rounded bg-slate-800 px-2 py-1 text-[11px] text-slate-300 hover:bg-slate-700"
+                >
+                  Staff (Limited)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleQuickLogin("customer@acme.com", "AcmeCustomer2026!")}
+                  className="rounded bg-emerald-950/40 text-emerald-300 px-2 py-1 text-[11px] border border-emerald-800/40 hover:bg-emerald-900/40"
+                >
+                  Customer Portal
+                </button>
               </div>
+            </div>
+
+            {authError && (
+              <div className="mb-3 rounded-lg bg-red-950/50 border border-red-800 p-2.5 text-xs text-red-200">
+                {authError}
+              </div>
+            )}
+            {authSuccess && (
+              <div className="mb-3 rounded-lg bg-emerald-950/50 border border-emerald-800 p-2.5 text-xs text-emerald-200">
+                {authSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleAuthSubmit} className="space-y-3.5">
+              {authMode === "register" && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                    Business Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Acme Subscription Services"
+                    value={authCompanyName}
+                    onChange={(e) => setAuthCompanyName(e.target.value)}
+                    className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                  />
+                </div>
+              )}
 
               <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">
-                  Amount Received ($)
+                <label className="block text-xs font-medium text-slate-300 mb-1">
+                  Email Address
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="email"
                   required
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-mono focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  placeholder="name@business.com"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">
-                  Payment Method
-                </label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                >
-                  <option value="bank_transfer">Bank Transfer (ACH / Wire)</option>
-                  <option value="credit_card">Credit Card</option>
-                  <option value="online">Online Payment</option>
-                  <option value="check">Company Check</option>
-                  <option value="cash">Cash</option>
-                </select>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Min 8 chars, Upper, Lower, Special"
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"
+                />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedInvoice(null)}
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full rounded-xl bg-indigo-600 py-2.5 text-xs font-semibold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-500"
                 >
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm" disabled={paymentMutation.isPending}>
-                  {paymentMutation.isPending ? "Recording..." : "Confirm & Settle"}
-                </Button>
+                  {authMode === "register"
+                    ? "Create Account & First Workspace"
+                    : "Sign In to Platform"}
+                </button>
+              </div>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode(authMode === "register" ? "login" : "register");
+                    setAuthError(null);
+                    setAuthSuccess(null);
+                  }}
+                  className="text-xs text-indigo-400 hover:underline"
+                >
+                  {authMode === "register"
+                    ? "Already have an account? Sign In"
+                    : "Don't have an account? Start Your Business"}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* Workspace Creation Dialog */}
+      <CreateWorkspaceDialog
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onWorkspaceCreated={(ws) => {
+          setActiveWorkspaceId(ws.id);
+          queryClient.invalidateQueries();
+        }}
+        ownedCount={2}
+      />
     </div>
   );
 }

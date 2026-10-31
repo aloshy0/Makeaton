@@ -5,25 +5,27 @@ from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.accounts.permissions import IsStaffOrAdmin
 from apps.billing.models import Invoice
+from apps.catalog.models import SubscriptionPlan
 from apps.payments.models import Payment
 from apps.subscriptions.models import Subscription
+from apps.workspaces.mixins import TenantScopedMixin
+from apps.workspaces.permissions import IsWorkspaceMember
 
 
-class DashboardMetricsView(APIView):
+class DashboardMetricsView(TenantScopedMixin, APIView):
     """
-    Consolidated Executive Reporting API:
+    Consolidated Workspace Executive Reporting API:
     Designed for sub-2-second response times with database-level aggregations.
     """
 
-    permission_classes = [IsStaffOrAdmin]
+    permission_classes = [IsWorkspaceMember]
 
-    def get(self, request):
+    def get(self, request, workspace_id):
         today = timezone.now().date()
 
         # 1. Subscriptions Aggregations
-        sub_stats = Subscription.objects.aggregate(
+        sub_stats = Subscription.objects.filter(workspace_id=workspace_id).aggregate(
             total_count=Count("id"),
             active_count=Count("id", filter=Q(status=Subscription.Status.ACTIVE)),
             paused_count=Count("id", filter=Q(status=Subscription.Status.PAUSED)),
@@ -35,28 +37,28 @@ class DashboardMetricsView(APIView):
         total_subscriptions = sub_stats["total_count"] or 0
         active_subscriptions = sub_stats["active_count"] or 0
 
-        # Calculate MRR based on active subscriptions billing intervals
-        # For performance, calculate via simple aggregation query
-        active_subs = Subscription.objects.filter(status=Subscription.Status.ACTIVE).values(
-            "plan__billing_frequency", "total_amount"
-        )
+        # Calculate MRR based on active subscriptions
+        active_subs = Subscription.objects.filter(
+            workspace_id=workspace_id, status=Subscription.Status.ACTIVE
+        ).values("plan__billing_interval", "total_amount")
+
         mrr = Decimal("0.00")
         for s in active_subs:
-            freq = s["plan__billing_frequency"]
-            amt = s["total_amount"] or Decimal("0.00")
-            if freq == "monthly":
+            interval = s.get("plan__billing_interval") or "monthly"
+            amt = s.get("total_amount") or Decimal("0.00")
+            if interval == SubscriptionPlan.BillingFrequency.MONTHLY:
                 mrr += amt
-            elif freq == "yearly":
+            elif interval == SubscriptionPlan.BillingFrequency.YEARLY:
                 mrr += amt / Decimal("12.00")
-            elif freq == "weekly":
+            elif interval == SubscriptionPlan.BillingFrequency.WEEKLY:
                 mrr += amt * Decimal("4.33")
-            elif freq == "daily":
+            elif interval == SubscriptionPlan.BillingFrequency.DAILY:
                 mrr += amt * Decimal("30.00")
         mrr = round(mrr, 2)
         arr = round(mrr * Decimal("12.00"), 2)
 
         # 2. Invoices & Overdue Aggregations
-        inv_stats = Invoice.objects.aggregate(
+        inv_stats = Invoice.objects.filter(workspace_id=workspace_id).aggregate(
             total_invoices=Count("id"),
             total_outstanding=Sum(
                 "outstanding_balance", filter=~Q(status=Invoice.Status.CANCELLED)
@@ -64,59 +66,86 @@ class DashboardMetricsView(APIView):
             overdue_count=Count(
                 "id",
                 filter=Q(
-                    status=Invoice.Status.CONFIRMED, outstanding_balance__gt=0, due_date__lt=today
+                    status=Invoice.Status.CONFIRMED,
+                    outstanding_balance__gt=0,
+                    due_date__lt=today,
                 ),
             ),
             overdue_amount=Sum(
                 "outstanding_balance",
                 filter=Q(
-                    status=Invoice.Status.CONFIRMED, outstanding_balance__gt=0, due_date__lt=today
+                    status=Invoice.Status.CONFIRMED,
+                    outstanding_balance__gt=0,
+                    due_date__lt=today,
                 ),
             ),
         )
 
-        # 3. Payments Aggregations
-        pay_stats = Payment.objects.aggregate(total_collected=Sum("amount"))
+        total_invoices = inv_stats["total_invoices"] or 0
+        total_outstanding = inv_stats["total_outstanding"] or Decimal("0.00")
+        overdue_invoices_count = inv_stats["overdue_count"] or 0
+        total_overdue_amount = inv_stats["overdue_amount"] or Decimal("0.00")
 
-        # 4. Revenue Trend (Last 6 months)
-        six_months_ago = today.replace(day=1) - timezone.timedelta(days=150)
-        recent_payments = Payment.objects.filter(payment_date__gte=six_months_ago).values(
-            "payment_date", "amount"
+        # 3. Payments / Collected Revenue
+        pay_stats = Payment.objects.filter(workspace_id=workspace_id).aggregate(
+            total_collected=Sum("amount")
         )
+        total_collected_revenue = pay_stats["total_collected"] or Decimal("0.00")
 
-        monthly_map = {}
-        for p in recent_payments:
-            month_key = p["payment_date"].strftime("%b %Y")
-            monthly_map[month_key] = monthly_map.get(month_key, Decimal("0.00")) + p["amount"]
-
-        trend = [{"month": k, "revenue": float(v)} for k, v in monthly_map.items()]
-        if not trend:
-            # Default empty trend for visualization
-            trend = [
-                {
-                    "month": today.strftime("%b %Y"),
-                    "revenue": float(pay_stats["total_collected"] or 0),
-                }
-            ]
+        # 4. Recent Cashflow (last 6 months)
+        cashflow_trends = []
+        for i in range(5, -1, -1):
+            month_date = today.replace(day=1) - timezone.timedelta(days=i * 30)
+            month_name = month_date.strftime("%b %Y")
+            month_payments = Payment.objects.filter(
+                workspace_id=workspace_id,
+                payment_date__year=month_date.year,
+                payment_date__month=month_date.month,
+            ).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+            cashflow_trends.append({"month": month_name, "amount": float(month_payments)})
 
         return Response(
             {
-                "kpis": {
-                    "active_subscriptions": active_subscriptions,
-                    "total_subscriptions": total_subscriptions,
+                "status": "success",
+                "workspace_id": str(workspace_id),
+                "data": {
                     "mrr": float(mrr),
                     "arr": float(arr),
-                    "total_revenue_collected": float(pay_stats["total_collected"] or 0.00),
-                    "total_outstanding": float(inv_stats["total_outstanding"] or 0.00),
-                    "overdue_invoices_count": inv_stats["overdue_count"] or 0,
-                    "overdue_amount": float(inv_stats["overdue_amount"] or 0.00),
+                    "total_subscriptions": total_subscriptions,
+                    "active_subscriptions": active_subscriptions,
+                    "paused_subscriptions": sub_stats["paused_count"] or 0,
+                    "quotations_count": sub_stats["quotation_count"] or 0,
+                    "closed_subscriptions": sub_stats["closed_count"] or 0,
+                    "total_invoices": total_invoices,
+                    "total_collected_revenue": float(total_collected_revenue),
+                    "total_outstanding_receivables": float(total_outstanding),
+                    "overdue_invoices_count": overdue_invoices_count,
+                    "total_overdue_amount": float(total_overdue_amount),
+                    "cashflow_trends": cashflow_trends,
                 },
-                "status_distribution": {
-                    "active": active_subscriptions,
-                    "paused": sub_stats["paused_count"] or 0,
-                    "quotation": sub_stats["quotation_count"] or 0,
-                    "closed": sub_stats["closed_count"] or 0,
-                },
-                "revenue_trend": trend,
+            }
+        )
+
+
+class DetailedReportsView(TenantScopedMixin, APIView):
+    permission_classes = [IsWorkspaceMember]
+
+    def get(self, request, workspace_id):
+        # Revenue by Plan breakdown
+        plans_data = (
+            Subscription.objects.filter(workspace_id=workspace_id)
+            .values("plan__name")
+            .annotate(
+                count=Count("id"),
+                total_rev=Sum("total_amount"),
+            )
+            .order_by("-total_rev")
+        )
+
+        return Response(
+            {
+                "status": "success",
+                "workspace_id": str(workspace_id),
+                "plans_breakdown": list(plans_data),
             }
         )

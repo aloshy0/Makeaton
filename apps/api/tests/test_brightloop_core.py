@@ -55,8 +55,8 @@ class TestBrightloopCore:
         plan = SubscriptionPlan.objects.create(
             name="Pro Monthly",
             code="PRO-M",
-            cost=Decimal("50.00"),
-            billing_frequency=SubscriptionPlan.BillingFrequency.MONTHLY,
+            base_price=Decimal("50.00"),
+            billing_interval=SubscriptionPlan.BillingInterval.MONTHLY,
             allow_pause=True,
             allow_early_close=True,
         )
@@ -91,8 +91,8 @@ class TestBrightloopCore:
         plan = SubscriptionPlan.objects.create(
             name="Standard",
             code="STD",
-            cost=Decimal("100.00"),
-            billing_frequency=SubscriptionPlan.BillingFrequency.MONTHLY,
+            base_price=Decimal("100.00"),
+            billing_interval=SubscriptionPlan.BillingInterval.MONTHLY,
         )
         TaxRule.objects.create(name="Tax 10%", rate_percent=Decimal("10.00"))
 

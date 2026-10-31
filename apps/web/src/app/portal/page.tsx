@@ -7,7 +7,13 @@ import { api } from "../../lib/api";
 import { formatCurrency, formatDate } from "../../lib/utils";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../../components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "../../components/ui/card";
 import { Invoice } from "../../types";
 
 export default function CustomerPortalPage() {
@@ -72,11 +78,10 @@ export default function CustomerPortalPage() {
               <span className="text-xs uppercase font-semibold tracking-wider text-indigo-300">
                 Customer Self-Service Portal
               </span>
-              <h1 className="text-xl font-bold tracking-tight text-white">
-                Acme Software Corp
-              </h1>
+              <h1 className="text-xl font-bold tracking-tight text-white">Acme Software Corp</h1>
               <p className="text-xs text-slate-300 mt-0.5">
-                View your active subscription services, manage terms, and settle recurring invoices online.
+                View your active subscription services, manage terms, and settle recurring invoices
+                online.
               </p>
             </div>
           </div>
@@ -95,7 +100,9 @@ export default function CustomerPortalPage() {
           <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
             <Repeat className="h-4 w-4 text-indigo-600" /> Your Active Subscriptions
           </h2>
-          <p className="text-xs text-slate-500">Self-manage your contracts without emailing support</p>
+          <p className="text-xs text-slate-500">
+            Self-manage your contracts without emailing support
+          </p>
         </div>
 
         {subsLoading ? (
@@ -110,17 +117,20 @@ export default function CustomerPortalPage() {
               <Card key={sub.id} className="border-slate-200">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-slate-900">{sub.subscription_number}</span>
+                    <span className="font-mono text-xs font-bold text-slate-900">
+                      {sub.subscription_number}
+                    </span>
                     <Badge variant={sub.status}>{sub.status}</Badge>
                   </div>
                   <CardTitle className="text-lg mt-1">{sub.plan_details?.name}</CardTitle>
                   <CardDescription>
-                    Started: {formatDate(sub.start_date)} • Next Renewal: {formatDate(sub.next_billing_date)}
+                    Started: {formatDate(sub.start_date)} • Next Renewal:{" "}
+                    {formatDate(sub.next_billing_date)}
                   </CardDescription>
                   <div className="mt-3 font-mono text-2xl font-bold text-slate-900">
                     {formatCurrency(sub.total_amount)}
                     <span className="text-xs text-slate-400 font-sans font-normal ml-1">
-                      /{sub.plan_details?.billing_frequency}
+                      /{sub.plan_details?.billing_interval}
                     </span>
                   </div>
                 </CardHeader>
@@ -128,7 +138,9 @@ export default function CustomerPortalPage() {
                   <div className="space-y-1 mb-4 text-slate-600">
                     {sub.lines.map((l) => (
                       <div key={l.id} className="flex justify-between">
-                        <span>{l.product_details?.name} (Qty {l.quantity})</span>
+                        <span>
+                          {l.product_details?.name} (Qty {l.quantity})
+                        </span>
                         <span className="font-mono">{formatCurrency(l.subtotal)}</span>
                       </div>
                     ))}
@@ -208,7 +220,9 @@ export default function CustomerPortalPage() {
                   <tbody className="divide-y divide-slate-100">
                     {invoices.map((inv) => (
                       <tr key={inv.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="px-5 py-3.5 font-mono font-bold text-slate-900">{inv.invoice_number}</td>
+                        <td className="px-5 py-3.5 font-mono font-bold text-slate-900">
+                          {inv.invoice_number}
+                        </td>
                         <td className="px-5 py-3.5 text-slate-600">{formatDate(inv.issue_date)}</td>
                         <td className="px-5 py-3.5 text-slate-600">{formatDate(inv.due_date)}</td>
                         <td className="px-5 py-3.5">
@@ -216,9 +230,17 @@ export default function CustomerPortalPage() {
                             {inv.is_overdue ? "Overdue" : inv.status}
                           </Badge>
                         </td>
-                        <td className="px-5 py-3.5 text-right font-mono text-slate-900">{formatCurrency(inv.total_amount)}</td>
+                        <td className="px-5 py-3.5 text-right font-mono text-slate-900">
+                          {formatCurrency(inv.total_amount)}
+                        </td>
                         <td className="px-5 py-3.5 text-right font-mono font-bold">
-                          <span className={parseFloat(inv.outstanding_balance) > 0 ? "text-rose-600" : "text-emerald-600"}>
+                          <span
+                            className={
+                              parseFloat(inv.outstanding_balance) > 0
+                                ? "text-rose-600"
+                                : "text-emerald-600"
+                            }
+                          >
                             {formatCurrency(inv.outstanding_balance)}
                           </span>
                         </td>
@@ -268,27 +290,35 @@ export default function CustomerPortalPage() {
             {paymentSuccess ? (
               <div className="py-8 text-center space-y-2">
                 <CheckCircle className="h-10 w-10 text-emerald-500 mx-auto" />
-                <div className="text-sm font-semibold text-slate-900">Payment Processed Successfully!</div>
+                <div className="text-sm font-semibold text-slate-900">
+                  Payment Processed Successfully!
+                </div>
                 <div className="text-xs text-slate-500">Your account balance has been updated.</div>
               </div>
             ) : (
               <form onSubmit={handlePay} className="mt-4 space-y-4">
                 <div>
-                  <label className="text-xs font-semibold uppercase text-slate-500">Invoice Number</label>
+                  <label className="text-xs font-semibold uppercase text-slate-500">
+                    Invoice Number
+                  </label>
                   <div className="font-mono text-sm font-semibold text-slate-900 mt-0.5">
                     {selectedInvoice.invoice_number}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold uppercase text-slate-500">Outstanding Balance</label>
+                  <label className="text-xs font-semibold uppercase text-slate-500">
+                    Outstanding Balance
+                  </label>
                   <div className="font-mono text-xl font-bold text-rose-600 mt-0.5">
                     {formatCurrency(selectedInvoice.outstanding_balance)}
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold uppercase text-slate-500">Payment Amount ($)</label>
+                  <label className="text-xs font-semibold uppercase text-slate-500">
+                    Payment Amount ($)
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -300,7 +330,12 @@ export default function CustomerPortalPage() {
                 </div>
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setSelectedInvoice(null)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedInvoice(null)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit" size="sm" disabled={paymentMutation.isPending}>

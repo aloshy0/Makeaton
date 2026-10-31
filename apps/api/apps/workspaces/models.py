@@ -1,4 +1,7 @@
+import hashlib
+import secrets
 import uuid
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -60,8 +63,9 @@ class Workspace(models.Model):
                 counter += 1
             self.slug = slug
 
+        is_new = self._state.adding
         # Transactional 5-workspace limit enforcement
-        if not self.pk:
+        if is_new:
             with transaction.atomic():
                 active_count = (
                     Workspace.objects.select_for_update()
@@ -120,3 +124,172 @@ class WorkspaceMembership(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.workspace.name} ({self.role})"
+
+
+class StaffPermission(models.Model):
+    class Profile(models.TextChoices):
+        READ_ONLY = "READ_ONLY", "Read Only"
+        OPERATIONS = "OPERATIONS", "Operations"
+        CUSTOM = "CUSTOM", "Custom"
+
+    membership = models.OneToOneField(
+        WorkspaceMembership,
+        on_delete=models.CASCADE,
+        related_name="permissions",
+        primary_key=True,
+    )
+    profile = models.CharField(max_length=20, choices=Profile.choices, default=Profile.OPERATIONS)
+    can_manage_products = models.BooleanField(default=True)
+    can_manage_subscriptions = models.BooleanField(default=True)
+    can_manage_invoices = models.BooleanField(default=True)
+    can_record_payments = models.BooleanField(default=True)
+    can_manage_customers = models.BooleanField(default=True)
+    can_view_reports = models.BooleanField(default=False)
+    can_execute_restricted_actions = models.BooleanField(
+        default=False,
+        help_text="If False, actions like early cancellation and refunds require approval.",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Staff Permission"
+        verbose_name_plural = "Staff Permissions"
+
+    def __str__(self):
+        return f"Permissions for {self.membership}"
+
+
+class ApprovalRequest(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(
+        Workspace,
+        on_delete=models.CASCADE,
+        related_name="approval_requests",
+    )
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="approval_requests",
+    )
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_approvals",
+    )
+    action_type = models.CharField(max_length=60)
+    entity_type = models.CharField(max_length=50)
+    entity_id = models.CharField(max_length=100)
+    payload = models.JSONField(default=dict, blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    rejection_reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Approval Request"
+        verbose_name_plural = "Approval Requests"
+
+    def __str__(self):
+        return f"[{self.status}] {self.action_type} by {self.requested_by.email}"
+
+
+def generate_webhook_secret():
+    return secrets.token_hex(32)
+
+
+class ApiKey(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(
+        Workspace,
+        on_delete=models.CASCADE,
+        related_name="api_keys",
+    )
+    name = models.CharField(max_length=100)
+    key_prefix = models.CharField(max_length=16, db_index=True)
+    hashed_key = models.CharField(max_length=128)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "API Key"
+        verbose_name_plural = "API Keys"
+
+    @classmethod
+    def create_key(cls, workspace, name, expires_in_days=None):
+        raw_secret = f"brk_live_{secrets.token_urlsafe(32)}"
+        key_prefix = raw_secret[:12]
+        hashed_key = hashlib.sha256(raw_secret.encode()).hexdigest()
+        expires_at = timezone.now() + timedelta(days=expires_in_days) if expires_in_days else None
+        instance = cls.objects.create(
+            workspace=workspace,
+            name=name,
+            key_prefix=key_prefix,
+            hashed_key=hashed_key,
+            expires_at=expires_at,
+        )
+        return instance, raw_secret
+
+    def rotate(self):
+        raw_secret = f"brk_live_{secrets.token_urlsafe(32)}"
+        self.key_prefix = raw_secret[:12]
+        self.hashed_key = hashlib.sha256(raw_secret.encode()).hexdigest()
+        self.save(update_fields=["key_prefix", "hashed_key"])
+        return raw_secret
+
+    def verify(self, raw_secret):
+        if not self.is_active:
+            return False
+        if self.expires_at and self.expires_at < timezone.now():
+            return False
+        return self.hashed_key == hashlib.sha256(raw_secret.encode()).hexdigest()
+
+
+class WebhookEndpoint(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(
+        Workspace,
+        on_delete=models.CASCADE,
+        related_name="webhook_endpoints",
+    )
+    url = models.URLField(max_length=500)
+    secret = models.CharField(max_length=64, default=generate_webhook_secret)
+    events = models.JSONField(default=list)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Webhook Endpoint"
+        verbose_name_plural = "Webhook Endpoints"
+
+
+class WebhookDelivery(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    endpoint = models.ForeignKey(
+        WebhookEndpoint,
+        on_delete=models.CASCADE,
+        related_name="deliveries",
+    )
+    event_type = models.CharField(max_length=60)
+    payload = models.JSONField(default=dict)
+    status_code = models.IntegerField(null=True, blank=True)
+    response_body = models.TextField(blank=True)
+    delivered = models.BooleanField(default=False)
+    attempt_count = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Webhook Delivery"
+        verbose_name_plural = "Webhook Deliveries"

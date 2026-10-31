@@ -5,9 +5,10 @@ from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
 
+from apps.discounts.models import DiscountRule
 from apps.subscriptions.models import Subscription
 
-from .models import DiscountRule, Invoice, InvoiceLine, TaxRule
+from .models import Invoice, InvoiceLine, TaxRule
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,6 @@ def advance_billing_date(current_date, frequency):
     elif frequency == "weekly":
         return current_date + timedelta(weeks=1)
     elif frequency == "monthly":
-        # approximate 30 days or next month
         year = current_date.year + (1 if current_date.month == 12 else 0)
         month = 1 if current_date.month == 12 else current_date.month + 1
         day = min(current_date.day, 28)
@@ -31,144 +31,164 @@ def advance_billing_date(current_date, frequency):
     return current_date + timedelta(days=30)
 
 
-def generate_invoices_for_due_subscriptions(target_date=None):
+def run_automated_billing_cycle(workspace_id=None, target_date=None):
     """
     Automated recurring billing run:
     Finds all active subscriptions where next_billing_date <= target_date.
+    Optionally scoped to a specific workspace_id.
     Generates an invoice with prefilled customer details, lines, taxes, and applicable discounts.
-    Enforces idempotency using key format: sub_{subscription.id}_{next_billing_date}.
+    Enforces idempotency using key format: ws_{workspace_id}_sub_{subscription.id}_{next_billing_date}.
     Advances next_billing_date.
-    Guarantees nothing is billed twice or skipped.
     """
     today = target_date or timezone.now().date()
-    due_subscriptions = (
-        Subscription.objects.filter(status=Subscription.Status.ACTIVE, next_billing_date__lte=today)
-        .select_related("customer", "plan")
-        .prefetch_related("lines__product", "lines__variant")
+    qs = Subscription.objects.filter(
+        status=Subscription.Status.ACTIVE, next_billing_date__lte=today
+    )
+    if workspace_id:
+        qs = qs.filter(workspace_id=workspace_id)
+
+    due_subscriptions = qs.select_related("customer", "plan").prefetch_related(
+        "lines__product", "lines__variant"
     )
 
     created_invoices = []
     skipped_count = 0
 
-    # Get active tax rules
-    tax_rules = list(TaxRule.objects.filter(is_active=True))
-    combined_tax_percent = sum(t.rate_percent for t in tax_rules)
-
-    # Get active discount rules
-    active_discounts = list(DiscountRule.objects.filter(is_active=True))
-
     for sub in due_subscriptions:
-        idempotency_key = f"sub_{sub.id}_{sub.next_billing_date}"
+        billing_date = sub.next_billing_date or today
+        idempotency_key = f"ws_{sub.workspace_id}_sub_{sub.id}_{billing_date}"
 
-        # Idempotency check: Skip if already billed for this date
+        # 1. Idempotency Check
         if Invoice.objects.filter(idempotency_key=idempotency_key).exists():
+            logger.info("Invoice for idempotency key %s already exists. Skipping.", idempotency_key)
             skipped_count += 1
             continue
 
         with transaction.atomic():
-            # Determine due date based on payment terms
-            days_map = {
-                Subscription.PaymentTerms.DUE_ON_RECEIPT: 0,
-                Subscription.PaymentTerms.NET_15: 15,
-                Subscription.PaymentTerms.NET_30: 30,
-                Subscription.PaymentTerms.NET_60: 60,
-            }
-            term_days = days_map.get(sub.payment_terms, 30)
-            due_date = sub.next_billing_date + timedelta(days=term_days)
+            # Get workspace-specific tax and discount rules
+            tax_rules = list(TaxRule.objects.filter(workspace=sub.workspace, is_active=True))
+            combined_tax_percent = sum((t.rate_percent for t in tax_rules), Decimal("0.00"))
 
+            active_discounts = list(
+                DiscountRule.objects.filter(workspace=sub.workspace, is_active=True)
+            )
+
+            # Compute payment due date based on payment terms
+            due_days = 0
+            if sub.payment_terms == Subscription.PaymentTerms.NET_15:
+                due_days = 15
+            elif sub.payment_terms == Subscription.PaymentTerms.NET_30:
+                due_days = 30
+            elif sub.payment_terms == Subscription.PaymentTerms.NET_60:
+                due_days = 60
+            due_date = billing_date + timedelta(days=due_days)
+
+            # 2. Create Draft Invoice
             invoice = Invoice.objects.create(
+                workspace=sub.workspace,
                 subscription=sub,
                 customer=sub.customer,
-                issue_date=sub.next_billing_date,
+                issue_date=billing_date,
                 due_date=due_date,
-                status=Invoice.Status.DRAFT,
+                status=Invoice.Status.CONFIRMED,
                 idempotency_key=idempotency_key,
+                notes=f"Recurring billing for plan '{sub.plan.name}'",
             )
 
-            # 1. Base Plan Line
-            plan_line_tax = round((sub.plan.cost * combined_tax_percent) / Decimal("100.00"), 2)
-            InvoiceLine.objects.create(
-                invoice=invoice,
-                description=f"Subscription Plan: {sub.plan.name} ({sub.plan.billing_frequency.capitalize()})",
-                quantity=1,
-                unit_price=sub.plan.cost,
-                tax_amount=plan_line_tax,
-                discount_amount=Decimal("0.00"),
-            )
-
-            # 2. Product Lines
-            for s_line in sub.lines.all():
-                line_subtotal = s_line.unit_price * s_line.quantity
-
-                # Check line-level discount
-                line_discount = Decimal("0.00")
-                for disc in active_discounts:
-                    if (
-                        disc.scope == DiscountRule.Scope.PRODUCT
-                        and disc.target_product == s_line.product
-                    ):
-                        calc = disc.calculate_discount(
-                            line_subtotal, s_line.quantity, s_line.product
-                        )
-                        line_discount = max(line_discount, calc)
-
-                line_tax = round(
-                    ((line_subtotal - line_discount) * combined_tax_percent) / Decimal("100.00"), 2
-                )
-                variant_label = f" ({s_line.variant.attribute_value})" if s_line.variant else ""
+            subtotal = Decimal("0.00")
+            for line in sub.lines.all():
+                line_amount = line.unit_price * line.quantity
+                subtotal += line_amount
 
                 InvoiceLine.objects.create(
                     invoice=invoice,
-                    description=f"{s_line.product.name}{variant_label}",
-                    product=s_line.product,
-                    variant=s_line.variant,
-                    quantity=s_line.quantity,
-                    unit_price=s_line.unit_price,
-                    tax_amount=line_tax,
-                    discount_amount=line_discount,
+                    product=line.product,
+                    variant=line.variant,
+                    description=f"{line.product.name} ({line.variant.attribute_value})"
+                    if line.variant
+                    else line.product.name,
+                    quantity=line.quantity,
+                    unit_price=line.unit_price,
+                    tax_amount=Decimal("0.00"),
+                    discount_amount=Decimal("0.00"),
+                    line_total=line_amount,
                 )
 
-            # 3. Whole subscription level discounts
-            all_lines = invoice.lines.all()
-            total_subtotal = sum(line.unit_price * line.quantity for line in all_lines)
-            total_line_tax = sum(line.tax_amount for line in all_lines)
-            total_line_discount = sum(line.discount_amount for line in all_lines)
+            # If plan base price applies without separate lines
+            if not sub.lines.exists():
+                subtotal = sub.plan.base_price
+                InvoiceLine.objects.create(
+                    invoice=invoice,
+                    description=f"Subscription: {sub.plan.name}",
+                    quantity=1,
+                    unit_price=sub.plan.base_price,
+                    tax_amount=Decimal("0.00"),
+                    discount_amount=Decimal("0.00"),
+                    line_total=sub.plan.base_price,
+                )
 
-            sub_discount = Decimal("0.00")
-            for disc in active_discounts:
-                if disc.scope == DiscountRule.Scope.SUBSCRIPTION:
-                    calc = disc.calculate_discount(total_subtotal, 1)
-                    if calc > sub_discount:
-                        sub_discount = calc
-                        # Increment usage count if capped
-                        if disc.max_uses:
-                            disc.times_used += 1
-                            disc.save(update_fields=["times_used"])
-
-            combined_discount = total_line_discount + sub_discount
-            invoice.subtotal = total_subtotal
-            invoice.tax_amount = total_line_tax
-            invoice.discount_amount = combined_discount
-            invoice.total_amount = max(
-                Decimal("0.00"), total_subtotal + total_line_tax - combined_discount
+            # 3. Calculate Taxes
+            tax_amount = (subtotal * combined_tax_percent / Decimal("100.00")).quantize(
+                Decimal("0.01")
             )
-            invoice.outstanding_balance = invoice.total_amount
-            invoice.save()
 
-            # Advance subscription next_billing_date
-            next_date = advance_billing_date(sub.next_billing_date, sub.plan.billing_frequency)
+            # 4. Calculate Discounts
+            discount_amount = Decimal("0.00")
+            for disc in active_discounts:
+                if (
+                    disc.start_date
+                    and disc.start_date > billing_date
+                    or disc.end_date
+                    and disc.end_date < billing_date
+                ):
+                    continue
+                if disc.max_uses and disc.times_used >= disc.max_uses:
+                    continue
+                if subtotal < disc.min_purchase_amount:
+                    continue
 
-            # Check if plan expires or auto closes
-            if sub.expiry_date and next_date > sub.expiry_date and sub.plan.auto_close_on_end:
-                sub.status = Subscription.Status.CLOSED
+                if disc.discount_type == DiscountRule.DiscountType.PERCENTAGE:
+                    d_val = (subtotal * disc.value / Decimal("100.00")).quantize(Decimal("0.01"))
+                else:
+                    d_val = min(subtotal, disc.value)
 
-            sub.next_billing_date = next_date
-            sub.save(update_fields=["next_billing_date", "status"])
+                discount_amount += d_val
+                disc.times_used += 1
+                disc.save(update_fields=["times_used"])
+
+            total_amount = max(Decimal("0.00"), subtotal + tax_amount - discount_amount)
+
+            # 5. Finalize Invoice
+            invoice.subtotal = subtotal
+            invoice.tax_amount = tax_amount
+            invoice.discount_amount = discount_amount
+            invoice.total_amount = total_amount
+            invoice.outstanding_balance = total_amount
+            invoice.save(
+                update_fields=[
+                    "subtotal",
+                    "tax_amount",
+                    "discount_amount",
+                    "total_amount",
+                    "outstanding_balance",
+                ]
+            )
+
+            # 6. Advance Subscription next_billing_date
+            sub.next_billing_date = advance_billing_date(billing_date, sub.plan.billing_interval)
+            sub.save(update_fields=["next_billing_date", "updated_at"])
 
             created_invoices.append(invoice)
+            logger.info("Successfully generated invoice %s for %s", invoice.invoice_number, sub)
 
     return {
+        "status": "success",
         "generated_count": len(created_invoices),
         "skipped_count": skipped_count,
         "invoice_ids": [str(inv.id) for inv in created_invoices],
+        "target_date": str(today),
     }
+
+
+# Backward-compatible alias
+generate_invoices_for_due_subscriptions = run_automated_billing_cycle

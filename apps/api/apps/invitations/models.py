@@ -21,6 +21,7 @@ class StaffInvitation(models.Model):
     class Role(models.TextChoices):
         ADMIN = "ADMIN", "Administrator"
         STAFF = "STAFF", "Internal Staff"
+        CUSTOMER = "CUSTOMER", "Customer"
 
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pending"

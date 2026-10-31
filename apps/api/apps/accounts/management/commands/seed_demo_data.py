@@ -5,26 +5,28 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from apps.billing.models import DiscountRule, Invoice, TaxRule
+from apps.billing.models import Invoice, TaxRule
 from apps.catalog.models import Product, ProductVariant, SubscriptionPlan
-from apps.customers.models import Customer
+from apps.customers.models import Customer, CustomerUserLink
+from apps.discounts.models import DiscountRule
 from apps.payments.models import Payment
-from apps.subscriptions.models import Subscription, SubscriptionLine
+from apps.subscriptions.models import Subscription, SubscriptionEvent, SubscriptionLine
+from apps.workspaces.models import Workspace, WorkspaceMembership
 
 User = get_user_model()
 
 
 class Command(BaseCommand):
-    help = "Seed database with Brightloop Software demonstration and benchmark records"
+    help = "Seed database with Multi-Tenant SaaS demonstration and benchmark records"
 
     def handle(self, *args, **options):
-        self.stdout.write("Seeding Brightloop demonstration data...")
+        self.stdout.write("Seeding Multi-Tenant SaaS demonstration records...")
 
-        # 1. Users
+        # 1. Global Users
         admin_user, _ = User.objects.get_or_create(
             email="admin@brightloop.com",
             defaults={
-                "first_name": "Admin",
+                "first_name": "Alexander",
                 "last_name": "Brightloop",
                 "role": User.Role.ADMIN,
                 "is_staff": True,
@@ -50,100 +52,160 @@ class Command(BaseCommand):
             email="customer@acme.com",
             defaults={"first_name": "David", "last_name": "Miller", "role": User.Role.CUSTOMER},
         )
-        cust_user.set_password("BrightloopCustomer2026!")
+        cust_user.set_password("AcmeCustomer2026!")
         cust_user.save()
 
-        # 2. Customers
+        # Workspace B Creator (independent business owner)
+        tenant_b_owner, _ = User.objects.get_or_create(
+            email="bob@retailstore.com",
+            defaults={"first_name": "Robert", "last_name": "Vance", "role": User.Role.ADMIN},
+        )
+        tenant_b_owner.set_password("RetailVance2026!")
+        tenant_b_owner.save()
+
+        # 2. Workspaces
+        ws1, _ = Workspace.objects.get_or_create(
+            slug="brightloop-cloud",
+            defaults={
+                "name": "Brightloop Cloud Services",
+                "owner": admin_user,
+                "currency": "USD",
+                "timezone": "America/New_York",
+            },
+        )
+
+        ws2, _ = Workspace.objects.get_or_create(
+            slug="brightloop-hardware",
+            defaults={
+                "name": "Brightloop Hardware Labs",
+                "owner": admin_user,
+                "currency": "EUR",
+                "timezone": "Europe/London",
+            },
+        )
+
+        # Independent Tenant B Workspace
+        ws_b, _ = Workspace.objects.get_or_create(
+            slug="bobs-retail-pos",
+            defaults={
+                "name": "Bob's Retail Cloud",
+                "owner": tenant_b_owner,
+                "currency": "USD",
+                "timezone": "America/Chicago",
+            },
+        )
+
+        # 3. Memberships
+        WorkspaceMembership.objects.get_or_create(
+            workspace=ws1,
+            user=admin_user,
+            defaults={
+                "role": WorkspaceMembership.Role.OWNER,
+                "status": WorkspaceMembership.Status.ACTIVE,
+            },
+        )
+        WorkspaceMembership.objects.get_or_create(
+            workspace=ws1,
+            user=staff_user,
+            defaults={
+                "role": WorkspaceMembership.Role.STAFF,
+                "status": WorkspaceMembership.Status.ACTIVE,
+            },
+        )
+        WorkspaceMembership.objects.get_or_create(
+            workspace=ws1,
+            user=cust_user,
+            defaults={
+                "role": WorkspaceMembership.Role.CUSTOMER,
+                "status": WorkspaceMembership.Status.ACTIVE,
+            },
+        )
+
+        WorkspaceMembership.objects.get_or_create(
+            workspace=ws2,
+            user=admin_user,
+            defaults={
+                "role": WorkspaceMembership.Role.OWNER,
+                "status": WorkspaceMembership.Status.ACTIVE,
+            },
+        )
+
+        WorkspaceMembership.objects.get_or_create(
+            workspace=ws_b,
+            user=tenant_b_owner,
+            defaults={
+                "role": WorkspaceMembership.Role.OWNER,
+                "status": WorkspaceMembership.Status.ACTIVE,
+            },
+        )
+
+        # 4. Customers in Workspace 1
         acme, _ = Customer.objects.get_or_create(
+            workspace=ws1,
             email="customer@acme.com",
             defaults={
-                "user": cust_user,
-                "company_name": "Acme Software Corp",
+                "company_name": "Acme Corporation",
                 "contact_name": "David Miller",
-                "phone": "+1 555-019-2834",
-                "billing_address": "742 Evergreen Terrace, Springfield, OR",
-                "tax_id": "US-987654321",
+                "phone": "+1-555-0199",
+                "billing_address": "100 Enterprise Way, Suite 400, Austin, TX 78701",
+                "tax_id": "US-88291039",
+            },
+        )
+        CustomerUserLink.objects.get_or_create(customer=acme, user=cust_user)
+
+        globex, _ = Customer.objects.get_or_create(
+            workspace=ws1,
+            email="billing@globex.org",
+            defaults={
+                "company_name": "Globex Solutions LLC",
+                "contact_name": "Hank Scorpio",
+                "phone": "+1-555-0144",
+                "billing_address": "742 Evergreen Terrace, Springfield, OR 97477",
+                "tax_id": "US-44910283",
             },
         )
 
-        techtrend, _ = Customer.objects.get_or_create(
-            email="finance@techtrend.io",
+        # 5. Catalog Products in Workspace 1
+        core_software, _ = Product.objects.get_or_create(
+            workspace=ws1,
+            code="SW-BL-CORE",
             defaults={
-                "company_name": "TechTrend Dynamics",
-                "contact_name": "Elena Rostova",
-                "phone": "+1 555-018-9922",
-                "billing_address": "100 Market St, Suite 400, San Francisco, CA",
-                "tax_id": "US-123456789",
-            },
-        )
-
-        blossom, _ = Customer.objects.get_or_create(
-            email="orders@blossomretail.com",
-            defaults={
-                "company_name": "Blossom Retail Shops",
-                "contact_name": "Chloe Bennett",
-                "phone": "+1 555-014-4321",
-                "billing_address": "12 Flower Ave, Austin, TX",
-                "tax_id": "US-443322110",
-            },
-        )
-
-        # 3. Products
-        core_app, _ = Product.objects.get_or_create(
-            code="CORE-APP",
-            defaults={
-                "name": "Brightloop Enterprise Suite",
+                "name": "Brightloop Core Platform",
                 "product_type": Product.ProductType.SOFTWARE,
-                "sales_price": Decimal("299.00"),
-                "cost_price": Decimal("50.00"),
-                "notes": "Primary SaaS platform license.",
-            },
-        )
-
-        addon_ai, _ = Product.objects.get_or_create(
-            code="ADDON-AI",
-            defaults={
-                "name": "AI Predictive Analytics Add-on",
-                "product_type": Product.ProductType.ADDON,
-                "sales_price": Decimal("99.00"),
-                "cost_price": Decimal("15.00"),
-                "notes": "Modular add-on customer can toggle on/off.",
-            },
-        )
-
-        addon_sla, _ = Product.objects.get_or_create(
-            code="ADDON-SLA",
-            defaults={
-                "name": "24/7 Dedicated Support SLA",
-                "product_type": Product.ProductType.SERVICE,
-                "sales_price": Decimal("150.00"),
+                "sales_price": Decimal("249.00"),
                 "cost_price": Decimal("40.00"),
+                "notes": "Base modular monolith SaaS subscription license",
             },
         )
 
-        # 4. Product Variants (per PDF: Brand variant with Odoo adding +560.00)
-        odoo_variant, _ = ProductVariant.objects.get_or_create(
-            product=core_app,
-            attribute_name="Brand",
-            attribute_value="Odoo Integration",
+        # Variant with Odoo integration delta (+560.00)
+        v_odoo, _ = ProductVariant.objects.get_or_create(
+            product=core_software,
+            attribute_name="Brand Integration",
+            attribute_value="Odoo Connector",
             defaults={"price_delta": Decimal("560.00")},
         )
 
-        std_variant, _ = ProductVariant.objects.get_or_create(
-            product=core_app,
-            attribute_name="Brand",
-            attribute_value="Standard Edition",
-            defaults={"price_delta": Decimal("0.00")},
+        addon_storage, _ = Product.objects.get_or_create(
+            workspace=ws1,
+            code="ADD-TB-STORAGE",
+            defaults={
+                "name": "High-Throughput 1TB Storage Tier",
+                "product_type": Product.ProductType.ADDON,
+                "sales_price": Decimal("49.00"),
+                "cost_price": Decimal("10.00"),
+            },
         )
 
-        # 5. Subscription Plans
-        monthly_plan, _ = SubscriptionPlan.objects.get_or_create(
-            code="PLAN-MONTHLY-BIZ",
+        # 6. Subscription Plans in Workspace 1
+        plan_monthly, _ = SubscriptionPlan.objects.get_or_create(
+            workspace=ws1,
+            code="PLAN-PRO-MO",
             defaults={
-                "name": "Business Pro (Monthly)",
-                "billing_frequency": SubscriptionPlan.BillingFrequency.MONTHLY,
-                "cost": Decimal("199.00"),
-                "minimum_quantity": 1,
+                "name": "Professional Tier (Monthly)",
+                "billing_interval": SubscriptionPlan.BillingFrequency.MONTHLY,
+                "base_price": Decimal("249.00"),
+                "min_seats": 5,
                 "auto_close_on_end": True,
                 "allow_early_close": True,
                 "allow_pause": True,
@@ -151,13 +213,14 @@ class Command(BaseCommand):
             },
         )
 
-        yearly_plan, _ = SubscriptionPlan.objects.get_or_create(
-            code="PLAN-YEARLY-ENT",
+        plan_annual, _ = SubscriptionPlan.objects.get_or_create(
+            workspace=ws1,
+            code="PLAN-ENT-YR",
             defaults={
-                "name": "Enterprise Annual (Yearly)",
-                "billing_frequency": SubscriptionPlan.BillingFrequency.YEARLY,
-                "cost": Decimal("1990.00"),
-                "minimum_quantity": 5,
+                "name": "Enterprise Infinite (Annual)",
+                "billing_interval": SubscriptionPlan.BillingFrequency.YEARLY,
+                "base_price": Decimal("2490.00"),
+                "min_seats": 25,
                 "auto_close_on_end": True,
                 "allow_early_close": False,
                 "allow_pause": False,
@@ -165,152 +228,144 @@ class Command(BaseCommand):
             },
         )
 
-        # 6. Tax and Discount Rules
+        # 7. Taxes & Discounts in Workspace 1
         tax_standard, _ = TaxRule.objects.get_or_create(
-            name="Standard Sales Tax",
+            workspace=ws1,
+            name="Standard Tech VAT",
             defaults={"rate_percent": Decimal("10.00"), "is_active": True},
         )
 
-        discount_seats, _ = DiscountRule.objects.get_or_create(
-            code="SEATS20",
+        disc_intro, _ = DiscountRule.objects.get_or_create(
+            workspace=ws1,
+            code="WELCOME15",
             defaults={
-                "name": "Volume Seats Discount (20%)",
+                "name": "New Tenant Welcome 15%",
                 "discount_type": DiscountRule.DiscountType.PERCENTAGE,
-                "value": Decimal("20.00"),
-                "min_quantity": 5,
-                "scope": DiscountRule.Scope.SUBSCRIPTION,
+                "value": Decimal("15.00"),
+                "min_purchase_amount": Decimal("100.00"),
                 "is_active": True,
             },
         )
 
-        # 7. Subscriptions
+        # 8. Subscriptions in Workspace 1
         today = timezone.now().date()
-
-        # Active Subscription for Acme
-        sub_acme, created = Subscription.objects.get_or_create(
+        sub_acme, _ = Subscription.objects.get_or_create(
+            workspace=ws1,
             subscription_number="SUB-2026-0001",
             defaults={
                 "customer": acme,
-                "plan": monthly_plan,
+                "plan": plan_monthly,
                 "status": Subscription.Status.ACTIVE,
-                "start_date": today - timedelta(days=45),
-                "next_billing_date": today + timedelta(days=15),
-                "payment_terms": Subscription.PaymentTerms.NET_30,
+                "start_date": today - timedelta(days=60),
+                "next_billing_date": today + timedelta(days=30),
+                "subtotal": Decimal("858.00"),
+                "tax_amount": Decimal("85.80"),
+                "discount_amount": Decimal("0.00"),
+                "total_amount": Decimal("943.80"),
             },
         )
-        if created:
-            SubscriptionLine.objects.create(
-                subscription=sub_acme,
-                product=core_app,
-                variant=odoo_variant,
-                quantity=1,
-                unit_price=core_app.sales_price + odoo_variant.price_delta,
-                subtotal=core_app.sales_price + odoo_variant.price_delta,
-            )
-            SubscriptionLine.objects.create(
-                subscription=sub_acme,
-                product=addon_ai,
-                quantity=2,
-                unit_price=addon_ai.sales_price,
-                subtotal=addon_ai.sales_price * 2,
-            )
-            sub_acme.calculate_totals()
 
-        # Quotation for TechTrend
-        sub_tt, created = Subscription.objects.get_or_create(
-            subscription_number="SUB-2026-0002",
+        SubscriptionLine.objects.get_or_create(
+            subscription=sub_acme,
+            product=core_software,
+            variant=v_odoo,
             defaults={
-                "customer": techtrend,
-                "plan": yearly_plan,
-                "status": Subscription.Status.QUOTATION,
-                "start_date": today,
-                "expiry_date": today + timedelta(days=30),
-                "payment_terms": Subscription.PaymentTerms.NET_15,
+                "quantity": 1,
+                "unit_price": Decimal("809.00"),
+                "subtotal": Decimal("809.00"),
             },
         )
-        if created:
-            SubscriptionLine.objects.create(
-                subscription=sub_tt,
-                product=core_app,
-                variant=std_variant,
-                quantity=5,
-                unit_price=core_app.sales_price,
-                subtotal=core_app.sales_price * 5,
-            )
-            sub_tt.calculate_totals()
-
-        # Confirmed Subscription for Blossom
-        sub_blossom, created = Subscription.objects.get_or_create(
-            subscription_number="SUB-2026-0003",
-            defaults={
-                "customer": blossom,
-                "plan": monthly_plan,
-                "status": Subscription.Status.CONFIRMED,
-                "start_date": today,
-                "next_billing_date": today,
-                "payment_terms": Subscription.PaymentTerms.DUE_ON_RECEIPT,
-            },
+        SubscriptionLine.objects.get_or_create(
+            subscription=sub_acme,
+            product=addon_storage,
+            defaults={"quantity": 1, "unit_price": Decimal("49.00"), "subtotal": Decimal("49.00")},
         )
-        if created:
-            SubscriptionLine.objects.create(
-                subscription=sub_blossom,
-                product=addon_sla,
-                quantity=1,
-                unit_price=addon_sla.sales_price,
-                subtotal=addon_sla.sales_price,
-            )
-            sub_blossom.calculate_totals()
 
-        # 8. Invoices and Payments
-        # Paid Invoice for Acme
-        inv_acme_paid, _ = Invoice.objects.get_or_create(
+        # Subscription Events
+        SubscriptionEvent.objects.get_or_create(
+            subscription=sub_acme,
+            previous_status=Subscription.Status.DRAFT,
+            new_status=Subscription.Status.ACTIVE,
+            defaults={"changed_by": admin_user, "reason": "Initial activation"},
+        )
+
+        # 9. Invoices & Payments in Workspace 1
+        inv1, _ = Invoice.objects.get_or_create(
+            workspace=ws1,
             invoice_number="INV-2026-0001",
             defaults={
-                "subscription": sub_acme,
                 "customer": acme,
-                "issue_date": today - timedelta(days=40),
-                "due_date": today - timedelta(days=10),
+                "subscription": sub_acme,
                 "status": Invoice.Status.PAID,
-                "subtotal": Decimal("1057.00"),
-                "tax_amount": Decimal("105.70"),
-                "total_amount": Decimal("1162.70"),
-                "paid_amount": Decimal("1162.70"),
+                "idempotency_key": f"ws_{ws1.id}_sub_{sub_acme.id}_first_cycle",
+                "issue_date": today - timedelta(days=30),
+                "due_date": today - timedelta(days=15),
+                "subtotal": Decimal("858.00"),
+                "tax_amount": Decimal("85.80"),
+                "discount_amount": Decimal("0.00"),
+                "total_amount": Decimal("943.80"),
+                "paid_amount": Decimal("943.80"),
                 "outstanding_balance": Decimal("0.00"),
-                "idempotency_key": f"sub_{sub_acme.id}_{today - timedelta(days=40)}",
-            },
-        )
-        Payment.objects.get_or_create(
-            payment_number="PAY-2026-0001",
-            defaults={
-                "invoice": inv_acme_paid,
-                "amount": Decimal("1162.70"),
-                "payment_method": Payment.Method.BANK_TRANSFER,
-                "payment_date": today - timedelta(days=20),
-                "reference": "WIRE-REF-9021",
-                "notes": "Acme monthly payment cleared.",
             },
         )
 
-        # Overdue Invoice for Blossom
-        inv_blossom_overdue, _ = Invoice.objects.get_or_create(
+        Payment.objects.get_or_create(
+            workspace=ws1,
+            payment_number="PAY-2026-0001",
+            defaults={
+                "invoice": inv1,
+                "amount": Decimal("943.80"),
+                "payment_method": Payment.Method.CREDIT_CARD,
+                "payment_date": today - timedelta(days=28),
+                "reference": "ch_acme_card_9921",
+                "notes": "Card charge settled",
+            },
+        )
+
+        # Overdue Invoice for Globex
+        inv_overdue, _ = Invoice.objects.get_or_create(
+            workspace=ws1,
             invoice_number="INV-2026-0002",
             defaults={
-                "subscription": sub_blossom,
-                "customer": blossom,
-                "issue_date": today - timedelta(days=35),
-                "due_date": today - timedelta(days=5),  # Past due!
+                "customer": globex,
                 "status": Invoice.Status.CONFIRMED,
-                "subtotal": Decimal("349.00"),
-                "tax_amount": Decimal("34.90"),
-                "total_amount": Decimal("383.90"),
+                "idempotency_key": f"ws_{ws1.id}_manual_overdue_sample",
+                "issue_date": today - timedelta(days=45),
+                "due_date": today - timedelta(days=15),
+                "subtotal": Decimal("1200.00"),
+                "tax_amount": Decimal("120.00"),
+                "discount_amount": Decimal("0.00"),
+                "total_amount": Decimal("1320.00"),
                 "paid_amount": Decimal("0.00"),
-                "outstanding_balance": Decimal("383.90"),
-                "idempotency_key": f"sub_{sub_blossom.id}_{today - timedelta(days=35)}",
+                "outstanding_balance": Decimal("1320.00"),
+                "notes": "Enterprise custom consult",
+            },
+        )
+
+        # 10. Sample Data in Independent Workspace B (Proving Tenant Isolation)
+        b_cust, _ = Customer.objects.get_or_create(
+            workspace=ws_b,
+            email="manager@dunedinbakery.com",
+            defaults={
+                "company_name": "Dunedin Artisan Bakery",
+                "contact_name": "Clara Higgins",
+                "phone": "+1-555-8833",
+            },
+        )
+        b_prod, _ = Product.objects.get_or_create(
+            workspace=ws_b,
+            code="POS-BAKERY",
+            defaults={
+                "name": "Bakery POS Touch System",
+                "product_type": Product.ProductType.SOFTWARE,
+                "sales_price": Decimal("89.00"),
             },
         )
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Demo database successfully seeded with users, products, plans, subscriptions, and invoices."
+                "Multi-Tenant SaaS Demo Data successfully seeded!\n"
+                f"Workspaces created: {ws1.name} (ID: {ws1.id}), {ws2.name}, {ws_b.name}\n"
+                f"Users: admin@brightloop.com, staff@brightloop.com, customer@acme.com, bob@retailstore.com"
             )
         )

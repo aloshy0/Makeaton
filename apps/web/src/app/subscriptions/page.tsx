@@ -121,7 +121,8 @@ export default function SubscriptionsPage() {
                       <td className="px-5 py-3.5">
                         <div className="font-medium text-slate-800">{sub.plan_details?.name}</div>
                         <div className="text-[11px] text-slate-400 capitalize">
-                          {sub.plan_details?.billing_frequency} • {sub.payment_terms.replace("_", " ")}
+                          {sub.plan_details?.billing_interval} •{" "}
+                          {sub.payment_terms.replace("_", " ")}
                         </div>
                       </td>
                       <td className="px-5 py-3.5">
@@ -165,7 +166,8 @@ export default function SubscriptionsPage() {
                   <Badge variant={selectedSub.status}>{selectedSub.status}</Badge>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Customer: {selectedSub.customer_details?.company_name} ({selectedSub.customer_details?.email})
+                  Customer: {selectedSub.customer_details?.company_name} (
+                  {selectedSub.customer_details?.email})
                 </p>
               </div>
               <button
@@ -250,11 +252,15 @@ export default function SubscriptionsPage() {
                 {/* Base Plan */}
                 <div className="flex items-center justify-between p-3 bg-slate-50/50">
                   <div>
-                    <span className="font-semibold text-slate-900">{selectedSub.plan_details?.name}</span>
-                    <span className="text-slate-500 block text-[11px]">Base Subscription Frequency Fee</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedSub.plan_details?.name}
+                    </span>
+                    <span className="text-slate-500 block text-[11px]">
+                      Base Subscription Frequency Fee
+                    </span>
                   </div>
                   <span className="font-mono font-bold text-slate-900">
-                    {formatCurrency(selectedSub.plan_details?.cost)}
+                    {formatCurrency(selectedSub.plan_details?.base_price || "0.00")}
                   </span>
                 </div>
 
@@ -265,7 +271,8 @@ export default function SubscriptionsPage() {
                       <span className="font-medium text-slate-900">{l.product_details?.name}</span>
                       {l.variant_details && (
                         <span className="ml-2 text-indigo-600 font-medium">
-                          ({l.variant_details.attribute_value} +{formatCurrency(l.variant_details.price_delta)})
+                          ({l.variant_details.attribute_value} +
+                          {formatCurrency(l.variant_details.price_delta)})
                         </span>
                       )}
                       <div className="text-[11px] text-slate-400">
@@ -291,11 +298,15 @@ export default function SubscriptionsPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Applied Discounts</span>
-                  <span className="font-mono text-emerald-600">-{formatCurrency(selectedSub.discount_amount)}</span>
+                  <span className="font-mono text-emerald-600">
+                    -{formatCurrency(selectedSub.discount_amount)}
+                  </span>
                 </div>
                 <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-bold text-slate-900">
                   <span>Total Recurring Charge</span>
-                  <span className="font-mono text-indigo-600">{formatCurrency(selectedSub.total_amount)}</span>
+                  <span className="font-mono text-indigo-600">
+                    {formatCurrency(selectedSub.total_amount)}
+                  </span>
                 </div>
               </div>
             </div>

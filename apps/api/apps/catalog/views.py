@@ -1,13 +1,16 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, viewsets
+from rest_framework import exceptions, filters, permissions, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
-from apps.accounts.permissions import IsStaffOrAdmin
+from apps.workspaces.mixins import TenantScopedMixin
+from apps.workspaces.permissions import IsWorkspaceAdmin, IsWorkspaceMember
 
 from .models import Product, ProductVariant, SubscriptionPlan
 from .serializers import ProductSerializer, ProductVariantSerializer, SubscriptionPlanSerializer
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     queryset = Product.objects.prefetch_related("variants").all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -16,33 +19,52 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ["name", "sales_price", "created_at"]
 
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
-            return [permissions.AllowAny()]
-        return [IsStaffOrAdmin()]
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [IsWorkspaceAdmin()]
+        return [IsWorkspaceMember()]
+
+    @action(detail=True, methods=["get", "post"], url_path="variants")
+    def variants(self, request, workspace_id, pk=None):
+        product = self.get_object()
+        if request.method == "POST":
+            if not IsWorkspaceAdmin().has_permission(request, self):
+                raise exceptions.PermissionDenied("Only Workspace Admins/Owners can add variants.")
+            serializer = ProductVariantSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(product=product)
+            return Response(serializer.data, status=201)
+
+        variants = product.variants.all()
+        return Response(ProductVariantSerializer(variants, many=True).data)
 
 
 class ProductVariantViewSet(viewsets.ModelViewSet):
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ["product", "attribute_name"]
-    search_fields = ["attribute_value"]
 
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
-            return [permissions.AllowAny()]
-        return [IsStaffOrAdmin()]
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [IsWorkspaceAdmin()]
+        return [IsWorkspaceMember()]
 
 
-class SubscriptionPlanViewSet(viewsets.ModelViewSet):
+class SubscriptionPlanViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     queryset = SubscriptionPlan.objects.all()
     serializer_class = SubscriptionPlanSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["billing_frequency", "is_active"]
+    filterset_fields = ["billing_interval", "is_active"]
     search_fields = ["name", "code"]
-    ordering_fields = ["name", "cost", "created_at"]
+    ordering_fields = ["name", "base_price", "created_at"]
 
     def get_permissions(self):
-        if self.action in ["list", "retrieve"]:
+        if self.action == "published":
             return [permissions.AllowAny()]
-        return [IsStaffOrAdmin()]
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [IsWorkspaceAdmin()]
+        return [IsWorkspaceMember()]
+
+    @action(detail=False, methods=["get"], url_path="published")
+    def published(self, request, workspace_id):
+        plans = SubscriptionPlan.objects.filter(workspace_id=workspace_id, is_active=True)
+        serializer = self.get_serializer(plans, many=True)
+        return Response(serializer.data)

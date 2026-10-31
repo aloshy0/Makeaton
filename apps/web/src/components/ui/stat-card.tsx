@@ -8,9 +8,12 @@ export interface StatCardProps {
   icon?: React.ReactNode;
   trend?: {
     value: string;
+    label?: string;
     isPositive?: boolean;
   };
+  variant?: "default" | "warning";
   highlight?: boolean;
+  loading?: boolean;
 }
 
 export function StatCard({ title, value, subtitle, icon, trend, highlight }: StatCardProps) {
