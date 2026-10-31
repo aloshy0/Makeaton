@@ -14,7 +14,7 @@ export function Navbar({ mode, setMode }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Left: Brand Logo & Main Navigation */}
         <div className="flex items-center gap-10">
@@ -27,7 +27,9 @@ export function Navbar({ mode, setMode }: NavbarProps) {
               <path d="M3 4.5h16l-4.5 6H3v-6z" />
               <path d="M3 13.5h11l-4.5 6.5H3v-6.5z" />
             </svg>
-            <span className="text-lg font-black tracking-tight text-black">FLOWGRID</span>
+            <span className="text-lg font-black tracking-tight text-black">
+              FLOWGRID
+            </span>
           </Link>
 
           {/* Navigation Links */}
@@ -55,21 +57,15 @@ export function Navbar({ mode, setMode }: NavbarProps) {
                     href="#customers"
                     className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                   >
-                    <div className="text-xs font-semibold text-slate-900">
-                      Customer Subscriptions
-                    </div>
-                    <div className="text-[11px] text-slate-500">
-                      Directory & renewal management.
-                    </div>
+                    <div className="text-xs font-semibold text-slate-900">Customer Subscriptions</div>
+                    <div className="text-[11px] text-slate-500">Directory & renewal management.</div>
                   </Link>
                   <Link
                     href="#billing"
                     className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                   >
                     <div className="text-xs font-semibold text-slate-900">Automated Billing</div>
-                    <div className="text-[11px] text-slate-500">
-                      Recurring invoices & GST tax calc.
-                    </div>
+                    <div className="text-[11px] text-slate-500">Recurring invoices & GST tax calc.</div>
                   </Link>
                   <Link
                     href="#analytics"
@@ -105,9 +101,7 @@ export function Navbar({ mode, setMode }: NavbarProps) {
                     className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                   >
                     <div className="text-xs font-semibold text-slate-900">Customer Portal</div>
-                    <div className="text-[11px] text-slate-500">
-                      Self-service billing for customers.
-                    </div>
+                    <div className="text-[11px] text-slate-500">Self-service billing for customers.</div>
                   </Link>
                 </div>
               )}

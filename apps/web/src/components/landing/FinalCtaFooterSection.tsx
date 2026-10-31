@@ -8,6 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export function FinalCtaFooterSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const slideContentRef = useRef<HTMLDivElement>(null);
   const ctaContentRef = useRef<HTMLDivElement>(null);
   const brandIconRef = useRef<HTMLDivElement>(null);
   const footerContentRef = useRef<HTMLDivElement>(null);
@@ -20,38 +21,61 @@ export function FinalCtaFooterSection() {
 
     const ctx = gsap.context(() => {
       if (prefersReducedMotion) {
-        gsap.set([ctaContentRef.current, brandIconRef.current, footerContentRef.current], {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-        });
+        gsap.set(
+          [
+            slideContentRef.current,
+            ctaContentRef.current,
+            brandIconRef.current,
+            footerContentRef.current,
+          ],
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }
+        );
         return;
       }
 
+      // PINNED SLIDE 7 TIMELINE
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top 80%",
-          end: "bottom bottom",
-          toggleActions: "play reverse play reverse",
+          start: "top top",
+          end: "+=100%",
+          pin: true,
+          pinSpacing: true,
+          scrub: 0.8,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
         },
-        defaults: { ease: "power3.out" },
       });
+
+      // Phase 1: Entrance Transition (0.0 to 0.40)
+      if (slideContentRef.current) {
+        tl.fromTo(
+          slideContentRef.current,
+          { opacity: 0, y: 50, scale: 0.96 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" },
+          0
+        );
+      }
 
       // 1. Floating Brand Logo Element entrance
       tl.fromTo(
         brandIconRef.current,
         { opacity: 0, scale: 0.7, y: -20 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.9, ease: "back.out(1.8)" }
+        { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: "back.out(1.8)" },
+        0.05
       );
 
       // 2. CTA content reveals
       if (ctaContentRef.current) {
         tl.fromTo(
           ctaContentRef.current.children,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.7, stagger: 0.12 },
-          "-=0.5"
+          { opacity: 0, y: 25 },
+          { opacity: 1, y: 0, duration: 0.35, stagger: 0.08, ease: "power2.out" },
+          0.1
         );
       }
 
@@ -59,9 +83,12 @@ export function FinalCtaFooterSection() {
       tl.fromTo(
         footerContentRef.current,
         { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.8 },
-        "-=0.3"
+        { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" },
+        0.15
       );
+
+      // Phase 2: Slide Holding State (0.40 to 1.0) - Stays pinned in view as final slide
+      tl.to({}, { duration: 0.60 });
 
       // Idle float on brand icon
       if (brandIconRef.current) {
@@ -82,7 +109,7 @@ export function FinalCtaFooterSection() {
     <section
       ref={sectionRef}
       id="cta-footer"
-      className="relative w-full bg-[#080b16] text-white overflow-hidden pt-24 sm:pt-32 pb-12"
+      className="relative w-full min-h-screen bg-[#080b16] text-white overflow-hidden flex flex-col justify-between select-none py-8 sm:py-12"
     >
       {/* Deep Navy Ambient Glowing Orbs */}
       <div
@@ -98,11 +125,11 @@ export function FinalCtaFooterSection() {
         aria-hidden="true"
       />
 
-      <div className="w-full max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10">
+      <div ref={slideContentRef} className="w-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 flex flex-col justify-between flex-1">
         {/* ============================================================ */}
         {/* HERO CTA BLOCK: Centered High-Impact Call to Action          */}
         {/* ============================================================ */}
-        <div className="flex flex-col items-center text-center max-w-3xl mx-auto pb-24 sm:pb-32">
+        <div className="flex flex-col items-center text-center max-w-3xl mx-auto pb-10 sm:pb-14 pt-4">
           {/* Minimal Floating FlowGrid Brand Element */}
           <div ref={brandIconRef} className="mb-8 relative select-none will-change-transform">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-[#131938] via-[#1e2756] to-[#0f1430] border border-white/20 shadow-[0_20px_50px_rgba(99,102,241,0.35)] flex items-center justify-center p-3 relative group">
