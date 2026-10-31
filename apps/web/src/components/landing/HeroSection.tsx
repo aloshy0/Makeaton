@@ -60,9 +60,10 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
   // Slide 3 Refs
   const slide3ContainerRef = useRef<HTMLDivElement>(null);
-  const slide3TopNotifRef = useRef<HTMLDivElement>(null);
-  const slide3TopCardRef = useRef<HTMLDivElement>(null);
+  const readyForPlansCardRef = useRef<HTMLDivElement>(null);
+  const slide3SplineWrapperRef = useRef<HTMLDivElement>(null);
   const slide3SplineRef = useRef<SVGPathElement>(null);
+  const slide3SplineDotRef = useRef<SVGCircleElement>(null);
   const slide3HeaderRef = useRef<HTMLDivElement>(null);
   const billingToggleRef = useRef<HTMLDivElement>(null);
   const plansWrapperRef = useRef<HTMLDivElement>(null);
@@ -77,8 +78,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
   const brandCardRef = useRef<HTMLDivElement>(null);
   const notif1Ref = useRef<HTMLDivElement>(null);
   const notif2Ref = useRef<HTMLDivElement>(null);
-  const notif3Ref = useRef<HTMLDivElement>(null);
-  const notif3InnerRef = useRef<HTMLDivElement>(null);
+  const slide2NotifAnchorRef = useRef<HTMLDivElement>(null);
 
   // Connecting SVG Splines Refs (Slide 2)
   const spline1Ref = useRef<SVGPathElement>(null);
@@ -212,25 +212,6 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         });
       }
 
-      if (notif3Ref.current) {
-        gsap.fromTo(
-          notif3Ref.current,
-          { opacity: 0, scale: 0.85, x: 20 },
-          { opacity: 1, scale: 1, x: 0, duration: 1, delay: 0.8, ease: "back.out(1.5)" }
-        );
-      }
-
-      if (notif3InnerRef.current) {
-        gsap.to(notif3InnerRef.current, {
-          y: -6,
-          duration: 3.4,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-          delay: 0.9,
-        });
-      }
-
       // 2. Setup Spline Paths Stroke Lengths for progressive drawing
       [spline1Ref.current, spline2Ref.current, spline3Ref.current].forEach((spline) => {
         if (spline) {
@@ -253,12 +234,55 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         }
       });
 
-      // Setup Slide 3 Connecting Spline path length
+      // Setup Slide 3 Connecting Spline path length and terminal dot
       if (slide3SplineRef.current) {
         const len = slide3SplineRef.current.getTotalLength ? slide3SplineRef.current.getTotalLength() : 60;
         gsap.set(slide3SplineRef.current, {
           strokeDasharray: len,
           strokeDashoffset: len,
+        });
+      }
+
+      if (slide3SplineDotRef.current) {
+        gsap.set(slide3SplineDotRef.current, {
+          transformOrigin: "center center",
+          scale: 0,
+        });
+      }
+
+      // Dynamic offset calculation: Distance from Slide 3 resting position (0, 0) to Slide 2 anchor
+      const getSlide2Offset = () => {
+        if (!readyForPlansCardRef.current || !slide2NotifAnchorRef.current) {
+          return { x: 440, y: 390 };
+        }
+        const curX = (gsap.getProperty(readyForPlansCardRef.current, "x") as number) || 0;
+        const curY = (gsap.getProperty(readyForPlansCardRef.current, "y") as number) || 0;
+        const cardRect = readyForPlansCardRef.current.getBoundingClientRect();
+        const anchorRect = slide2NotifAnchorRef.current.getBoundingClientRect();
+
+        if (cardRect.width === 0 || anchorRect.width === 0) {
+          return { x: 440, y: 390 };
+        }
+
+        // Account for illustrationWrapperRef horizontal shift if called before shift completes
+        const currentWrapperX = illustrationWrapperRef.current
+          ? ((gsap.getProperty(illustrationWrapperRef.current, "x") as number) || 0)
+          : 0;
+        const targetWrapperX = typeof window !== "undefined" && window.innerWidth >= 1280 ? 40 : 0;
+        const wrapperShift = targetWrapperX - currentWrapperX;
+
+        return {
+          x: curX + ((anchorRect.left + wrapperShift + anchorRect.width / 2) - (cardRect.left + cardRect.width / 2)),
+          y: curY + ((anchorRect.top + anchorRect.height / 2) - (cardRect.top + cardRect.height / 2)),
+        };
+      };
+
+      if (readyForPlansCardRef.current) {
+        gsap.set(readyForPlansCardRef.current, {
+          x: () => getSlide2Offset().x,
+          y: () => getSlide2Offset().y,
+          opacity: 0,
+          scale: 0.85,
         });
       }
 
@@ -302,6 +326,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         },
         0
       );
+
       // C. Slide 2 elements reveal smoothly
       scrollTl.to(
         slide2ContainerRef.current,
@@ -368,27 +393,34 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         }
       });
 
+      // Ready for Plans Card reveals at Slide 2 anchor position
+      if (readyForPlansCardRef.current) {
+        scrollTl.fromTo(
+          readyForPlansCardRef.current,
+          {
+            opacity: 0,
+            scale: 0.85,
+            x: () => getSlide2Offset().x,
+            y: () => getSlide2Offset().y,
+          },
+          {
+            opacity: 1,
+            scale: 1,
+            x: () => getSlide2Offset().x,
+            y: () => getSlide2Offset().y,
+            duration: 0.45,
+            ease: "back.out(1.4)",
+          },
+          0.25
+        );
+      }
+
       // Holding state: keeps Slide 2 in full view for user to inspect
-      scrollTl.to({}, { duration: 0.45 });
+      scrollTl.to({}, { duration: 0.35 });
 
       // ================================================================
-      // PHASE 2: "Ready for Plans" Physically Flies from Slide 2 to Slide 3
+      // PHASE 2: "Ready for Plans" Flies from Slide 2 into Slide 3
       // ================================================================
-
-      // Precise flight target calculation from Slide 2 position to Slide 3 top center
-      const getNotif3Target = () => {
-        if (!notif3Ref.current || !slide3TopCardRef.current) {
-          return { x: -420, y: -380 };
-        }
-        const curX = (gsap.getProperty(notif3Ref.current, "x") as number) || 0;
-        const curY = (gsap.getProperty(notif3Ref.current, "y") as number) || 0;
-        const from = notif3Ref.current.getBoundingClientRect();
-        const to = slide3TopCardRef.current.getBoundingClientRect();
-        return {
-          x: curX + (to.left + to.width / 2 - (from.left + from.width / 2)),
-          y: curY + (to.top + to.height / 2 - (from.top + from.height / 2)),
-        };
-      };
 
       // A. Slide 2 left content retreats UP
       scrollTl.to(
@@ -398,167 +430,135 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           y: -70,
           filter: "blur(6px)",
           pointerEvents: "none",
-          duration: 0.45,
+          duration: 0.35,
           ease: "power2.inOut",
         },
-        0.95
+        0.85
       );
 
-      // B. Product panel, brand card, pricing updated notification retreat UP into background
+      // B. Entire Slide 2 illustration composition (panel, brand card, notifs, splines) fades out cleanly
       scrollTl.to(
-        [notif2Ref.current, brandCardRef.current, productPanelRef.current],
+        illustrationWrapperRef.current,
         {
           opacity: 0,
-          y: -50,
-          scale: 0.88,
-          duration: 0.45,
-          stagger: 0.03,
+          y: -40,
+          scale: 0.92,
+          duration: 0.35,
           ease: "power2.in",
         },
-        0.95
+        0.85
       );
 
-      // Slide 2 mint spline fades out as notif3 detaches
-      if (spline3Ref.current) {
+      // C. THE HERO ANIMATION: readyForPlansCardRef glides smoothly from Slide 2 position to (0, 0)
+      if (readyForPlansCardRef.current) {
         scrollTl.to(
-          spline3Ref.current,
+          readyForPlansCardRef.current,
           {
-            opacity: 0,
-            duration: 0.25,
-            ease: "power1.out",
+            x: 0,
+            y: 0,
+            scale: 1,
+            boxShadow: "0 16px 36px -8px rgba(0,0,0,0.08)",
+            duration: 0.38,
+            ease: "power2.inOut",
           },
-          0.95
+          0.85
         );
       }
 
-      // "Product Created" notification lingers in background as seen in user's reference
-      if (notif1Ref.current) {
-        scrollTl.to(
-          notif1Ref.current,
-          {
-            opacity: 0.35,
-            scale: 0.94,
-            duration: 0.4,
-            ease: "power1.out",
-          },
-          0.95
-        );
-        scrollTl.to(
-          notif1Ref.current,
-          {
-            opacity: 0,
-            y: -30,
-            duration: 0.35,
-            ease: "power2.in",
-          },
-          1.22
+      // D. Connecting curved spline line extends downward as the card settles at top-center
+      if (slide3SplineWrapperRef.current) {
+        scrollTl.fromTo(
+          slide3SplineWrapperRef.current,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.15 },
+          1.20
         );
       }
 
-      // C. THE HERO ANIMATION: notif3 ("Ready for Plans") physically flies from Slide 2 to Slide 3 top center
-      scrollTl.to(
-        notif3Ref.current,
-        {
-          x: () => getNotif3Target().x,
-          y: () => getNotif3Target().y,
-          scale: 1.04,
-          zIndex: 50,
-          boxShadow: "0 20px 45px -10px rgba(16,185,129,0.35), 0 10px 25px rgba(0,0,0,0.08)",
-          duration: 0.52,
-          ease: "power2.inOut",
-        },
-        0.96
-      );
-
-      // D. Slide 3 container reveals as notif3 approaches destination
-      scrollTl.to(
-        slide3ContainerRef.current,
-        {
-          opacity: 1,
-          pointerEvents: "auto",
-          duration: 0.35,
-          ease: "power2.out",
-        },
-        1.04
-      );
-
-      // Seamless handoff at destination
-      scrollTl.fromTo(
-        slide3TopCardRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.1, ease: "none" },
-        1.46
-      );
-      scrollTl.to(
-        notif3Ref.current,
-        { opacity: 0, duration: 0.1, ease: "none" },
-        1.46
-      );
-
-      // E. Connecting curved spline line extends downward from landed notification to anchor dot
       if (slide3SplineRef.current) {
-        scrollTl.to(
+        scrollTl.fromTo(
           slide3SplineRef.current,
+          { strokeDashoffset: () => slide3SplineRef.current?.getTotalLength() || 60 },
           {
             strokeDashoffset: 0,
-            duration: 0.38,
+            duration: 0.22,
             ease: "power1.inOut",
           },
-          1.18
+          1.20
         );
       }
 
-      // F. Heading, Badge & Description reveal smoothly
+      if (slide3SplineDotRef.current) {
+        scrollTl.fromTo(
+          slide3SplineDotRef.current,
+          { scale: 0 },
+          {
+            scale: 1,
+            duration: 0.16,
+            ease: "back.out(2)",
+          },
+          1.32
+        );
+      }
+
+      // E. Centered Header (Badge, Heading, Description) reveals smoothly
       scrollTl.fromTo(
         slide3HeaderRef.current,
         { opacity: 0, y: -20 },
-        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
-        1.22
+        { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" },
+        1.32
       );
 
-      // G. Segmented Billing Cycle Selector appears
+      // F. Segmented Billing Cycle Selector appears
       scrollTl.fromTo(
         billingToggleRef.current,
         { opacity: 0, y: -15 },
-        { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" },
-        1.28
+        { opacity: 1, y: 0, duration: 0.30, ease: "power2.out" },
+        1.40
       );
 
-      // H. Basic, Pro, Business cards enter sequentially
+      // G. Basic, Pro, Business cards enter sequentially
       scrollTl.fromTo(
         planCardBasicRef.current,
         { opacity: 0, y: 35, scale: 0.94 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.2)" },
-        1.32
+        { opacity: 1, y: 0, scale: 1, duration: 0.40, ease: "back.out(1.2)" },
+        1.46
       );
 
       scrollTl.fromTo(
         planCardProRef.current,
         { opacity: 0, y: 45, scale: 0.92 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.4)" },
-        1.38
+        { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.4)" },
+        1.52
       );
 
       scrollTl.fromTo(
         planCardBusinessRef.current,
         { opacity: 0, y: 35, scale: 0.94 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.2)" },
-        1.44
+        { opacity: 1, y: 0, scale: 1, duration: 0.40, ease: "back.out(1.2)" },
+        1.58
       );
 
-      // I. Pro card receives a subtle glow animation
+      // H. Pro card receives a subtle glow animation
       scrollTl.to(
         planCardProRef.current,
         {
           boxShadow: "0 22px 65px -8px rgba(99,102,241,0.55), 0 0 45px rgba(99,102,241,0.32)",
-          duration: 0.35,
+          duration: 0.30,
           ease: "power2.out",
         },
-        1.50
+        1.68
+      );
+
+      // Enable pointer events on Slide 3
+      scrollTl.set(
+        slide3ContainerRef.current,
+        { pointerEvents: "auto" },
+        1.46
       );
 
       // Holding state: keeps Slide 3 in full view for user to inspect & interact
-      scrollTl.to({}, { duration: 0.55 });
+      scrollTl.to({}, { duration: 0.80 });
 
       // ================================================================
       // PHASE 3: FINAL TRANSITION INTO CUSTOMER SUBSCRIPTIONS & BILLING
@@ -570,10 +570,11 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           opacity: 0,
           scale: 0.96,
           filter: "blur(6px)",
+          pointerEvents: "none",
           duration: 0.45,
           ease: "power2.inOut",
         },
-        2.05
+        2.50
       );
     }, pinSectionRef);
 
@@ -1037,30 +1038,12 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               </div>
 
               {/* ------------------------------------------------------------ */}
-              {/* NOTIFICATION 3: Ready for Plans (Bottom-Right Floating Card) */}
+              {/* SLIDE 2 ANCHOR: Target Position for Ready for Plans in Slide 2 */}
               {/* ------------------------------------------------------------ */}
               <div
-                ref={notif3Ref}
-                className="absolute bottom-4 sm:bottom-8 -right-2 sm:-right-6 z-40 will-change-transform max-w-[280px] sm:max-w-[320px]"
-              >
-                <div
-                  ref={notif3InnerRef}
-                  className="bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl sm:rounded-3xl p-3 sm:px-5 sm:py-2.5 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5"
-                >
-                  <div className="w-8 h-8 rounded-full bg-emerald-400 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Check className="w-4 h-4 stroke-[3]" />
-                  </div>
-                  <div className="text-left pr-1">
-                    <div className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
-                      Ready for Plans
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
-                      Turn products into subscription plans
-                    </div>
-                  </div>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] ml-auto shrink-0 self-start mt-0.5" />
-                </div>
-              </div>
+                ref={slide2NotifAnchorRef}
+                className="absolute bottom-4 sm:bottom-8 -right-2 sm:-right-6 w-[280px] sm:w-[320px] h-[54px] pointer-events-none opacity-0"
+              />
             </div>
           </div>
 
@@ -1069,18 +1052,14 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           {/* ================================================================ */}
           <div
             ref={slide3ContainerRef}
-            style={{
-              opacity: 0,
-              pointerEvents: "none",
-            }}
-            className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1240px] mx-auto will-change-transform"
+            className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1240px] mx-auto will-change-transform pointer-events-none"
           >
-            {/* Top Centered Notification Target: "Ready for Plans" */}
-            <div ref={slide3TopNotifRef} className="relative z-10 flex flex-col items-center">
+            {/* Top Centered Notification: "Ready for Plans" (Travels from Slide 2) */}
+            <div className="relative z-40 flex flex-col items-center">
               <div
-                ref={slide3TopCardRef}
+                ref={readyForPlansCardRef}
                 style={{ opacity: 0 }}
-                className="bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl sm:rounded-3xl px-5 py-2.5 sm:py-3 shadow-[0_12px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5 max-w-[320px] will-change-transform"
+                className="bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl sm:rounded-3xl px-5 py-2.5 sm:py-3 shadow-[0_12px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5 max-w-[320px] will-change-transform select-none"
               >
                 <div className="w-8 h-8 rounded-full bg-emerald-400 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Check className="w-4 h-4 stroke-[3]" />
@@ -1097,7 +1076,11 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               </div>
 
               {/* S-curved Mint Connecting Spline with terminal dot */}
-              <div className="relative flex flex-col items-center -my-0.5">
+              <div
+                ref={slide3SplineWrapperRef}
+                style={{ opacity: 0 }}
+                className="relative flex flex-col items-center -my-0.5"
+              >
                 <svg width="36" height="40" viewBox="0 0 36 40" fill="none" className="overflow-visible">
                   <path
                     ref={slide3SplineRef}
@@ -1107,13 +1090,23 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     strokeLinecap="round"
                     fill="none"
                   />
-                  <circle cx="18" cy="36" r="3" fill="#10b981" />
+                  <circle
+                    ref={slide3SplineDotRef}
+                    cx="18"
+                    cy="36"
+                    r="3"
+                    fill="#10b981"
+                  />
                 </svg>
               </div>
             </div>
 
             {/* Centered Header: Badge, Heading, Description */}
-            <div ref={slide3HeaderRef} className="relative z-10 flex flex-col items-center text-center max-w-2xl px-2">
+            <div
+              ref={slide3HeaderRef}
+              style={{ opacity: 0 }}
+              className="relative z-10 flex flex-col items-center text-center max-w-2xl px-2"
+            >
               {/* Badge: SUBSCRIPTION PLANS */}
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f3e8ff] border border-[#e9d5ff] text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-[#7c3aed] shadow-xs mb-2.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#7c3aed]" />
@@ -1138,6 +1131,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             {/* Centered Segmented Billing Cycle Selector */}
             <div
               ref={billingToggleRef}
+              style={{ opacity: 0 }}
               className="relative z-10 inline-flex items-center p-1 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-inner mt-4 sm:mt-5 mb-5 sm:mb-6"
             >
               {(["daily", "weekly", "monthly", "yearly"] as const).map((cycle) => {
@@ -1173,6 +1167,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               {/* Card 1: Basic */}
               <div
                 ref={planCardBasicRef}
+                style={{ opacity: 0 }}
                 className="rounded-[26px] sm:rounded-[28px] bg-[#0e121a] border border-white/10 p-6 sm:p-7 flex flex-col justify-between shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/20 group relative"
               >
                 <div>
@@ -1218,6 +1213,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               {/* Card 2: Pro (HIGHLIGHTED) */}
               <div
                 ref={planCardProRef}
+                style={{ opacity: 0 }}
                 className="relative rounded-[26px] sm:rounded-[28px] bg-gradient-to-b from-[#131742] via-[#0b0e27] to-[#070919] border-2 border-[#6366f1] p-6 sm:p-7 flex flex-col justify-between shadow-[0_20px_55px_-10px_rgba(99,102,241,0.5),0_0_35px_rgba(99,102,241,0.25)] md:-translate-y-2.5 z-20 transition-all duration-300 group"
               >
                 {/* Floating "Most Popular" Badge */}
@@ -1271,6 +1267,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               {/* Card 3: Business */}
               <div
                 ref={planCardBusinessRef}
+                style={{ opacity: 0 }}
                 className="rounded-[26px] sm:rounded-[28px] bg-[#0e121a] border border-white/10 p-6 sm:p-7 flex flex-col justify-between shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/20 group relative"
               >
                 <div>
