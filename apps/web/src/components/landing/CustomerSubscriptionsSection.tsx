@@ -20,7 +20,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export function CustomerSubscriptionsSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const slideContentRef = useRef<HTMLDivElement>(null);
   const leftColRef = useRef<HTMLDivElement>(null);
   const highlightsRef = useRef<HTMLDivElement>(null);
   const mainCardRef = useRef<HTMLDivElement>(null);
@@ -41,7 +40,6 @@ export function CustomerSubscriptionsSection() {
       if (prefersReducedMotion) {
         gsap.set(
           [
-            slideContentRef.current,
             leftColRef.current,
             highlightsRef.current?.children,
             mainCardRef.current,
@@ -56,37 +54,22 @@ export function CustomerSubscriptionsSection() {
         return;
       }
 
-      // PINNED SLIDE 4 TIMELINE
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "top top",
-          end: "+=130%",
-          pin: true,
-          pinSpacing: true,
-          scrub: 0.8,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
+          start: "top 75%",
+          end: "bottom 25%",
+          toggleActions: "play reverse play reverse",
         },
+        defaults: { ease: "power3.out" },
       });
-
-      // Phase 1: Entrance Transition (0.0 to 0.45)
-      if (slideContentRef.current) {
-        tl.fromTo(
-          slideContentRef.current,
-          { opacity: 0, y: 50, scale: 0.96 },
-          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" },
-          0
-        );
-      }
 
       // 1. Left column text entrance
       if (leftColRef.current) {
         tl.fromTo(
           leftColRef.current.children,
-          { opacity: 0, x: -25 },
-          { opacity: 1, x: 0, duration: 0.35, stagger: 0.08, ease: "power2.out" },
-          0.05
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.7, stagger: 0.1 }
         );
       }
 
@@ -94,35 +77,35 @@ export function CustomerSubscriptionsSection() {
       if (highlightsRef.current) {
         tl.fromTo(
           highlightsRef.current.children,
-          { opacity: 0, x: -20 },
-          { opacity: 1, x: 0, duration: 0.35, stagger: 0.08, ease: "power2.out" },
-          0.1
+          { opacity: 0, x: -25 },
+          { opacity: 1, x: 0, duration: 0.6, stagger: 0.12 },
+          "-=0.4"
         );
       }
 
       // 3. Main Customer Subscriptions Panel entrance
       tl.fromTo(
         mainCardRef.current,
-        { opacity: 0, y: 40, scale: 0.94 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.2)" },
-        0.08
+        { opacity: 0, y: 50, scale: 0.94 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.85, ease: "back.out(1.2)" },
+        "-=0.6"
       );
 
       // 4. Plan Transformation Bridge: Selected Pro Plan transforms into John Smith's subscription
       tl.fromTo(
         planTransferPillRef.current,
-        { opacity: 0, y: -30, scale: 0.85 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: "back.out(1.5)" },
-        0.12
+        { opacity: 0, y: -40, scale: 0.8 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "back.out(1.5)" },
+        "-=0.5"
       );
 
       // 5. Customer records appear sequentially
       if (customerRowsRef.current) {
         tl.fromTo(
           customerRowsRef.current.children,
-          { opacity: 0, y: 15 },
-          { opacity: 1, y: 0, duration: 0.3, stagger: 0.06, ease: "power2.out" },
-          0.18
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.15, ease: "power2.out" },
+          "-=0.3"
         );
       }
 
@@ -132,51 +115,32 @@ export function CustomerSubscriptionsSection() {
         gsap.set(splineRef.current, { strokeDasharray: len, strokeDashoffset: len });
         tl.to(
           splineRef.current,
-          { strokeDashoffset: 0, duration: 0.35, ease: "power2.inOut" },
-          0.15
+          { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" },
+          "-=0.4"
         );
       }
 
-      // 7. Floating notifications appear
+      // 7. Floating notifications appear with bounce
       tl.fromTo(
         notif1Ref.current,
-        { opacity: 0, scale: 0.8, y: -15 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "back.out(1.5)" },
-        0.22
+        { opacity: 0, scale: 0.8, y: -20 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: "back.out(1.5)" },
+        "-=0.4"
       );
 
       tl.fromTo(
         notif2Ref.current,
-        { opacity: 0, scale: 0.8, x: -15 },
-        { opacity: 1, scale: 1, x: 0, duration: 0.3, ease: "back.out(1.5)" },
-        0.26
+        { opacity: 0, scale: 0.8, x: -20 },
+        { opacity: 1, scale: 1, x: 0, duration: 0.55, ease: "back.out(1.5)" },
+        "-=0.35"
       );
 
       tl.fromTo(
         notif3Ref.current,
-        { opacity: 0, scale: 0.8, y: 15 },
-        { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: "back.out(1.5)" },
-        0.30
+        { opacity: 0, scale: 0.8, y: 20 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: "back.out(1.5)" },
+        "-=0.3"
       );
-
-      // Phase 2: Slide Holding State (0.45 to 0.85) - Locked in full view for user to inspect
-      tl.to({}, { duration: 0.40 });
-
-      // Phase 3: Slide Exit Transition (0.85 to 1.05) - Smoothly moves up & fades to welcome Slide 5
-      if (slideContentRef.current) {
-        tl.to(
-          slideContentRef.current,
-          {
-            opacity: 0,
-            y: -60,
-            scale: 0.96,
-            filter: "blur(4px)",
-            duration: 0.25,
-            ease: "power2.inOut",
-          },
-          0.85
-        );
-      }
 
       // Subtle ambient bobbing on floating notifications
       [notif1Ref.current, notif2Ref.current, notif3Ref.current].forEach((notif, idx) => {
@@ -200,7 +164,7 @@ export function CustomerSubscriptionsSection() {
     <section
       ref={sectionRef}
       id="customers"
-      className="relative w-full h-screen min-h-screen bg-white overflow-hidden flex items-center justify-center select-none"
+      className="relative w-full min-h-screen py-24 sm:py-32 bg-white overflow-hidden flex items-center justify-center"
     >
       {/* Ambient Lighting Gradients (Matching FlowGrid design language) */}
       <div
@@ -216,7 +180,7 @@ export function CustomerSubscriptionsSection() {
         aria-hidden="true"
       />
 
-      <div ref={slideContentRef} className="w-full max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 py-4">
+      <div className="w-full max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* ============================================================ */}
           {/* Left Column: Heading, Description & 3 Feature Highlights     */}
