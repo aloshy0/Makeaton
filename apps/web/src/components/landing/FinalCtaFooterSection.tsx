@@ -28,28 +28,32 @@ export function FinalCtaFooterSection() {
   // Legal modal state
   const [activeLegalTab, setActiveLegalTab] = useState<LegalTab | null>(null);
 
-  // Smooth scroll helper respecting Lenis or native
-  const smoothScrollTo = useCallback((targetId: string) => {
-    if (typeof window === "undefined") return;
-    const element = document.getElementById(targetId);
-    if ((window as any).lenis) {
-      (window as any).lenis.scrollTo(element || `#${targetId}`, {
-        offset: -40,
-        duration: 1.2,
-      });
-    } else if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, []);
+  // Keep footer section links working with Lenis, native scrolling and reduced motion.
+  const scrollToSection = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+      const element = document.getElementById(targetId);
+      if (!element) return;
 
-  const scrollToTop = useCallback(() => {
-    if (typeof window === "undefined") return;
-    if ((window as any).lenis) {
-      (window as any).lenis.scrollTo(0, { duration: 1.4 });
-    } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  }, []);
+      event.preventDefault();
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const lenis = (
+        window as unknown as {
+          lenis?: { scrollTo: (target: HTMLElement, options: object) => void };
+        }
+      ).lenis;
+
+      if (lenis) {
+        lenis.scrollTo(element, { offset: -80, duration: 1.2, immediate: prefersReducedMotion });
+      } else {
+        window.scrollTo({
+          top: element.getBoundingClientRect().top + window.scrollY - 80,
+          behavior: prefersReducedMotion ? "auto" : "smooth",
+        });
+      }
+      window.history.replaceState(window.history.state, "", `#${targetId}`);
+    },
+    []
+  );
 
   // Close legal modal with ESC key
   useEffect(() => {
@@ -210,13 +214,13 @@ export function FinalCtaFooterSection() {
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
 
-              <button
-                type="button"
-                onClick={() => smoothScrollTo("products")}
+              <a
+                href="#products"
+                onClick={(event) => scrollToSection(event, "products")}
                 className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-white/5 hover:bg-white/10 border border-white/20 text-white text-sm font-semibold transition-all shadow-xs active:scale-95 cursor-pointer"
               >
                 <span>Explore FlowGrid</span>
-              </button>
+              </a>
             </div>
 
             {/* Trust Micro-badges */}
@@ -281,49 +285,49 @@ export function FinalCtaFooterSection() {
               </span>
               <ul className="space-y-2.5 text-xs text-slate-400">
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => smoothScrollTo("products")}
+                  <a
+                    href="#products"
+                    onClick={(event) => scrollToSection(event, "products")}
                     className="hover:text-white transition-colors cursor-pointer text-left focus:outline-none focus-visible:underline"
                   >
                     Product Management
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => smoothScrollTo("plans")}
+                  <a
+                    href="#plans"
+                    onClick={(event) => scrollToSection(event, "plans")}
                     className="hover:text-white transition-colors cursor-pointer text-left focus:outline-none focus-visible:underline"
                   >
                     Subscription Plans
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => smoothScrollTo("customers")}
+                  <a
+                    href="#customers"
+                    onClick={(event) => scrollToSection(event, "customers")}
                     className="hover:text-white transition-colors cursor-pointer text-left focus:outline-none focus-visible:underline"
                   >
                     Customer Subscriptions
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => smoothScrollTo("billing")}
+                  <a
+                    href="#billing"
+                    onClick={(event) => scrollToSection(event, "billing")}
                     className="hover:text-white transition-colors cursor-pointer text-left focus:outline-none focus-visible:underline"
                   >
                     Automated Billing
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => smoothScrollTo("analytics")}
+                  <a
+                    href="#analytics"
+                    onClick={(event) => scrollToSection(event, "analytics")}
                     className="hover:text-white transition-colors cursor-pointer text-left focus:outline-none focus-visible:underline"
                   >
                     Business Analytics
-                  </button>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -374,13 +378,13 @@ export function FinalCtaFooterSection() {
               </span>
               <ul className="space-y-2.5 text-xs text-slate-400">
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => smoothScrollTo("plans")}
+                  <a
+                    href="#plans"
+                    onClick={(event) => scrollToSection(event, "plans")}
                     className="hover:text-white transition-colors cursor-pointer text-left"
                   >
                     Pricing Matrix
-                  </button>
+                  </a>
                 </li>
                 <li>
                   <Link
@@ -508,15 +512,15 @@ export function FinalCtaFooterSection() {
               </div>
 
               {/* Back to Top Smooth Trigger */}
-              <button
-                type="button"
-                onClick={scrollToTop}
+              <a
+                href="#hero"
+                onClick={(event) => scrollToSection(event, "hero")}
                 className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors ml-1 cursor-pointer"
                 title="Scroll back to top"
                 aria-label="Scroll back to top"
               >
                 <ArrowUp className="w-3.5 h-3.5" />
-              </button>
+              </a>
             </div>
           </div>
         </footer>

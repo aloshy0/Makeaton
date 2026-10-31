@@ -1,415 +1,251 @@
 "use client";
 
-import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import {
-  TrendingUp,
-  CreditCard,
-  AlertTriangle,
-  Repeat,
-  DollarSign,
-  Download,
-  Calendar,
-  Layers,
-  ArrowUpRight,
-  Printer,
-  Sparkles,
-} from "lucide-react";
-import {
-  AreaChart,
   Area,
-  BarChart,
-  Bar,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
+import { AlertCircle, Building2, Download, Printer, RefreshCw } from "lucide-react";
 import { api } from "../../lib/api";
-import { formatCurrency, formatDate } from "../../lib/utils";
-import { StatCard } from "../../components/ui/stat-card";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+import { formatCurrency } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
-import { DashboardMetrics, Subscription, Invoice } from "../../types";
-
-const CASHFLOW_TREND_DATA = [
-  { month: "Jun 2026", invoiced: 18400, collected: 17200, mrr: 16500 },
-  { month: "Jul 2026", invoiced: 22100, collected: 20800, mrr: 19800 },
-  { month: "Aug 2026", invoiced: 27500, collected: 26000, mrr: 24200 },
-  { month: "Sep 2026", invoiced: 34200, collected: 32100, mrr: 31000 },
-  { month: "Oct 2026", invoiced: 43250, collected: 40150, mrr: 38450 },
-  { month: "Nov 2026 (Est)", invoiced: 51000, collected: 48000, mrr: 45000 },
-];
-
-const PLAN_DISTRIBUTION_DATA = [
-  { name: "Enterprise Dedicated", value: 48, color: "#4f46e5" },
-  { name: "Growth Scale", value: 34, color: "#06b6d4" },
-  { name: "Starter Tier", value: 18, color: "#10b981" },
-];
+import { useAccount } from "../../context/account-context";
 
 export default function ReportsPage() {
-  const [timeRange, setTimeRange] = useState<"30d" | "quarter" | "year" | "all">("quarter");
-  const [downloading, setDownloading] = useState(false);
-
-  const { data: metrics, isLoading: metricsLoading } = useQuery<DashboardMetrics>({
-    queryKey: ["reports", "metrics"],
-    queryFn: () => api.getDashboard(),
+  const { activeWorkspace } = useAccount();
+  const workspaceId = activeWorkspace?.id;
+  const currency = activeWorkspace?.currency || "USD";
+  const reportQuery = useQuery({
+    queryKey: ["reports", "summary", workspaceId],
+    queryFn: () => {
+      if (!workspaceId) throw new Error("Select a workspace to view its reports.");
+      return api.getDashboard(workspaceId);
+    },
+    enabled: Boolean(workspaceId),
   });
 
-  const { data: subscriptions = [] } = useQuery<Subscription[]>({
-    queryKey: ["reports", "subscriptions"],
-    queryFn: () => api.getSubscriptions(),
-  });
+  const metrics = reportQuery.data;
+  const cashflow =
+    metrics?.cashflow_trends.map((point) => ({
+      month: point.month,
+      amount: Number(point.amount),
+    })) || [];
 
-  const { data: invoices = [] } = useQuery<Invoice[]>({
-    queryKey: ["reports", "invoices"],
-    queryFn: () => api.getInvoices(),
-  });
-
-  const handleExportCSV = () => {
-    setDownloading(true);
-    setTimeout(() => {
-      const csvHeader = "Month,Invoiced (USD),Collected (USD),MRR (USD)\n";
-      const csvRows = CASHFLOW_TREND_DATA.map(
-        (r) => `${r.month},${r.invoiced},${r.collected},${r.mrr}`
-      ).join("\n");
-      const blob = new Blob([csvHeader + csvRows], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute(
-        "download",
-        `flowgrid-financial-report-${new Date().toISOString().slice(0, 10)}.csv`
-      );
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setDownloading(false);
-    }, 600);
-  };
-
-  const handlePrint = () => {
-    window.print();
+  const exportCsv = () => {
+    if (!metrics) return;
+    const rows = [
+      ["Month", `Payments collected (${currency})`],
+      ...metrics.cashflow_trends.map((point) => [point.month, point.amount]),
+    ];
+    const csv = rows
+      .map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const file = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `flowgrid-collections-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <main className="space-y-6 pb-8" aria-labelledby="reports-title">
+      <header className="flex flex-col gap-4 rounded-2xl border border-[#E8ECF3] bg-white p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Executive Financial & Subscription Analytics
-            </h1>
-            <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-semibold px-2 py-0.5">
-              Sub-2s Query Speed
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Idempotent accounting aggregations, cashflow realization, and recurring revenue
-            retention.
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#7651F5]">
+            {activeWorkspace?.name || "Workspace"}
+          </p>
+          <h1 id="reports-title" className="mt-1 text-2xl font-bold tracking-tight text-[#0B1020]">
+            Business reports
+          </h1>
+          <p className="mt-1 text-sm text-[#64748B]">
+            Recorded recurring revenue, payments and outstanding customer balances.
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Time range selector */}
-          <div className="flex items-center rounded-lg border border-slate-200 bg-white p-1 text-xs">
-            {(
-              [
-                { id: "30d", label: "30 Days" },
-                { id: "quarter", label: "Quarter" },
-                { id: "year", label: "1 Year" },
-                { id: "all", label: "All Time" },
-              ] as const
-            ).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTimeRange(t.id)}
-                className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
-                  timeRange === t.id
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={downloading}>
-            <Download className="h-3.5 w-3.5 mr-1.5" />
-            {downloading ? "Exporting..." : "Export CSV"}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => window.print()}>
+            <Printer className="mr-2 h-4 w-4" aria-hidden="true" /> Print
           </Button>
-
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className="h-3.5 w-3.5 mr-1.5" />
-            Print
+          <Button size="sm" onClick={exportCsv} disabled={!metrics}>
+            <Download className="mr-2 h-4 w-4" aria-hidden="true" /> Export collections CSV
           </Button>
         </div>
-      </div>
+      </header>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Monthly Recurring Revenue"
-          value={metrics ? formatCurrency(metrics.mrr) : "$0.00"}
-          subtitle="Contracted recurring revenue"
-          icon={<TrendingUp className="h-5 w-5" />}
-          trend={{ value: "+14.8%", isPositive: true }}
-          loading={metricsLoading}
-          highlight
-        />
+      {!activeWorkspace && (
+        <section className="rounded-2xl border border-[#E8ECF3] bg-white p-8 text-center">
+          <Building2 className="mx-auto h-9 w-9 text-[#7651F5]" aria-hidden="true" />
+          <h2 className="mt-4 text-xl font-bold text-[#0B1020]">Choose a workspace</h2>
+          <p className="mt-2 text-sm text-[#64748B]">
+            Select a business workspace to view its financial reports.
+          </p>
+          <Link href="/workspaces" className="mt-5 inline-flex">
+            <Button>View workspaces</Button>
+          </Link>
+        </section>
+      )}
 
-        <StatCard
-          title="Annual Run Rate (ARR)"
-          value={metrics ? formatCurrency(metrics.arr) : "$0.00"}
-          subtitle="Projected annualized baseline"
-          icon={<DollarSign className="h-5 w-5" />}
-          trend={{ value: "+18.2%", isPositive: true }}
-          loading={metricsLoading}
-        />
+      {reportQuery.isLoading && (
+        <div
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+          aria-busy="true"
+          aria-label="Loading reports"
+        >
+          {Array.from({ length: 4 }, (_, index) => (
+            <div
+              key={index}
+              className="h-32 animate-pulse rounded-2xl border border-[#E8ECF3] bg-white"
+            />
+          ))}
+        </div>
+      )}
 
-        <StatCard
-          title="Collected Revenue"
-          value={metrics ? formatCurrency(metrics.total_collected_revenue) : "$0.00"}
-          subtitle="Actual settled payments"
-          icon={<CreditCard className="h-5 w-5" />}
-          trend={{ value: "+9.4%", isPositive: true }}
-          loading={metricsLoading}
-        />
-
-        <StatCard
-          title="Outstanding Receivables"
-          value={metrics ? formatCurrency(metrics.total_outstanding_receivables) : "$0.00"}
-          subtitle="Pending customer settlement"
-          icon={<AlertTriangle className="h-5 w-5 text-amber-500" />}
-          variant="warning"
-          loading={metricsLoading}
-        />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cashflow Realization Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-semibold text-slate-900">
-                  Cashflow Realization & Revenue Trajectory
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Invoiced billings versus cash collected over rolling cycles
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-indigo-600" />
-                  <span className="text-slate-600">Invoiced</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                  <span className="text-slate-600">Collected</span>
-                </div>
-              </div>
+      {reportQuery.isError && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5" role="alert">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+            <div className="flex-1">
+              <h2 className="font-semibold text-amber-950">Reports are unavailable</h2>
+              <p className="mt-1 text-sm text-amber-900">
+                Check your workspace access and the API connection, then retry. Sample financial
+                figures are not displayed.
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={CASHFLOW_TREND_DATA}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="colorInvoiced" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.0} />
-                    </linearGradient>
-                    <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                    tickFormatter={(val) => `$${val / 1000}k`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "#1e293b",
-                      borderRadius: "0.5rem",
-                      color: "#f8fafc",
-                      fontSize: "12px",
-                    }}
-                    formatter={(val: number) => [`$${val.toLocaleString()}`, ""]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="invoiced"
-                    stroke="#4f46e5"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorInvoiced)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="collected"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorCollected)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Plan Breakdown */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-slate-900">
-              Subscription Mix
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Revenue distribution across subscription tiers
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-4">
-            <div className="h-44 w-full flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={PLAN_DISTRIBUTION_DATA}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={68}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {PLAN_DISTRIBUTION_DATA.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#0f172a",
-                      borderColor: "#1e293b",
-                      borderRadius: "0.5rem",
-                      color: "#f8fafc",
-                      fontSize: "12px",
-                    }}
-                    formatter={(val: number) => [`${val}% of Subscriptions`, ""]}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="space-y-2 border-t border-slate-100 pt-3 text-xs">
-              {PLAN_DISTRIBUTION_DATA.map((p) => (
-                <div key={p.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: p.color }}
-                    />
-                    <span className="font-medium text-slate-700">{p.name}</span>
-                  </div>
-                  <span className="font-mono font-bold text-slate-900">{p.value}%</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Cohort Accounting Ledger Table */}
-      <Card>
-        <CardHeader className="border-b border-slate-100 pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-base font-semibold text-slate-900">
-                Monthly Accounting Ledger & Realization Breakdown
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Audited recurring billing events, realization ratios, and cash collected
-              </CardDescription>
-            </div>
-            <Badge variant="confirmed">GAAP / IFRS-15 Compliant</Badge>
+            <Button variant="outline" size="sm" onClick={() => reportQuery.refetch()}>
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" /> Retry
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200/80 bg-slate-50/75 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                  <th className="px-5 py-3.5">Accounting Period</th>
-                  <th className="px-5 py-3.5 text-right">Invoiced Volume</th>
-                  <th className="px-5 py-3.5 text-right">Settled Revenue</th>
-                  <th className="px-5 py-3.5 text-right">Outstanding Delta</th>
-                  <th className="px-5 py-3.5 text-right">Realization Rate</th>
-                  <th className="px-5 py-3.5 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
-                {CASHFLOW_TREND_DATA.map((row, idx) => {
-                  const delta = row.invoiced - row.collected;
-                  const rate = ((row.collected / row.invoiced) * 100).toFixed(1);
-                  return (
-                    <tr key={row.month} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-5 py-3.5 font-sans font-medium text-slate-900">
-                        {row.month}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-slate-900">
-                        {formatCurrency(row.invoiced)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-emerald-600 font-semibold">
-                        {formatCurrency(row.collected)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-slate-500">
-                        {formatCurrency(delta)}
-                      </td>
-                      <td className="px-5 py-3.5 text-right font-sans font-semibold text-slate-800">
-                        {rate}%
-                      </td>
-                      <td className="px-5 py-3.5 text-center font-sans">
-                        <Badge
-                          variant={idx === CASHFLOW_TREND_DATA.length - 1 ? "draft" : "active"}
-                        >
-                          {idx === CASHFLOW_TREND_DATA.length - 1 ? "Projected" : "Audited"}
-                        </Badge>
+        </section>
+      )}
+
+      {metrics && (
+        <>
+          <section
+            className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+            aria-label="Financial summary"
+          >
+            {[
+              ["Monthly recurring revenue", formatCurrency(metrics.mrr, currency)],
+              ["Annual run rate", formatCurrency(metrics.arr, currency)],
+              ["Payments collected", formatCurrency(metrics.total_collected_revenue, currency)],
+              [
+                "Outstanding receivables",
+                formatCurrency(metrics.total_outstanding_receivables, currency),
+              ],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-2xl border border-[#E8ECF3] bg-white p-5 shadow-sm"
+              >
+                <p className="text-sm font-medium text-[#64748B]">{label}</p>
+                <p className="mt-3 text-2xl font-bold tracking-tight text-[#0B1020]">{value}</p>
+              </div>
+            ))}
+          </section>
+
+          <section
+            className="rounded-2xl border border-[#E8ECF3] bg-white p-5 sm:p-6"
+            aria-labelledby="collections-title"
+          >
+            <div>
+              <h2 id="collections-title" className="font-semibold text-[#0B1020]">
+                Payments collected by month
+              </h2>
+              <p className="mt-1 text-sm text-[#64748B]">
+                Recorded payment totals for the last six calendar months
+              </p>
+            </div>
+            {cashflow.some((point) => Number.isFinite(point.amount) && point.amount > 0) ? (
+              <div
+                className="mt-5 h-80 w-full"
+                role="img"
+                aria-label="Monthly payments collected chart"
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={cashflow} margin={{ top: 8, right: 12, left: 4, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="reportCollections" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#7651F5" stopOpacity={0.24} />
+                        <stop offset="95%" stopColor="#7651F5" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke="#E8ECF3" strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis
+                      tickLine={false}
+                      axisLine={false}
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => formatCurrency(value, currency)}
+                    />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value), currency)} />
+                    <Area
+                      type="monotone"
+                      dataKey="amount"
+                      name="Collected"
+                      stroke="#7651F5"
+                      strokeWidth={2.5}
+                      fill="url(#reportCollections)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="mt-5 flex h-64 items-center justify-center rounded-xl bg-slate-50 px-4 text-center text-sm text-[#64748B]">
+                No payments were recorded in this period.
+              </div>
+            )}
+          </section>
+
+          <section
+            className="overflow-hidden rounded-2xl border border-[#E8ECF3] bg-white"
+            aria-labelledby="collections-table-title"
+          >
+            <div className="border-b border-[#E8ECF3] p-5">
+              <h2 id="collections-table-title" className="font-semibold text-[#0B1020]">
+                Monthly collection detail
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px] text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-[#64748B]">
+                  <tr>
+                    <th scope="col" className="px-5 py-3">
+                      Period
+                    </th>
+                    <th scope="col" className="px-5 py-3 text-right">
+                      Payments collected
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E8ECF3]">
+                  {cashflow.map((point) => (
+                    <tr key={point.month}>
+                      <th scope="row" className="px-5 py-3 font-medium text-[#0B1020]">
+                        {point.month}
+                      </th>
+                      <td className="px-5 py-3 text-right tabular-nums text-[#0B1020]">
+                        {formatCurrency(point.amount, currency)}
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
+    </main>
   );
 }

@@ -25,7 +25,6 @@ import {
   DUMMY_CUSTOMERS,
   DUMMY_INVOICES,
   DUMMY_MEMBERSHIPS,
-  DUMMY_METRICS,
   DUMMY_PAYMENTS,
   DUMMY_PLANS,
   DUMMY_PRODUCTS,
@@ -284,14 +283,10 @@ export const api = {
     }).catch(() => ({ status: "success", message: "Workspace deactivated." })),
 
   // Reporting Dashboard
-  getDashboard: (wsIdOrContext?: any) => {
-    const ws = isUuid(wsIdOrContext) ? wsIdOrContext : DEFAULT_WORKSPACE_ID;
-    return request<{ status: string; data: DashboardMetrics }>(
-      `/workspaces/${ws}/dashboard/summary/`
-    )
-      .then((r) => r.data || DUMMY_METRICS)
-      .catch(() => DUMMY_METRICS);
-  },
+  getDashboard: (workspaceId: string) =>
+    request<{ status: string; data: DashboardMetrics }>(
+      `/workspaces/${workspaceId}/dashboard/summary/`
+    ).then((response) => response.data),
 
   // Subscriptions
   getSubscriptions: (arg1?: any, arg2?: string) => {

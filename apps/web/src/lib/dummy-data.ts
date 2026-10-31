@@ -601,25 +601,25 @@ export const DUMMY_AUDIT_LOGS: AuditLog[] = [
 ];
 
 export const DUMMY_METRICS: DashboardMetrics = {
-  mrr: 1698.0,
-  arr: 20376.0,
+  mrr: "1698.00",
+  arr: "20376.00",
   total_subscriptions: 14,
   active_subscriptions: 11,
   paused_subscriptions: 2,
   quotations_count: 5,
   closed_subscriptions: 1,
   total_invoices: 28,
-  total_collected_revenue: 14890.0,
-  total_outstanding_receivables: 219.0,
+  total_collected_revenue: "14890.00",
+  total_outstanding_receivables: "219.00",
   overdue_invoices_count: 1,
-  total_overdue_amount: 53.9,
+  total_overdue_amount: "53.90",
   cashflow_trends: [
-    { month: "May", amount: 1250 },
-    { month: "Jun", amount: 1390 },
-    { month: "Jul", amount: 1450 },
-    { month: "Aug", amount: 1520 },
-    { month: "Sep", amount: 1610 },
-    { month: "Oct", amount: 1698 },
+    { month: "May", amount: "1250.00" },
+    { month: "Jun", amount: "1390.00" },
+    { month: "Jul", amount: "1450.00" },
+    { month: "Aug", amount: "1520.00" },
+    { month: "Sep", amount: "1610.00" },
+    { month: "Oct", amount: "1698.00" },
   ],
 };
 

@@ -14,6 +14,7 @@ from apps.customers.models import Customer, CustomerUserLink
 from apps.subscriptions.models import Subscription
 from apps.workspaces.models import (
     ApiKey,
+    StaffPermission,
     WebhookDelivery,
     Workspace,
     WorkspaceMembership,
@@ -158,6 +159,31 @@ class TestMultiTenantSaaS:
         # User A attempting to access Workspace B customers is DENIED (403)
         res_cust_b = self.client.get(f"/api/v1/workspaces/{self.ws_b.id}/customers/")
         assert res_cust_b.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_dashboard_reporting_is_workspace_scoped_and_permission_gated(self):
+        dashboard_url = f"/api/v1/workspaces/{self.ws_a.id}/dashboard/summary/"
+
+        self.client.force_authenticate(user=self.owner_a)
+        owner_response = self.client.get(dashboard_url)
+        assert owner_response.status_code == status.HTTP_200_OK
+        assert owner_response.data["data"]["mrr"] == "0.00"
+        assert len(owner_response.data["data"]["cashflow_trends"]) == 6
+
+        self.client.force_authenticate(user=self.customer_user_a)
+        customer_response = self.client.get(dashboard_url)
+        assert customer_response.status_code == status.HTTP_403_FORBIDDEN
+
+        self.client.force_authenticate(user=self.staff_a)
+        staff_denied_response = self.client.get(dashboard_url)
+        assert staff_denied_response.status_code == status.HTTP_403_FORBIDDEN
+
+        StaffPermission.objects.create(membership=self.mem_staff_a, can_view_reports=True)
+        staff_allowed_response = self.client.get(dashboard_url)
+        assert staff_allowed_response.status_code == status.HTTP_200_OK
+
+        self.client.force_authenticate(user=self.owner_b)
+        cross_workspace_response = self.client.get(dashboard_url)
+        assert cross_workspace_response.status_code == status.HTTP_403_FORBIDDEN
 
     # 3. RBAC & Staff Operations vs Admin Powers
     def test_role_based_access_control_and_staff_limits(self):

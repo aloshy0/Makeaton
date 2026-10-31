@@ -322,20 +322,20 @@ export interface AuditLog {
 }
 
 export interface DashboardMetrics {
-  mrr: number;
-  arr: number;
+  mrr: string;
+  arr: string;
   total_subscriptions: number;
   active_subscriptions: number;
   paused_subscriptions: number;
   quotations_count: number;
   closed_subscriptions: number;
   total_invoices: number;
-  total_collected_revenue: number;
-  total_outstanding_receivables: number;
+  total_collected_revenue: string;
+  total_outstanding_receivables: string;
   overdue_invoices_count: number;
-  total_overdue_amount: number;
+  total_overdue_amount: string;
   cashflow_trends: Array<{
     month: string;
-    amount: number;
+    amount: string;
   }>;
 }

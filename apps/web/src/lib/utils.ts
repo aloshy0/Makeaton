@@ -5,15 +5,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number | string | undefined | null): string {
+export function formatCurrency(
+  amount: number | string | undefined | null,
+  currency = "USD"
+): string {
   if (amount === undefined || amount === null) return "$0.00";
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(isNaN(num) ? 0 : num);
+  const safeAmount = Number.isFinite(num) ? num : 0;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safeAmount);
+  } catch {
+    return `${safeAmount.toFixed(2)} ${currency}`;
+  }
 }
 
 export function formatDate(dateStr: string | null | undefined): string {

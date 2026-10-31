@@ -11,6 +11,8 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     // Register ScrollTrigger with GSAP
     if (typeof window !== "undefined") {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
       gsap.registerPlugin(ScrollTrigger);
 
       // Initialize Lenis with refined kinetic physics

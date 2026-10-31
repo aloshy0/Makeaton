@@ -4,6 +4,20 @@
 
 ---
 
+### [Stage 16] Landing Footer, Reporting Reliability & Presentation Rehearsal
+
+- **Date/Time:** 2026-10-31
+- **Actions:**
+  - Kept the public landing content and visual layout intact while fixing footer section navigation to target real section anchors, work with Lenis/native scrolling, and respect reduced-motion settings.
+  - Rebuilt the dashboard and reports pages around workspace-scoped API results, with explicit loading/error/empty/workspace-selection states and decimal-string CSV exports.
+  - Removed placeholder dashboard metric fallbacks and added reporting access rules for owners/admins and staff with `can_view_reports`; customers and other tenants are denied.
+  - Added backend regression coverage for reporting access, a SQLite-only local demo settings module, presentation readiness findings, and an end-user test plan.
+  - Validated frontend unit tests (4 passed), frontend lint, production build, backend lint, and backend tests (15 passed) on isolated SQLite.
+- **Readiness:** Local seeded rehearsal is supported. The configured PostgreSQL database currently rejects authentication and Redis is disconnected; the account context still has automatic hard-coded demo login behavior. See `docs/PRESENTATION_READINESS.md` before describing the system as production-ready.
+- **Status:** PASS WITH ENVIRONMENT BLOCKERS
+
+---
+
 ### [Stage 0] Repository and Requirements Audit
 
 - **Date/Time:** 2026-10-31 09:21 UTC+05:30
