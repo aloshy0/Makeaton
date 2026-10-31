@@ -14,7 +14,7 @@ import {
 import { cn } from "../../lib/utils";
 
 const navigation = [
-  { name: "Executive Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Executive Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Subscriptions", href: "/subscriptions", icon: Repeat },
   { name: "Billing & Invoices", href: "/invoices", icon: Receipt },
   { name: "Products & Plans", href: "/catalog", icon: Layers },

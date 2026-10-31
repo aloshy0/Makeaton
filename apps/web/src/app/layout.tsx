@@ -7,9 +7,9 @@ import { AppShell } from "../components/layout/app-shell";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Brightloop Software — Subscription Management Platform",
+  title: "FlowGrid — Keep your business in flow.",
   description:
-    "Enterprise Digital Backbone for Recurring Billing, Quotations, Plans & Financial Analytics",
+    "FlowGrid helps businesses manage products, subscription plans, customers, recurring invoices, payments and revenue from one unified platform.",
 };
 
 export default function RootLayout({
