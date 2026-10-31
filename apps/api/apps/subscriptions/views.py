@@ -58,6 +58,12 @@ class SubscriptionViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     def close(self, request, workspace_id, pk=None):
         subscription = self.get_object()
         membership = getattr(request, "workspace_membership", None)
+        if not membership:
+            membership = WorkspaceMembership.objects.filter(
+                workspace_id=workspace_id,
+                user=request.user,
+                status=WorkspaceMembership.Status.ACTIVE,
+            ).first()
 
         # Staff limited power: if plan does not allow early close, staff cannot close without admin approval
         if not subscription.plan.allow_early_close and membership:

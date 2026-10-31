@@ -2,6 +2,7 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 
 export type BadgeVariant =
+  | "default"
   | "active"
   | "confirmed"
   | "quotation"
@@ -20,6 +21,7 @@ export type BadgeVariant =
   | "success";
 
 const variantStyles: Record<BadgeVariant, string> = {
+  default: "bg-slate-100 text-slate-700 border-slate-200/80",
   active: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
   success: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
   confirmed: "bg-blue-50 text-blue-700 border-blue-200/80",
@@ -39,6 +41,7 @@ const variantStyles: Record<BadgeVariant, string> = {
 };
 
 const dotColors: Record<BadgeVariant, string> = {
+  default: "bg-slate-400",
   active: "bg-emerald-500",
   success: "bg-emerald-500",
   paid: "bg-emerald-500",

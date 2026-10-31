@@ -363,3 +363,103 @@ class TestMultiTenantSaaS:
         assert result_2["generated_count"] == 0
         assert result_2["skipped_count"] == 1
         assert Invoice.objects.filter(workspace=self.ws_a, subscription=self.sub_a).count() == 1
+
+    # 9. User Account Contexts & Context Switching
+    def test_user_account_contexts_and_switching(self):
+        # Setup: owner_a also has customer link in ws_b (representing a business owner who is also a customer elsewhere)
+        cust_in_b = Customer.objects.create(
+            workspace=self.ws_b,
+            company_name="Alex Personal Services",
+            contact_name="Alexander Owner",
+            email=self.owner_a.email,
+        )
+        CustomerUserLink.objects.create(customer=cust_in_b, user=self.owner_a)
+
+        self.client.force_authenticate(user=self.owner_a)
+
+        # 1. Discover contexts
+        res_ctx = self.client.get("/api/v1/auth/me/contexts/")
+        assert res_ctx.status_code == status.HTTP_200_OK
+        data = res_ctx.data
+        assert data["global_user"]["email"] == self.owner_a.email
+        assert len(data["business_contexts"]) >= 1
+        assert any(
+            b["id"] == str(self.ws_a.id) and b["role"] == "OWNER" for b in data["business_contexts"]
+        )
+        assert data["personal_customer_context"]["has_customer_relationship"] is True
+        assert any(
+            link["workspace_id"] == str(self.ws_b.id)
+            for link in data["personal_customer_context"]["linked_businesses"]
+        )
+
+        # 2. Switch to Personal Customer Context
+        res_switch_cust = self.client.post(
+            "/api/v1/auth/me/active-context/",
+            {
+                "context_type": "PERSONAL_CUSTOMER",
+                "workspace_id": str(self.ws_b.id),
+            },
+        )
+        assert res_switch_cust.status_code == status.HTTP_200_OK
+        assert res_switch_cust.data["active_context"]["type"] == "PERSONAL_CUSTOMER"
+        assert res_switch_cust.data["active_context"]["role"] == "CUSTOMER"
+
+        # 3. Check permissions in Customer Context
+        res_perm_cust = self.client.get(
+            "/api/v1/auth/me/permissions/?context_type=PERSONAL_CUSTOMER"
+        )
+        assert res_perm_cust.status_code == status.HTTP_200_OK
+        assert res_perm_cust.data["is_customer"] is True
+        assert res_perm_cust.data["can_manage_products"] is False
+        assert res_perm_cust.data["can_manage_workspace"] is False
+
+        # 4. Switch back to Business Context (ws_a)
+        res_switch_biz = self.client.post(
+            "/api/v1/auth/me/active-context/",
+            {
+                "context_type": "BUSINESS",
+                "workspace_id": str(self.ws_a.id),
+            },
+        )
+        assert res_switch_biz.status_code == status.HTTP_200_OK
+        assert res_switch_biz.data["active_context"]["type"] == "BUSINESS"
+        assert res_switch_biz.data["active_context"]["role"] == "OWNER"
+
+        # 5. Check permissions in Owner Context
+        res_perm_biz = self.client.get(
+            f"/api/v1/auth/me/permissions/?context_type=BUSINESS&workspace_id={self.ws_a.id}"
+        )
+        assert res_perm_biz.status_code == status.HTTP_200_OK
+        assert res_perm_biz.data["is_owner"] is True
+        assert res_perm_biz.data["can_manage_workspace"] is True
+        assert res_perm_biz.data["can_manage_products"] is True
+
+        # 6. Attempt unauthorized business context switch to a workspace without membership
+        res_unauthorized = self.client.post(
+            "/api/v1/auth/me/active-context/",
+            {
+                "context_type": "BUSINESS",
+                "workspace_id": str(
+                    self.ws_b.id
+                ),  # owner_a is only a customer in ws_b, NOT business staff/owner
+            },
+        )
+        assert res_unauthorized.status_code == status.HTTP_403_FORBIDDEN
+
+    # 10. Customer Direct Business Access Rejection
+    def test_customer_denied_business_administration(self):
+        self.client.force_authenticate(user=self.customer_user_a)
+
+        # Attempt to access workspace customers list -> 403
+        res_customers = self.client.get(f"/api/v1/workspaces/{self.ws_a.id}/customers/")
+        assert res_customers.status_code == status.HTTP_403_FORBIDDEN
+
+        # Attempt to create a product -> 403
+        res_prod = self.client.post(
+            f"/api/v1/workspaces/{self.ws_a.id}/products/",
+            {
+                "name": "Hacked Product",
+                "sales_price": "100.00",
+            },
+        )
+        assert res_prod.status_code == status.HTTP_403_FORBIDDEN

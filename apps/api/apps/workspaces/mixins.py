@@ -4,20 +4,19 @@ from rest_framework import exceptions
 from apps.audit.models import AuditLog
 from apps.customers.models import CustomerUserLink
 from apps.workspaces.models import Workspace, WorkspaceMembership
-from apps.workspaces.permissions import IsWorkspaceMember
+from apps.workspaces.permissions import IsWorkspaceStaff
 
 
 class TenantScopedMixin:
     """
     Mixin for DRF ViewSets and Views enforcing multi-tenant isolation.
     - Resolves workspace_id from URL kwargs.
-    - Asserts user possesses active membership.
+    - Asserts user possesses active business membership (Owner, Admin, or Staff).
     - Automatically filters querysets by workspace_id.
     - Injects workspace_id into serializer saves.
-    - For CUSTOMER role, automatically scopes to linked customer profile.
     """
 
-    permission_classes = [IsWorkspaceMember]
+    permission_classes = [IsWorkspaceStaff]
 
     @property
     def workspace_id(self):

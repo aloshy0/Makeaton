@@ -79,9 +79,10 @@ class IsWorkspaceStaff(permissions.BasePermission):
         workspace_id = (
             view.kwargs.get("workspace_id") or view.kwargs.get("id") or view.kwargs.get("pk")
         )
-        if Workspace.objects.filter(id=workspace_id, owner=request.user, is_active=True).exists():
+        if not workspace_id:
             return True
-        return WorkspaceMembership.objects.filter(
+
+        membership = WorkspaceMembership.objects.filter(
             workspace_id=workspace_id,
             user=request.user,
             role__in=[
@@ -90,7 +91,18 @@ class IsWorkspaceStaff(permissions.BasePermission):
                 WorkspaceMembership.Role.STAFF,
             ],
             status=WorkspaceMembership.Status.ACTIVE,
+        ).first()
+
+        is_owner = Workspace.objects.filter(
+            id=workspace_id, owner=request.user, is_active=True
         ).exists()
+
+        if membership:
+            request.workspace_membership = membership
+            return True
+        if is_owner:
+            return True
+        return False
 
 
 class IsWorkspaceCustomer(permissions.BasePermission):

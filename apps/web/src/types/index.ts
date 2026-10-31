@@ -29,6 +29,19 @@ export interface Workspace {
   updated_at?: string;
 }
 
+export interface StaffPermission {
+  membership: string;
+  profile: "READ_ONLY" | "OPERATIONS" | "CUSTOM";
+  can_manage_products: boolean;
+  can_manage_subscriptions: boolean;
+  can_manage_invoices: boolean;
+  can_record_payments: boolean;
+  can_manage_customers: boolean;
+  can_view_reports: boolean;
+  can_execute_restricted_actions: boolean;
+  updated_at?: string;
+}
+
 export interface WorkspaceMembership {
   id: string;
   workspace: string;
@@ -36,12 +49,13 @@ export interface WorkspaceMembership {
   role: WorkspaceRole;
   status: "ACTIVE" | "SUSPENDED";
   joined_at: string;
+  permissions?: StaffPermission;
 }
 
 export interface StaffInvitation {
   id: string;
   email: string;
-  role: "ADMIN" | "STAFF";
+  role: "ADMIN" | "STAFF" | "CUSTOMER";
   token?: string;
   status: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
   expires_at: string;
@@ -131,8 +145,7 @@ export interface Subscription {
   customer_details?: Customer;
   plan: string;
   plan_details?: SubscriptionPlan;
-  status:
-    "draft" | "quotation" | "confirmed" | "active" | "past_due" | "paused" | "closed" | "expired";
+  status: SubscriptionStatus;
   start_date: string;
   expiry_date?: string;
   next_billing_date?: string;
@@ -144,6 +157,47 @@ export interface Subscription {
   notes?: string;
   lines: SubscriptionLine[];
   events?: SubscriptionEvent[];
+  created_at: string;
+}
+
+export interface QuotationLine {
+  id: string;
+  quotation: string;
+  product: string;
+  product_details?: Product;
+  variant?: string;
+  variant_details?: ProductVariant;
+  quantity: number;
+  unit_price: string;
+  subtotal: string;
+}
+
+export interface Quotation {
+  id: string;
+  workspace?: string;
+  quotation_number: string;
+  customer: string;
+  customer_details?: Customer;
+  template?: string;
+  plan?: string;
+  plan_details?: SubscriptionPlan;
+  status: "draft" | "sent" | "approved" | "rejected" | "converted";
+  valid_until: string;
+  subtotal: string;
+  tax_amount: string;
+  total_amount: string;
+  lines: QuotationLine[];
+  created_at: string;
+}
+
+export interface QuotationTemplate {
+  id: string;
+  workspace?: string;
+  name: string;
+  description: string;
+  default_payment_terms: string;
+  default_validity_days: number;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -199,6 +253,67 @@ export interface Payment {
   reference?: string;
   notes?: string;
   created_at: string;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  workspace: string;
+  requested_by: string;
+  requested_by_email?: string;
+  reviewed_by?: string;
+  reviewed_by_email?: string;
+  action_type: string;
+  entity_type: string;
+  entity_id: string;
+  payload: Record<string, any>;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  rejection_reason?: string;
+  created_at: string;
+  reviewed_at?: string;
+}
+
+export interface ApiKey {
+  id: string;
+  name: string;
+  key_prefix: string;
+  secret?: string; // only present upon creation/rotation
+  is_active: boolean;
+  created_at: string;
+  expires_at?: string;
+}
+
+export interface WebhookEndpoint {
+  id: string;
+  url: string;
+  secret: string;
+  events: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  endpoint: string;
+  event_type: string;
+  payload: Record<string, any>;
+  status_code?: number;
+  response_body?: string;
+  delivered: boolean;
+  attempt_count: number;
+  created_at: string;
+  delivered_at?: string;
+}
+
+export interface AuditLog {
+  id: string;
+  workspace?: string;
+  user?: string;
+  user_email?: string;
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  payload: Record<string, any>;
+  timestamp: string;
 }
 
 export interface DashboardMetrics {

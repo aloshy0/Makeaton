@@ -2,7 +2,19 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { UserCheck, Repeat, Receipt, CheckCircle, CreditCard, X } from "lucide-react";
+import {
+  UserCheck,
+  Repeat,
+  Receipt,
+  CheckCircle,
+  CreditCard,
+  X,
+  Plus,
+  Sparkles,
+  Printer,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
 import { api } from "../../lib/api";
 import { formatCurrency, formatDate } from "../../lib/utils";
 import { Badge } from "../../components/ui/badge";
@@ -14,7 +26,8 @@ import {
   CardContent,
   CardDescription,
 } from "../../components/ui/card";
-import { Invoice } from "../../types";
+import { Invoice, SubscriptionPlan } from "../../types";
+import { DUMMY_PLANS } from "../../lib/dummy-data";
 
 export default function CustomerPortalPage() {
   const queryClient = useQueryClient();
@@ -22,14 +35,23 @@ export default function CustomerPortalPage() {
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
+  // Browse plans modal state
+  const [isBrowsePlansOpen, setIsBrowsePlansOpen] = useState(false);
+  const [subscribeSuccess, setSubscribeSuccess] = useState<string | null>(null);
+
   const { data: subscriptions = [], isLoading: subsLoading } = useQuery({
     queryKey: ["subscriptions", "customerPortal"],
-    queryFn: () => api.getSubscriptions(),
+    queryFn: () => api.getPortalSubscriptions(),
   });
 
   const { data: invoices = [], isLoading: invsLoading } = useQuery({
     queryKey: ["invoices", "customerPortal"],
-    queryFn: () => api.getInvoices(),
+    queryFn: () => api.getPortalInvoices(),
+  });
+
+  const { data: availablePlans = DUMMY_PLANS } = useQuery({
+    queryKey: ["portal", "availablePlans"],
+    queryFn: () => api.getPublishedPlans(),
   });
 
   const transitionMutation = useMutation({
@@ -38,6 +60,25 @@ export default function CustomerPortalPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboardMetrics"] });
+    },
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: (plan: SubscriptionPlan) =>
+      api.createSubscription("aac3abe7-18b7-4c5f-a29e-786b63476459", {
+        customer: "cust-001",
+        plan: plan.id,
+        start_date: new Date().toISOString().slice(0, 10),
+        payment_terms: "immediate",
+        notes: `Self-service subscription from Customer Portal: ${plan.name}`,
+      }),
+    onSuccess: (sub) => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      setSubscribeSuccess(`Successfully subscribed to plan! Reference: ${sub.subscription_number}`);
+      setTimeout(() => {
+        setSubscribeSuccess(null);
+        setIsBrowsePlansOpen(false);
+      }, 2000);
     },
   });
 
@@ -66,9 +107,9 @@ export default function CustomerPortalPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-300">
       {/* Customer Header Banner */}
-      <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-900 to-slate-900 p-6 text-white shadow-sm">
+      <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 p-6 text-white shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
@@ -78,17 +119,29 @@ export default function CustomerPortalPage() {
               <span className="text-xs uppercase font-semibold tracking-wider text-indigo-300">
                 Customer Self-Service Portal
               </span>
-              <h1 className="text-xl font-bold tracking-tight text-white">Acme Software Corp</h1>
+              <h1 className="text-xl font-bold tracking-tight text-white">
+                Acme Global Technologies
+              </h1>
               <p className="text-xs text-slate-300 mt-0.5">
-                View your active subscription services, manage terms, and settle recurring invoices
-                online.
+                Manage your active subscription services, browse new product lines, and settle
+                recurring invoices online.
               </p>
             </div>
           </div>
-          <div className="text-right sm:border-l sm:border-slate-700 sm:pl-6">
-            <div className="text-xs text-slate-300">Account Status</div>
-            <div className="text-sm font-semibold text-emerald-400 flex items-center gap-1 justify-end mt-0.5">
-              <CheckCircle className="h-4 w-4" /> Good Standing
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              onClick={() => setIsBrowsePlansOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Subscribe to New Plan
+            </Button>
+            <div className="text-right sm:border-l sm:border-slate-700 sm:pl-4">
+              <div className="text-[11px] text-slate-400">Account Status</div>
+              <div className="text-xs font-semibold text-emerald-400 flex items-center gap-1 justify-end mt-0.5">
+                <CheckCircle className="h-3.5 w-3.5" /> Good Standing
+              </div>
             </div>
           </div>
         </div>
@@ -96,13 +149,23 @@ export default function CustomerPortalPage() {
 
       {/* Customer Subscriptions */}
       <div>
-        <div className="mb-4">
-          <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-            <Repeat className="h-4 w-4 text-indigo-600" /> Your Active Subscriptions
-          </h2>
-          <p className="text-xs text-slate-500">
-            Self-manage your contracts without emailing support
-          </p>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+              <Repeat className="h-4 w-4 text-indigo-600" /> Your Active Subscriptions
+            </h2>
+            <p className="text-xs text-slate-500">
+              Self-manage your contract terms without opening support tickets
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setIsBrowsePlansOpen(true)}
+            className="text-xs"
+          >
+            Browse Plans
+          </Button>
         </div>
 
         {subsLoading ? (
@@ -136,7 +199,7 @@ export default function CustomerPortalPage() {
                 </CardHeader>
                 <CardContent className="pt-3 border-t border-slate-100 text-xs">
                   <div className="space-y-1 mb-4 text-slate-600">
-                    {sub.lines.map((l) => (
+                    {sub.lines?.map((l) => (
                       <div key={l.id} className="flex justify-between">
                         <span>
                           {l.product_details?.name} (Qty {l.quantity})
@@ -190,11 +253,19 @@ export default function CustomerPortalPage() {
 
       {/* Customer Invoices */}
       <div>
-        <div className="mb-4">
-          <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-            <Receipt className="h-4 w-4 text-indigo-600" /> Billing History & Invoices
-          </h2>
-          <p className="text-xs text-slate-500">Download PDF receipts and pay open invoices</p>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-indigo-600" /> Billing History & Invoices
+            </h2>
+            <p className="text-xs text-slate-500">
+              Download PDF receipts and pay open invoices online
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => window.print()} className="text-xs">
+            <Printer className="h-3.5 w-3.5 mr-1" />
+            Print Ledger
+          </Button>
         </div>
 
         <Card>
@@ -236,7 +307,7 @@ export default function CustomerPortalPage() {
                         <td className="px-5 py-3.5 text-right font-mono font-bold">
                           <span
                             className={
-                              parseFloat(inv.outstanding_balance) > 0
+                              Number(inv.outstanding_balance) > 0
                                 ? "text-rose-600"
                                 : "text-emerald-600"
                             }
@@ -245,7 +316,7 @@ export default function CustomerPortalPage() {
                           </span>
                         </td>
                         <td className="px-5 py-3.5 text-right">
-                          {parseFloat(inv.outstanding_balance) > 0 && inv.status !== "draft" ? (
+                          {Number(inv.outstanding_balance) > 0 && inv.status !== "draft" ? (
                             <Button
                               size="sm"
                               onClick={() => {
@@ -269,6 +340,98 @@ export default function CustomerPortalPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal: Browse and Subscribe to Available Plans */}
+      {isBrowsePlansOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-3xl rounded-xl bg-white shadow-2xl border border-slate-200 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50">
+              <div className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-indigo-600" />
+                <h3 className="text-base font-semibold text-slate-900">
+                  Available Subscription Plans
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsBrowsePlansOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {subscribeSuccess ? (
+                <div className="py-8 text-center space-y-3">
+                  <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto" />
+                  <h4 className="text-base font-bold text-slate-900">{subscribeSuccess}</h4>
+                  <p className="text-xs text-slate-500">
+                    Your portal dashboard is updating with your new subscription.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500">
+                    Select a plan to start immediately. Invoices will automatically be issued per
+                    the contract interval.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {availablePlans.map((plan) => (
+                      <Card
+                        key={plan.id}
+                        className="flex flex-col justify-between hover:border-indigo-300 transition-all"
+                      >
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <Badge variant="confirmed">{plan.billing_interval}</Badge>
+                            <span className="font-mono text-[10px] text-slate-400">
+                              {plan.code}
+                            </span>
+                          </div>
+                          <CardTitle className="text-base">{plan.name}</CardTitle>
+                          <div className="mt-2 font-mono text-2xl font-bold text-slate-900">
+                            {formatCurrency(plan.base_price)}
+                            <span className="text-xs font-normal text-slate-500 font-sans ml-1">
+                              /{plan.billing_interval}
+                            </span>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-3 border-t border-slate-100 text-xs space-y-3">
+                          <div className="space-y-1.5 text-slate-600 text-[11px]">
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                              <span>Includes up to {plan.min_seats || 1} seat(s)</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                              <span>{plan.allow_pause ? "Pause anytime" : "Non-pauseable"}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                              <span>Auto-renew enabled</span>
+                            </div>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className="w-full text-xs"
+                            disabled={subscribeMutation.isPending}
+                            onClick={() => subscribeMutation.mutate(plan)}
+                          >
+                            <span>Subscribe Now</span>
+                            <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Online Pay Modal */}
       {selectedInvoice && (
