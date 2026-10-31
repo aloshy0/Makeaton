@@ -1,22 +1,19 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowDown,
-  Layers,
   Repeat,
   Receipt,
   Users,
-  ShieldCheck,
   TrendingUp,
-  CreditCard,
   Sparkles,
-  ChevronRight,
-  Search,
-  Bell,
+  ShieldCheck,
+  Zap,
 } from "lucide-react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 interface HeroSectionProps {
   mode: "personal" | "business";
@@ -25,32 +22,161 @@ interface HeroSectionProps {
 
 export function HeroSection({ mode, setMode }: HeroSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const headlineRef = useRef<HTMLHeadingElement>(null);
+  const headlineLine1Ref = useRef<HTMLSpanElement>(null);
+  const headlineLine2Ref = useRef<HTMLSpanElement>(null);
+  const badgeRef = useRef<HTMLDivElement>(null);
+  const subtitleRef = useRef<HTMLParagraphElement>(null);
+  const ctaButtonsRef = useRef<HTMLDivElement>(null);
   const mockupRef = useRef<HTMLDivElement>(null);
+  const revenueCounterRef = useRef<HTMLSpanElement>(null);
+  const donutProgressRef = useRef<SVGCircleElement>(null);
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
+
+  const [counterValue, setCounterValue] = useState(
+    mode === "business" ? "$24,850.00" : "$6,950.00"
+  );
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    gsap.registerPlugin(ScrollTrigger);
+
     const ctx = gsap.context(() => {
-      // Subtle entry animation for headline & mockup
-      gsap.fromTo(
-        headlineRef.current,
-        { opacity: 0, y: 30 },
-        { opacity: 1, y: 0, duration: 1, ease: "power3.out" }
+      // 1. Create a master coordinated timeline for Hero entrance
+      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+
+      // Badge entrance
+      tl.fromTo(
+        badgeRef.current,
+        { opacity: 0, y: -20, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.8 }
       );
 
-      gsap.fromTo(
-        mockupRef.current,
-        { opacity: 0, y: 50, scale: 0.96 },
-        { opacity: 1, y: 0, scale: 1, duration: 1.2, delay: 0.2, ease: "power3.out" }
+      // Headline line-by-line split reveal
+      tl.fromTo(
+        [headlineLine1Ref.current, headlineLine2Ref.current],
+        { opacity: 0, y: 40, filter: "blur(6px)" },
+        {
+          opacity: 1,
+          y: 0,
+          filter: "blur(0px)",
+          duration: 1,
+          stagger: 0.2,
+        },
+        "-=0.5"
       );
+
+      // Subtitle reveal
+      tl.fromTo(
+        subtitleRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.8 },
+        "-=0.6"
+      );
+
+      // CTA Buttons upward movement
+      tl.fromTo(
+        ctaButtonsRef.current,
+        { opacity: 0, y: 25 },
+        { opacity: 1, y: 0, duration: 0.8 },
+        "-=0.5"
+      );
+
+      // Dashboard preview: starts lower and smoothly scales into view
+      tl.fromTo(
+        mockupRef.current,
+        { opacity: 0, y: 90, scale: 0.92 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 1.4,
+          ease: "expo.out",
+        },
+        "-=0.6"
+      );
+
+      // Numeric counter animation: counts up from 0 to target revenue
+      const targetNum = mode === "business" ? 24850 : 6950;
+      const counterObj = { val: 0 };
+      tl.to(
+        counterObj,
+        {
+          val: targetNum,
+          duration: 1.8,
+          ease: "power2.out",
+          onUpdate: () => {
+            if (revenueCounterRef.current) {
+              revenueCounterRef.current.innerText =
+                "$" +
+                Math.round(counterObj.val).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                });
+            }
+          },
+        },
+        "-=1.0"
+      );
+
+      // Subscription cards appear sequentially
+      if (cardsContainerRef.current) {
+        const subCards = cardsContainerRef.current.children;
+        tl.fromTo(
+          subCards,
+          { opacity: 0, x: -20, scale: 0.95 },
+          {
+            opacity: 1,
+            x: 0,
+            scale: 1,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "back.out(1.4)",
+          },
+          "-=1.2"
+        );
+      }
+
+      // Revenue Donut chart draws progressively
+      if (donutProgressRef.current) {
+        tl.fromTo(
+          donutProgressRef.current,
+          { strokeDasharray: "0 100" },
+          { strokeDasharray: "72 100", duration: 1.6, ease: "power2.out" },
+          "-=1.4"
+        );
+      }
+
+      // Subtle continuous floating motion for the dashboard mockup
+      gsap.to(mockupRef.current, {
+        y: "-=8",
+        duration: 3.5,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        delay: 1.5,
+      });
+
+      // Parallax scroll on the dashboard as user leaves the hero
+      gsap.to(mockupRef.current, {
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1.2,
+        },
+        y: 60,
+        scale: 0.96,
+        opacity: 0.85,
+      });
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [mode]);
 
-  const scrollToNext = () => {
-    const nextSection = document.getElementById("product-intro");
-    if (nextSection) {
-      nextSection.scrollIntoView({ behavior: "smooth" });
+  const scrollToWorkflow = () => {
+    const target = document.getElementById("workflow-storytelling");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -59,55 +185,67 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
       {/* Outer Obsidian Container with Rounded Corners & Aurora Glow */}
       <div
         ref={containerRef}
-        className="relative rounded-[2.5rem] lg:rounded-[3rem] bg-[#0c0c0e] text-white overflow-hidden border border-white/10 shadow-2xl p-6 sm:p-10 lg:p-16 min-h-[820px] flex flex-col justify-between"
+        className="relative rounded-[2.5rem] lg:rounded-[3rem] bg-[#0c0c0e] text-white overflow-hidden border border-white/10 shadow-2xl p-6 sm:p-10 lg:p-16 min-h-[860px] flex flex-col justify-between"
       >
         {/* Subtle Cyber Grid and Emerald Aurora Ambient Background */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
+        <div className="absolute inset-0 bg-grid-pattern opacity-25 pointer-events-none" />
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none" />
         <div className="absolute top-1/3 -right-32 w-96 h-96 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none" />
 
         {/* Hero Top Content: Heading, Subtitle & Primary CTA */}
-        <div className="relative z-10 max-w-3xl mx-auto text-center pt-4 sm:pt-8 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-[11px] font-medium tracking-wide">
+        <div className="relative z-10 max-w-3xl mx-auto text-center pt-4 sm:pt-6 space-y-6">
+          <div
+            ref={badgeRef}
+            className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-[11px] font-semibold tracking-wide"
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Next-Gen Subscription OS
+            Next-Gen Subscription Engine
           </div>
 
-          <h1
-            ref={headlineRef}
-            className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08]"
-          >
-            Keep your business <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-slate-400">
+          {/* Line-by-line Headline */}
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08]">
+            <span ref={headlineLine1Ref} className="block">
+              Keep your business
+            </span>
+            <span
+              ref={headlineLine2Ref}
+              className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-slate-400"
+            >
               in flow.
             </span>
           </h1>
 
-          <p className="text-sm sm:text-base lg:text-lg text-slate-400 max-w-xl mx-auto font-normal leading-relaxed">
+          <p
+            ref={subtitleRef}
+            className="text-sm sm:text-base lg:text-lg text-slate-400 max-w-xl mx-auto font-normal leading-relaxed"
+          >
             Manage subscriptions, automate recurring billing and keep every payment on track. All from
             one place.
           </p>
 
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div
+            ref={ctaButtonsRef}
+            className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
             <Link
               href="/dashboard"
               className="px-7 py-3 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-slate-200 transition-all active:scale-95 shadow-lg shadow-white/10"
             >
               Open FlowGrid account
             </Link>
-            <Link
-              href="#lifecycle"
+            <button
+              onClick={scrollToWorkflow}
               className="px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium text-xs sm:text-sm transition-all"
             >
-              Explore platform
-            </Link>
+              View Interactive Workflow ↓
+            </button>
           </div>
         </div>
 
-        {/* Realistic FlowGrid Dashboard Product Mockup (Matching MONELIQ reference video frame_03s.jpg) */}
+        {/* Realistic FlowGrid Dashboard Product Mockup with Coordinated GSAP Timeline */}
         <div
           ref={mockupRef}
-          className="relative z-10 mt-12 w-full max-w-5xl mx-auto rounded-3xl bg-[#141418]/90 border border-white/15 p-4 sm:p-6 shadow-2xl backdrop-blur-xl"
+          className="relative z-10 mt-10 w-full max-w-5xl mx-auto rounded-3xl bg-[#141418]/90 border border-white/15 p-4 sm:p-6 shadow-2xl backdrop-blur-xl"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             {/* Mockup Sidebar */}
@@ -138,7 +276,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               </div>
             </div>
 
-            {/* Mockup Main Display: Balance & Subscription Tiers */}
+            {/* Mockup Main Display: Dynamic Counting Balance & Subscription Tiers */}
             <div className="lg:col-span-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -146,8 +284,11 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     {mode === "business" ? "Monthly Recurring Revenue (MRR)" : "Active Subscriptions"}
                   </span>
                   <div className="flex items-baseline gap-2 mt-0.5">
-                    <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                      {mode === "business" ? "$24,850.00" : "$6,950.00"}
+                    <span
+                      ref={revenueCounterRef}
+                      className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight"
+                    >
+                      $0.00
                     </span>
                     <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
                       +18.4%
@@ -156,13 +297,13 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                 </div>
 
                 <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[11px] text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span>Automated</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Live Automated</span>
                 </div>
               </div>
 
-              {/* Subscriptions Card Preview */}
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              {/* Subscriptions Card Preview with Sequential Entrance */}
+              <div ref={cardsContainerRef} className="grid grid-cols-2 gap-3 pt-2">
                 <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-white">Acme Enterprise</span>
@@ -191,7 +332,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               </div>
             </div>
 
-            {/* Mockup Right Display: Donut Statistic (Matching MONELIQ reference) */}
+            {/* Mockup Right Display: Progressive Donut Statistic */}
             <div className="lg:col-span-3 flex flex-col items-center justify-center p-3 rounded-2xl bg-white/[0.03] border border-white/10">
               <div className="flex items-center justify-between w-full pb-2 text-[11px] text-slate-400">
                 <span>Revenue Split</span>
@@ -208,24 +349,14 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     strokeWidth="4"
                   />
                   <circle
+                    ref={donutProgressRef}
                     cx="18"
                     cy="18"
                     r="14"
                     fill="none"
                     stroke="#10B981"
                     strokeWidth="4"
-                    strokeDasharray="55 100"
-                    strokeLinecap="round"
-                  />
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="14"
-                    fill="none"
-                    stroke="#8B5CF6"
-                    strokeWidth="4"
-                    strokeDasharray="25 100"
-                    strokeDashoffset="-55"
+                    strokeDasharray="0 100"
                     strokeLinecap="round"
                   />
                 </svg>
@@ -240,14 +371,14 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                     Recurring
                   </span>
-                  <span className="text-slate-200">68%</span>
+                  <span className="text-slate-200">72%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                    Add-ons & Seats
+                    Seats & Addons
                   </span>
-                  <span className="text-slate-200">32%</span>
+                  <span className="text-slate-200">28%</span>
                 </div>
               </div>
             </div>
@@ -258,11 +389,11 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         <div className="relative z-10 pt-8 flex items-center justify-between">
           {/* Scroll Down Button */}
           <button
-            onClick={scrollToNext}
+            onClick={scrollToWorkflow}
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 transition-all group"
           >
             <ArrowDown className="w-3.5 h-3.5 group-hover:translate-y-0.5 transition-transform text-emerald-400" />
-            <span>Scroll</span>
+            <span>Scroll to Explore</span>
           </button>
 
           {/* Mode Switch Pill (MONELIQ Reference Style) */}
