@@ -85,3 +85,4 @@ To guarantee that dashboards and listings respond in **under 2.0 seconds** with 
   - `IsStaffUser`: Operational execution (quotes, invoices, payments) but cannot modify tax or discount rules or manage staff accounts.
   - `IsCustomerUser`: Scoped exclusively to objects where `customer.user == request.user`.
 - **Idempotency in Billing**: Automated recurring billing runs generate deterministic billing hashes (`subscription_id + billing_period_date`) preventing duplicate charges if re-run.
+

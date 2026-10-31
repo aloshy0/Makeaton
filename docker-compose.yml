@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: brightloop_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-brightloop_db}
+      POSTGRES_USER: ${DB_USER:-brightloop_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-brightloop_secure_password_2026}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-brightloop_user} -d ${DB_NAME:-brightloop_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: brightloop_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: brightloop_api
+    restart: unless-stopped
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./apps/api:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - SECRET_KEY=${SECRET_KEY:-brightloop-dev-insecure-secret-key-change-in-production-1234567890}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=${DB_NAME:-brightloop_db}
+      - DB_USER=${DB_USER:-brightloop_user}
+      - DB_PASSWORD=${DB_PASSWORD:-brightloop_secure_password_2026}
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: brightloop_celery_worker
+    restart: unless-stopped
+    command: celery -A config worker -l info
+    volumes:
+      - ./apps/api:/app
+    environment:
+      - ENVIRONMENT=development
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-brightloop_db}
+      - DB_USER=${DB_USER:-brightloop_user}
+      - DB_PASSWORD=${DB_PASSWORD:-brightloop_secure_password_2026}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - api
+      - redis
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    container_name: brightloop_celery_beat
+    restart: unless-stopped
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./apps/api:/app
+    environment:
+      - ENVIRONMENT=development
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-brightloop_db}
+      - DB_USER=${DB_USER:-brightloop_user}
+      - DB_PASSWORD=${DB_PASSWORD:-brightloop_secure_password_2026}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    depends_on:
+      - api
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.web
+    container_name: brightloop_web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+

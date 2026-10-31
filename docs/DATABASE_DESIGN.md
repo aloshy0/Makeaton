@@ -183,3 +183,4 @@ erDiagram
   - `payment_date`: DATE NOT NULL INDEX
   - `reference`: VARCHAR(100)
   - `notes`: TEXT
+

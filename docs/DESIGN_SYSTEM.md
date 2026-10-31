@@ -69,3 +69,4 @@ Every data component strictly implements:
 - **Loading State**: Subtle Skeleton pulses (`animate-pulse bg-slate-200/70 h-4 rounded`).
 - **Empty State**: Icon illustration, informative prompt ("No active subscriptions found"), and actionable primary button ("Create Subscription").
 - **Error State**: Non-blocking alert banner with explicit retry action.
+

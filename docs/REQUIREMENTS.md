@@ -154,3 +154,4 @@ $$\text{Draft / Confirmed} \longrightarrow \text{Cancelled}$$
 ### 8.2 Performance SLA
 - Response time **under 2.0 seconds** for all listing and dashboard views with thousands of records.
 - Optimized query patterns: Database indexes on `(status, created_at)`, `customer_id`, `subscription_id`, `due_date`; consolidated aggregation queries (`/api/v1/reporting/dashboard/`).
+
