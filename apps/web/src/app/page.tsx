@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { SmoothScrollProvider } from "../components/landing/SmoothScrollProvider";
 import { Navbar } from "../components/landing/Navbar";
 import { HeroSection } from "../components/landing/HeroSection";
-import { WorkflowStorytellingSection } from "../components/landing/WorkflowStorytellingSection";
 import { AutomatedBillingEngineSection } from "../components/landing/AutomatedBillingEngineSection";
 import { AnalyticsDashboardSection } from "../components/landing/AnalyticsDashboardSection";
 import { ReliabilityBentoSection } from "../components/landing/ReliabilityBentoSection";
@@ -22,12 +21,9 @@ export default function FlowGridLandingPage() {
         <Navbar mode={mode} setMode={setMode} />
 
         {/* Master Coordinated Scroll Experience */}
-        <main className="space-y-4 sm:space-y-8">
-          {/* Section 1: Hero with line-by-line reveal, counting metrics, progressive donut draw, and floating dashboard */}
+        <main className="w-full relative flex flex-col">
+          {/* Section 1 & 2: Hero & Connected "From subscription to payment" Pipeline */}
           <HeroSection mode={mode} setMode={setMode} />
-
-          {/* Section 2: Pinned Full-Screen Storytelling Workflow (PRODUCTS → PLANS → SUBSCRIPTIONS → INVOICES → PAYMENTS) */}
-          <WorkflowStorytellingSection />
 
           {/* Section 3: Automated Billing Engine with Animated Invoice Generation & Payment Stamp */}
           <AutomatedBillingEngineSection />

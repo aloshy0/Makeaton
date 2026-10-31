@@ -36,7 +36,14 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       gsap.ticker.add(updateTicker);
       gsap.ticker.lagSmoothing(0);
 
+      // Force calculate triggers in strict top-to-bottom document order
+      const timer = setTimeout(() => {
+        ScrollTrigger.sort();
+        ScrollTrigger.refresh();
+      }, 150);
+
       return () => {
+        clearTimeout(timer);
         gsap.ticker.remove(updateTicker);
         lenis.destroy();
         ScrollTrigger.getAll().forEach((trigger) => trigger.kill());

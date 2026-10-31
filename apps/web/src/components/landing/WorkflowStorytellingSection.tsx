@@ -79,10 +79,13 @@ export function WorkflowStorytellingSection() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=3200",
-          pin: pinContainerRef.current,
+          end: "+=2600",
+          pin: true,
+          pinSpacing: true,
           scrub: 0.8,
           anticipatePin: 1,
+          refreshPriority: 1,
+          invalidateOnRefresh: true,
           onUpdate: (self) => {
             const p = self.progress;
             // Update active step indicator
@@ -237,7 +240,7 @@ export function WorkflowStorytellingSection() {
     <section
       ref={sectionRef}
       id="workflow-storytelling"
-      className="relative w-full bg-[#09090b] text-white"
+      className="relative w-full min-h-screen bg-[#09090b] text-white z-10 overflow-hidden"
     >
       {/* Pinned Fullscreen Stage */}
       <div

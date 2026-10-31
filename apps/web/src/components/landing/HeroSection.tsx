@@ -1,21 +1,25 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   Play,
   Search,
-  Bell,
-  ChevronDown,
-  LayoutDashboard,
-  Package,
-  Repeat,
+  Box,
+  Tag,
+  Layers,
+  Laptop,
+  Dumbbell,
+  GraduationCap,
   FileText,
-  Users,
-  BarChart3,
-  Settings,
-  ArrowUpRight,
+  Check,
+  MoreHorizontal,
+  Plus,
+  Repeat,
+  ShieldCheck,
+  Sparkles,
+  Crown,
 } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -26,20 +30,76 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ mode, setMode }: HeroSectionProps) {
+  const pinSectionRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const leftColRef = useRef<HTMLDivElement>(null);
-  const mockupRef = useRef<HTMLDivElement>(null);
+
+  // Billing Cycle Toggle State for Slide 3 Plans
+  const [billingCycle, setBillingCycle] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
+
+  const planPrices = {
+    basic: { daily: "₹25", weekly: "₹149", monthly: "₹499", yearly: "₹4,990" },
+    pro: { daily: "₹49", weekly: "₹299", monthly: "₹999", yearly: "₹9,990" },
+    business: { daily: "₹99", weekly: "₹599", monthly: "₹1,999", yearly: "₹19,990" },
+  };
+
+  const intervalLabels = {
+    daily: "day",
+    weekly: "week",
+    monthly: "month",
+    yearly: "year",
+  };
+
+  // Slide 1 Refs
+  const slide1LeftRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+
+  // Slide 2 Refs
+  const slide2ContainerRef = useRef<HTMLDivElement>(null);
+  const slide2LeftRef = useRef<HTMLDivElement>(null);
+  const highlightsRef = useRef<HTMLDivElement>(null);
+
+  // Slide 3 Refs
+  const slide3ContainerRef = useRef<HTMLDivElement>(null);
+  const slide3TopNotifRef = useRef<HTMLDivElement>(null);
+  const slide3TopCardRef = useRef<HTMLDivElement>(null);
+  const slide3SplineRef = useRef<SVGPathElement>(null);
+  const slide3HeaderRef = useRef<HTMLDivElement>(null);
+  const billingToggleRef = useRef<HTMLDivElement>(null);
+  const plansWrapperRef = useRef<HTMLDivElement>(null);
+  const planCardBasicRef = useRef<HTMLDivElement>(null);
+  const planCardProRef = useRef<HTMLDivElement>(null);
+  const planCardBusinessRef = useRef<HTMLDivElement>(null);
+
+  // Right-side Illustration Composition Refs (Slide 2)
+  const illustrationWrapperRef = useRef<HTMLDivElement>(null);
+  const productPanelRef = useRef<HTMLDivElement>(null);
+  const productRowsRef = useRef<HTMLDivElement>(null);
+  const brandCardRef = useRef<HTMLDivElement>(null);
+  const notif1Ref = useRef<HTMLDivElement>(null);
+  const notif2Ref = useRef<HTMLDivElement>(null);
+  const notif3Ref = useRef<HTMLDivElement>(null);
+  const notif3InnerRef = useRef<HTMLDivElement>(null);
+
+  // Connecting SVG Splines Refs (Slide 2)
+  const spline1Ref = useRef<SVGPathElement>(null);
+  const spline2Ref = useRef<SVGPathElement>(null);
+  const spline3Ref = useRef<SVGPathElement>(null);
+
+  // Transformation Spline Lines (Products -> Plans for Slide 2 to Slide 3)
+  const transformSplinesRef = useRef<SVGSVGElement>(null);
+  const transformPath1Ref = useRef<SVGPathElement>(null);
+  const transformPath2Ref = useRef<SVGPathElement>(null);
+  const transformPath3Ref = useRef<SVGPathElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      // Left content stagger entrance
-      if (leftColRef.current) {
+      // 1. Initial Page Load Animations (Slide 1 Hero)
+      if (slide1LeftRef.current) {
         gsap.fromTo(
-          leftColRef.current.children,
+          slide1LeftRef.current.children,
           { opacity: 0, y: 30 },
           {
             opacity: 1,
@@ -51,7 +111,6 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         );
       }
 
-      // Stats row entrance
       if (statsRef.current) {
         gsap.fromTo(
           statsRef.current.children,
@@ -67,60 +126,502 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         );
       }
 
-      // 3D Dashboard Mockup entrance with perspective tilt
-      if (mockupRef.current) {
+      // Initial Right Composition Entrance on Page Load
+      if (productPanelRef.current) {
         gsap.fromTo(
-          mockupRef.current,
+          productPanelRef.current,
           {
             opacity: 0,
-            y: 60,
-            rotateY: -18,
-            rotateX: 10,
-            scale: 0.92,
+            y: 50,
+            rotateY: -22,
+            rotateX: 14,
+            scale: 0.94,
           },
           {
             opacity: 1,
             y: 0,
-            rotateY: -11,
-            rotateX: 5,
+            rotateY: -10,
+            rotateX: 6,
             scale: 1,
-            duration: 1.3,
+            duration: 1.2,
             delay: 0.2,
             ease: "expo.out",
           }
         );
-
-        // Subtle floating breathing effect on mouse move or idle
-        gsap.to(mockupRef.current, {
+        gsap.to(productPanelRef.current, {
           y: -8,
-          duration: 3.5,
+          duration: 3.8,
           repeat: -1,
           yoyo: true,
           ease: "sine.inOut",
         });
       }
-    }, containerRef);
+
+      if (brandCardRef.current) {
+        gsap.fromTo(
+          brandCardRef.current,
+          { opacity: 0, scale: 0.9, x: 30 },
+          {
+            opacity: 1,
+            scale: 1,
+            x: 0,
+            duration: 1.2,
+            delay: 0.35,
+            ease: "expo.out",
+          }
+        );
+        gsap.to(brandCardRef.current, {
+          y: -6,
+          duration: 4.2,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.4,
+        });
+      }
+
+      if (notif1Ref.current) {
+        gsap.fromTo(
+          notif1Ref.current,
+          { opacity: 0, scale: 0.85, y: -20 },
+          { opacity: 1, scale: 1, y: 0, duration: 1, delay: 0.5, ease: "back.out(1.5)" }
+        );
+        gsap.to(notif1Ref.current, {
+          y: -7,
+          duration: 3.2,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.5,
+        });
+      }
+
+      if (notif2Ref.current) {
+        gsap.fromTo(
+          notif2Ref.current,
+          { opacity: 0, scale: 0.85, y: 20 },
+          { opacity: 1, scale: 1, y: 0, duration: 1, delay: 0.65, ease: "back.out(1.5)" }
+        );
+        gsap.to(notif2Ref.current, {
+          y: 6,
+          duration: 3.6,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.7,
+        });
+      }
+
+      if (notif3Ref.current) {
+        gsap.fromTo(
+          notif3Ref.current,
+          { opacity: 0, scale: 0.85, x: 20 },
+          { opacity: 1, scale: 1, x: 0, duration: 1, delay: 0.8, ease: "back.out(1.5)" }
+        );
+      }
+
+      if (notif3InnerRef.current) {
+        gsap.to(notif3InnerRef.current, {
+          y: -6,
+          duration: 3.4,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          delay: 0.9,
+        });
+      }
+
+      // 2. Setup Spline Paths Stroke Lengths for progressive drawing
+      [spline1Ref.current, spline2Ref.current, spline3Ref.current].forEach((spline) => {
+        if (spline) {
+          const len = spline.getTotalLength ? spline.getTotalLength() : 350;
+          gsap.set(spline, {
+            strokeDasharray: len,
+            strokeDashoffset: len,
+          });
+        }
+      });
+
+      // Setup Transform Spline paths lengths
+      [transformPath1Ref.current, transformPath2Ref.current, transformPath3Ref.current].forEach((spline) => {
+        if (spline) {
+          const len = spline.getTotalLength ? spline.getTotalLength() : 450;
+          gsap.set(spline, {
+            strokeDasharray: len,
+            strokeDashoffset: len,
+          });
+        }
+      });
+
+      // Setup Slide 3 Connecting Spline path length
+      if (slide3SplineRef.current) {
+        const len = slide3SplineRef.current.getTotalLength ? slide3SplineRef.current.getTotalLength() : 60;
+        gsap.set(slide3SplineRef.current, {
+          strokeDasharray: len,
+          strokeDashoffset: len,
+        });
+      }
+
+      // 3. MASTER PINNED SCROLL TIMELINE: Slide 1 -> Slide 2 -> Slide 3 Transition
+      const scrollTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: pinSectionRef.current,
+          start: "top top",
+          end: "+=320%",
+          pin: true,
+          pinSpacing: true,
+          scrub: 1,
+          anticipatePin: 1,
+          refreshPriority: 10,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      // A. Slide 1 left hero content retreats smoothly
+      scrollTl.to(
+        slide1LeftRef.current,
+        {
+          opacity: 0,
+          x: -100,
+          scale: 0.92,
+          filter: "blur(6px)",
+          pointerEvents: "none",
+          duration: 0.45,
+          ease: "power2.inOut",
+        },
+        0
+      );
+
+      // B. Right illustration shifts into position for Slide 2
+      scrollTl.to(
+        illustrationWrapperRef.current,
+        {
+          x: () => (window.innerWidth >= 1280 ? 40 : 0),
+          duration: 0.55,
+          ease: "power2.inOut",
+        },
+        0
+      );
+      // C. Slide 2 elements reveal smoothly
+      scrollTl.to(
+        slide2ContainerRef.current,
+        {
+          opacity: 1,
+          pointerEvents: "auto",
+          duration: 0.5,
+          ease: "power2.out",
+        },
+        0.15
+      );
+
+      scrollTl.fromTo(
+        slide2LeftRef.current,
+        { opacity: 0, x: -60 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" },
+        0.2
+      );
+
+      // D. Three Highlights Reveal Sequentially
+      if (highlightsRef.current) {
+        scrollTl.fromTo(
+          highlightsRef.current.children,
+          { opacity: 0, x: -30 },
+          {
+            opacity: 1,
+            x: 0,
+            stagger: 0.08,
+            duration: 0.45,
+            ease: "power2.out",
+          },
+          0.25
+        );
+      }
+
+      // E. Product Rows Reveal Sequentially
+      if (productRowsRef.current) {
+        scrollTl.fromTo(
+          productRowsRef.current.children,
+          { opacity: 0.3, y: 15 },
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.06,
+            duration: 0.4,
+            ease: "power2.out",
+          },
+          0.3
+        );
+      }
+
+      // F. Connecting Spline Lines Draw Progressively
+      [spline1Ref.current, spline2Ref.current, spline3Ref.current].forEach((spline) => {
+        if (spline) {
+          scrollTl.to(
+            spline,
+            {
+              strokeDashoffset: 0,
+              duration: 0.5,
+              ease: "none",
+            },
+            0.25
+          );
+        }
+      });
+
+      // Holding state: keeps Slide 2 in full view for user to inspect
+      scrollTl.to({}, { duration: 0.45 });
+
+      // ================================================================
+      // PHASE 2: "Ready for Plans" Physically Flies from Slide 2 to Slide 3
+      // ================================================================
+
+      // Precise flight target calculation from Slide 2 position to Slide 3 top center
+      const getNotif3Target = () => {
+        if (!notif3Ref.current || !slide3TopCardRef.current) {
+          return { x: -420, y: -380 };
+        }
+        const curX = (gsap.getProperty(notif3Ref.current, "x") as number) || 0;
+        const curY = (gsap.getProperty(notif3Ref.current, "y") as number) || 0;
+        const from = notif3Ref.current.getBoundingClientRect();
+        const to = slide3TopCardRef.current.getBoundingClientRect();
+        return {
+          x: curX + (to.left + to.width / 2 - (from.left + from.width / 2)),
+          y: curY + (to.top + to.height / 2 - (from.top + from.height / 2)),
+        };
+      };
+
+      // A. Slide 2 left content retreats UP
+      scrollTl.to(
+        slide2ContainerRef.current,
+        {
+          opacity: 0,
+          y: -70,
+          filter: "blur(6px)",
+          pointerEvents: "none",
+          duration: 0.45,
+          ease: "power2.inOut",
+        },
+        0.95
+      );
+
+      // B. Product panel, brand card, pricing updated notification retreat UP into background
+      scrollTl.to(
+        [notif2Ref.current, brandCardRef.current, productPanelRef.current],
+        {
+          opacity: 0,
+          y: -50,
+          scale: 0.88,
+          duration: 0.45,
+          stagger: 0.03,
+          ease: "power2.in",
+        },
+        0.95
+      );
+
+      // Slide 2 mint spline fades out as notif3 detaches
+      if (spline3Ref.current) {
+        scrollTl.to(
+          spline3Ref.current,
+          {
+            opacity: 0,
+            duration: 0.25,
+            ease: "power1.out",
+          },
+          0.95
+        );
+      }
+
+      // "Product Created" notification lingers in background as seen in user's reference
+      if (notif1Ref.current) {
+        scrollTl.to(
+          notif1Ref.current,
+          {
+            opacity: 0.35,
+            scale: 0.94,
+            duration: 0.4,
+            ease: "power1.out",
+          },
+          0.95
+        );
+        scrollTl.to(
+          notif1Ref.current,
+          {
+            opacity: 0,
+            y: -30,
+            duration: 0.35,
+            ease: "power2.in",
+          },
+          1.22
+        );
+      }
+
+      // C. THE HERO ANIMATION: notif3 ("Ready for Plans") physically flies from Slide 2 to Slide 3 top center
+      scrollTl.to(
+        notif3Ref.current,
+        {
+          x: () => getNotif3Target().x,
+          y: () => getNotif3Target().y,
+          scale: 1.04,
+          zIndex: 50,
+          boxShadow: "0 20px 45px -10px rgba(16,185,129,0.35), 0 10px 25px rgba(0,0,0,0.08)",
+          duration: 0.52,
+          ease: "power2.inOut",
+        },
+        0.96
+      );
+
+      // D. Slide 3 container reveals as notif3 approaches destination
+      scrollTl.to(
+        slide3ContainerRef.current,
+        {
+          opacity: 1,
+          pointerEvents: "auto",
+          duration: 0.35,
+          ease: "power2.out",
+        },
+        1.04
+      );
+
+      // Seamless handoff at destination
+      scrollTl.fromTo(
+        slide3TopCardRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.1, ease: "none" },
+        1.46
+      );
+      scrollTl.to(
+        notif3Ref.current,
+        { opacity: 0, duration: 0.1, ease: "none" },
+        1.46
+      );
+
+      // E. Connecting curved spline line extends downward from landed notification to anchor dot
+      if (slide3SplineRef.current) {
+        scrollTl.to(
+          slide3SplineRef.current,
+          {
+            strokeDashoffset: 0,
+            duration: 0.38,
+            ease: "power1.inOut",
+          },
+          1.18
+        );
+      }
+
+      // F. Heading, Badge & Description reveal smoothly
+      scrollTl.fromTo(
+        slide3HeaderRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" },
+        1.22
+      );
+
+      // G. Segmented Billing Cycle Selector appears
+      scrollTl.fromTo(
+        billingToggleRef.current,
+        { opacity: 0, y: -15 },
+        { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" },
+        1.28
+      );
+
+      // H. Basic, Pro, Business cards enter sequentially
+      scrollTl.fromTo(
+        planCardBasicRef.current,
+        { opacity: 0, y: 35, scale: 0.94 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.2)" },
+        1.32
+      );
+
+      scrollTl.fromTo(
+        planCardProRef.current,
+        { opacity: 0, y: 45, scale: 0.92 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.4)" },
+        1.38
+      );
+
+      scrollTl.fromTo(
+        planCardBusinessRef.current,
+        { opacity: 0, y: 35, scale: 0.94 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(1.2)" },
+        1.44
+      );
+
+      // I. Pro card receives a subtle glow animation
+      scrollTl.to(
+        planCardProRef.current,
+        {
+          boxShadow: "0 22px 65px -8px rgba(99,102,241,0.55), 0 0 45px rgba(99,102,241,0.32)",
+          duration: 0.35,
+          ease: "power2.out",
+        },
+        1.50
+      );
+
+      // Holding state: keeps Slide 3 in full view for user to inspect & interact
+      scrollTl.to({}, { duration: 0.55 });
+
+      // ================================================================
+      // PHASE 3: FINAL TRANSITION INTO CUSTOMER SUBSCRIPTIONS & BILLING
+      // ================================================================
+      scrollTl.to(
+        slide3ContainerRef.current,
+        {
+          y: -80,
+          opacity: 0,
+          scale: 0.96,
+          filter: "blur(6px)",
+          duration: 0.45,
+          ease: "power2.inOut",
+        },
+        2.05
+      );
+    }, pinSectionRef);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-white pt-6 pb-20 lg:pt-10 lg:pb-28">
+    <div
+      ref={pinSectionRef}
+      className="relative w-full min-h-screen bg-white z-20 overflow-hidden"
+    >
+      {/* Background Purple, Blue and Mint Ambient Lighting */}
       <div
-        ref={containerRef}
-        className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-14"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* ============================================================== */}
-          {/* LEFT COLUMN: Badge, Typography, CTAs, and Stats Row            */}
-          {/* ============================================================== */}
-          <div ref={leftColRef} className="lg:col-span-5 flex flex-col items-start z-10 space-y-6 lg:space-y-8">
+        className="absolute top-1/6 right-1/4 w-[520px] h-[520px] rounded-full bg-purple-200/35 blur-[140px] pointer-events-none"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute top-1/2 right-1/3 w-[460px] h-[460px] rounded-full bg-blue-100/40 blur-[130px] pointer-events-none"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute bottom-6 right-6 sm:right-12 w-[540px] h-[540px] rounded-full bg-emerald-200/40 blur-[140px] pointer-events-none"
+        aria-hidden="true"
+      />
+
+      {/* Main Pinned Viewport Stage */}
+      <div className="relative w-full h-screen flex items-center justify-center py-2 sm:py-4 overflow-hidden">
+        <div
+          ref={containerRef}
+          className="w-full max-w-[1520px] mx-auto px-6 sm:px-10 lg:px-12 relative z-10 flex items-center min-h-[600px]"
+        >
+          {/* ================================================================ */}
+          {/* SLIDE 1: Hero Layout (Left Column)                               */}
+          {/* ================================================================ */}
+          <div
+            ref={slide1LeftRef}
+            className="absolute left-6 sm:left-10 lg:left-12 max-w-xl z-20 flex flex-col items-start space-y-6 lg:space-y-8 will-change-transform"
+          >
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 shadow-xs">
               <span className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6] shadow-[0_0_8px_rgba(139,92,246,0.6)]" />
-              <span className="text-xs font-semibold text-slate-800 tracking-tight">FlowGrid 2.0</span>
+              <span className="text-xs font-semibold text-slate-800 tracking-tight">
+                FlowGrid 2.0
+              </span>
               <span className="text-slate-300">|</span>
-              <span className="text-xs font-medium text-slate-600">Next-Gen Subscription Platform</span>
+              <span className="text-xs font-medium text-slate-600">
+                Next-Gen Subscription Platform
+              </span>
             </div>
 
             {/* Main Headline */}
@@ -141,18 +642,18 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             <div className="flex flex-wrap items-center gap-3.5 pt-1">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-slate-800 transition-all shadow-md active:scale-95 group"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-black text-white text-sm font-semibold hover:bg-slate-800 transition-all shadow-md active:scale-95 group"
               >
-                <span>Open FlowGrid account</span>
+                <span>Get started</span>
                 <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </Link>
 
               <button
                 type="button"
                 onClick={() => {
-                  const demoSection = document.getElementById("workflow-storytelling");
-                  if (demoSection) {
-                    demoSection.scrollIntoView({ behavior: "smooth" });
+                  const target = document.getElementById("automated-billing");
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth" });
                   }
                 }}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-800 text-sm font-semibold transition-all shadow-xs active:scale-95 group"
@@ -164,10 +665,10 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
               </button>
             </div>
 
-            {/* Stats Metric Row */}
+            {/* 3-Column Stats Row */}
             <div
               ref={statsRef}
-              className="w-full pt-8 lg:pt-10 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-6"
+              className="w-full pt-8 lg:pt-10 border-t border-slate-100 grid grid-cols-3 gap-6 max-w-md"
             >
               <div>
                 <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
@@ -195,374 +696,626 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                   Uptime
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div>
-                <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
-                  4.8/5
+          {/* ================================================================ */}
+          {/* SLIDE 2: Product Management (Slide 2 Presentation)               */}
+          {/* ================================================================ */}
+          <div
+            ref={slide2ContainerRef}
+            style={{ opacity: 0, pointerEvents: "none" }}
+            className="absolute left-6 sm:left-10 lg:left-12 max-w-md lg:max-w-lg z-20 flex flex-col items-start space-y-6 will-change-transform"
+          >
+            {/* Pill Badge */}
+            <div ref={slide2LeftRef} className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-100/70 border border-purple-200/50 text-[11px] font-bold tracking-wider uppercase text-purple-700 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" />
+                <span>ORGANIZE PRODUCTS</span>
+              </div>
+
+              {/* Main Headline */}
+              <h2 className="text-3xl sm:text-4xl lg:text-[54px] font-extrabold tracking-[-0.035em] text-slate-950 leading-[1.08]">
+                Everything you sell. <br />
+                In{" "}
+                <span className="bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">
+                  one place.
+                </span>
+              </h2>
+
+              {/* Subtitle Description */}
+              <p className="text-sm sm:text-base text-slate-500 font-normal leading-relaxed max-w-md">
+                Add your products, organize your services and manage pricing effortlessly.
+                Build the foundation for your subscription business with FlowGrid.
+              </p>
+            </div>
+
+            {/* Three Key Highlights Stacked Vertically */}
+            <div ref={highlightsRef} className="space-y-4 pt-1 w-full">
+              {/* Highlight 1: Organize Products */}
+              <div className="flex items-start gap-3.5 group">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 border border-purple-100/80 text-purple-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Box className="w-5 h-5 text-[#8b5cf6] stroke-[2.2]" />
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">
-                  Customer rating
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                    Organize Products
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                    Manage all your physical and digital products in one place.
+                  </p>
+                </div>
+              </div>
+
+              {/* Highlight 2: Flexible Pricing */}
+              <div className="flex items-start gap-3.5 group">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100/80 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Tag className="w-5 h-5 text-[#3b82f6] stroke-[2.2]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                    Flexible Pricing
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                    Set sales prices, costs and product variants with ease.
+                  </p>
+                </div>
+              </div>
+
+              {/* Highlight 3: Subscription Ready */}
+              <div className="flex items-start gap-3.5 group">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/80 text-emerald-600 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Layers className="w-5 h-5 text-[#10b981] stroke-[2.2]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                    Subscription Ready
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                    Turn your products into flexible subscription plans.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* ============================================================== */}
-          {/* RIGHT COLUMN: 3D Angled Glowing Dark Dashboard Mockup           */}
-          {/* ============================================================== */}
-          <div className="lg:col-span-7 relative flex items-center justify-center lg:justify-end">
-            {/* Ambient Aurora Glows */}
-            {/* Bottom-Left Cyan Glow */}
+          {/* ================================================================ */}
+          {/* RIGHT-SIDE ILLUSTRATION: Product Collection Composition           */}
+          {/* ================================================================ */}
+          <div
+            ref={illustrationWrapperRef}
+            className="ml-auto relative flex items-center justify-center will-change-transform z-30"
+          >
+            {/* 3D Perspective Box */}
             <div
-              className="absolute -bottom-8 -left-12 sm:bottom-0 sm:left-4 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-[#06b6d4] opacity-35 blur-[90px] pointer-events-none"
-              aria-hidden="true"
-            />
-            {/* Top-Right Violet / Purple Glow */}
-            <div
-              className="absolute -top-10 right-0 sm:top-2 sm:right-6 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-[#8b5cf6] opacity-30 blur-[100px] pointer-events-none"
-              aria-hidden="true"
-            />
-
-            {/* 3D Perspective Wrapper */}
-            <div
-              className="w-full max-w-[700px] xl:max-w-[760px] relative"
-              style={{ perspective: "1300px" }}
+              className="relative w-[360px] sm:w-[500px] md:w-[560px] lg:w-[640px] xl:w-[680px] h-[520px] sm:h-[560px] flex items-center justify-center"
+              style={{ perspective: "1400px" }}
             >
+              {/* Connecting Curved SVG Spline Paths (Behind UI Elements) */}
+              <svg
+                className="absolute inset-0 w-full h-full pointer-events-none z-10 hidden sm:block"
+                viewBox="0 0 680 560"
+                fill="none"
+              >
+                <defs>
+                  {/* Purple Spline for Product Created */}
+                  <linearGradient id="purplePath" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#a855f7" stopOpacity="0.85" />
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.35" />
+                  </linearGradient>
+
+                  {/* Blue Spline for Pricing Updated */}
+                  <linearGradient id="bluePath" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.85" />
+                    <stop offset="100%" stopColor="#6366f1" stopOpacity="0.35" />
+                  </linearGradient>
+
+                  {/* Mint Green Spline for Ready for Plans */}
+                  <linearGradient id="mintPath" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.75" />
+                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.85" />
+                  </linearGradient>
+                </defs>
+
+                {/* Spline 1 (Purple): Notification 1 to Product Panel */}
+                <path
+                  ref={spline1Ref}
+                  d="M 320 135 C 320 180, 310 190, 340 230"
+                  stroke="url(#purplePath)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                />
+
+                {/* Spline 2 (Blue): Notification 2 to Product Panel */}
+                <path
+                  ref={spline2Ref}
+                  d="M 430 450 C 460 450, 460 380, 450 350"
+                  stroke="url(#bluePath)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                />
+
+                {/* Spline 3 (Mint Green): Product Panel/Brand Card to Notification 3 */}
+                <path
+                  ref={spline3Ref}
+                  d="M 545 320 C 585 330, 560 370, 570 410"
+                  stroke="url(#mintPath)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              {/* ------------------------------------------------------------ */}
+              {/* SUPPORTING ELEMENT: Smaller Tilted Brand Card Behind Panel    */}
+              {/* ------------------------------------------------------------ */}
               <div
-                ref={mockupRef}
+                ref={brandCardRef}
                 style={{
                   transformStyle: "preserve-3d",
-                  transform: "rotateY(-11deg) rotateX(5deg)",
+                  transform: "rotateY(-18deg) rotateX(10deg) rotateZ(6deg)",
                 }}
-                className="w-full bg-[#0d1117] text-slate-100 rounded-[28px] p-5 sm:p-6 border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-transform duration-500 ease-out hover:rotate-y-[-6deg] hover:rotate-x-[2deg]"
+                className="absolute right-0 sm:right-2 top-24 sm:top-28 w-40 sm:w-46 h-44 sm:h-52 rounded-[28px] bg-white/95 border border-slate-100 shadow-[0_20px_50px_-10px_rgba(15,23,42,0.1)] flex items-center justify-center will-change-transform z-10"
               >
-                {/* -------------------------------------------------------- */}
-                {/* TOP BAR: Search & User Profile                           */}
-                {/* -------------------------------------------------------- */}
-                <div className="flex items-center justify-between pb-4 border-b border-white/10 gap-3">
-                  {/* Left: Brand Mini Logo inside Dashboard */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-black text-xs flex items-center justify-center border border-emerald-500/30">
-                      FG
-                    </div>
-                    <span className="text-sm font-bold tracking-tight text-white">
-                      FlowGrid
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2 select-none">
+                  <svg className="w-5 h-5 text-black" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 4.5h16l-4.5 6H3v-6z" />
+                    <path d="M3 13.5h11l-4.5 6.5H3v-6.5z" />
+                  </svg>
+                  <span className="text-sm font-black tracking-tight text-slate-950">
+                    FLOWGRID
+                  </span>
+                </div>
+              </div>
 
-                  {/* Center: Search Bar with Keyboard Shortcut */}
-                  <div className="hidden sm:flex items-center gap-2 bg-white/[0.06] border border-white/10 rounded-full px-3.5 py-1.5 text-xs text-slate-400 w-56 lg:w-64">
+              {/* ------------------------------------------------------------ */}
+              {/* MAIN ELEMENT: Product Collection Panel (Floating White Panel) */}
+              {/* ------------------------------------------------------------ */}
+              <div
+                ref={productPanelRef}
+                style={{
+                  transformStyle: "preserve-3d",
+                  transform: "rotateY(-10deg) rotateX(6deg)",
+                }}
+                className="relative w-full max-w-[420px] sm:max-w-[470px] lg:max-w-[490px] rounded-[30px] sm:rounded-[34px] bg-white border border-slate-100/90 shadow-[0_30px_70px_-15px_rgba(20,25,45,0.12),0_15px_35px_-5px_rgba(20,25,45,0.06)] p-5 sm:p-6 will-change-transform z-20 overflow-hidden"
+              >
+                {/* Soft Glass Sheen Highlight */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/70 to-transparent pointer-events-none opacity-50"
+                  aria-hidden="true"
+                />
+
+                {/* Header: Title + Add Product Action */}
+                <div className="flex items-center justify-between pb-3 relative z-10">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+                    Products
+                  </h3>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#6366f1] hover:bg-indigo-600 text-white text-xs font-semibold shadow-xs transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Add product</span>
+                  </button>
+                </div>
+
+                {/* Search Field */}
+                <div className="relative z-10 mb-4">
+                  <div className="flex items-center gap-2 bg-slate-50/90 border border-slate-200/60 rounded-xl px-3 py-1.5 text-xs text-slate-400 shadow-inner">
                     <Search className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="flex-1 text-[11px]">Search anything...</span>
-                    <span className="text-[10px] font-mono bg-white/10 px-1.5 py-0.5 rounded text-slate-300">
-                      ⌘ K
+                    <span className="text-[11px] text-slate-400 font-normal">Search products...</span>
+                  </div>
+                </div>
+
+                {/* Product Entries List */}
+                <div ref={productRowsRef} className="space-y-2.5 relative z-10">
+                  {/* Entry 1: Cloud Software */}
+                  <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                        <Laptop className="w-4 h-4 text-[#8b5cf6]" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 leading-tight">
+                          Cloud Software
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                          Software
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-slate-900 font-mono">₹999</span>
+                        <span className="text-[10px] text-slate-400 font-normal"> /month</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/60">
+                        Active
+                      </span>
+                      <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
+                    </div>
+                  </div>
+
+                  {/* Entry 2: Gym Membership */}
+                  <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <Dumbbell className="w-4 h-4 text-[#3b82f6]" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 leading-tight">
+                          Gym Membership
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                          Service
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-slate-900 font-mono">₹500</span>
+                        <span className="text-[10px] text-slate-400 font-normal"> /month</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/60">
+                        Active
+                      </span>
+                      <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
+                    </div>
+                  </div>
+
+                  {/* Entry 3: Online Course */}
+                  <div className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50/70 transition-colors border border-slate-100/60 bg-white">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <GraduationCap className="w-4 h-4 text-[#10b981]" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 leading-tight">
+                          Online Course
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">
+                          Education
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-slate-900 font-mono">₹1,499</span>
+                        <span className="text-[10px] text-slate-400 font-normal"> /month</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100/60">
+                        Active
+                      </span>
+                      <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ------------------------------------------------------------ */}
+              {/* NOTIFICATION 1: Product Created (Top-Left Floating Card)     */}
+              {/* ------------------------------------------------------------ */}
+              <div
+                ref={notif1Ref}
+                className="absolute top-2 sm:top-6 -left-2 sm:-left-6 z-30 bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl p-3 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3 will-change-transform max-w-[240px] sm:max-w-[270px]"
+              >
+                <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                  <Box className="w-4 h-4 text-[#8b5cf6]" />
+                </div>
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 leading-tight">
+                    Product Created
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                    Cloud Software added successfully
+                  </div>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-[#8b5cf6] shadow-[0_0_6px_rgba(139,92,246,0.6)] ml-auto shrink-0" />
+              </div>
+
+              {/* ------------------------------------------------------------ */}
+              {/* NOTIFICATION 2: Pricing Updated (Bottom-Left Floating Card)  */}
+              {/* ------------------------------------------------------------ */}
+              <div
+                ref={notif2Ref}
+                className="absolute bottom-6 sm:bottom-10 left-2 sm:left-6 z-30 bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl p-3 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3 will-change-transform max-w-[210px] sm:max-w-[240px]"
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4 text-[#3b82f6]" />
+                </div>
+                <div className="pr-2">
+                  <div className="text-xs font-bold text-slate-900 leading-tight">
+                    Pricing Updated
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                    Set sales prices & costs
+                  </div>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-[#3b82f6] shadow-[0_0_6px_rgba(59,130,246,0.6)] ml-auto shrink-0" />
+              </div>
+
+              {/* ------------------------------------------------------------ */}
+              {/* NOTIFICATION 3: Ready for Plans (Bottom-Right Floating Card) */}
+              {/* ------------------------------------------------------------ */}
+              <div
+                ref={notif3Ref}
+                className="absolute bottom-4 sm:bottom-8 -right-2 sm:-right-6 z-40 will-change-transform max-w-[280px] sm:max-w-[320px]"
+              >
+                <div
+                  ref={notif3InnerRef}
+                  className="bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl sm:rounded-3xl p-3 sm:px-5 sm:py-2.5 shadow-[0_14px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5"
+                >
+                  <div className="w-8 h-8 rounded-full bg-emerald-400 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Check className="w-4 h-4 stroke-[3]" />
+                  </div>
+                  <div className="text-left pr-1">
+                    <div className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
+                      Ready for Plans
+                    </div>
+                    <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
+                      Turn products into subscription plans
+                    </div>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] ml-auto shrink-0 self-start mt-0.5" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================================ */}
+          {/* SLIDE 3: SUBSCRIPTION PLANS (Centered Reference Layout)          */}
+          {/* ================================================================ */}
+          <div
+            ref={slide3ContainerRef}
+            style={{
+              opacity: 0,
+              pointerEvents: "none",
+            }}
+            className="absolute inset-0 z-30 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-[1240px] mx-auto will-change-transform"
+          >
+            {/* Top Centered Notification Target: "Ready for Plans" */}
+            <div ref={slide3TopNotifRef} className="relative z-10 flex flex-col items-center">
+              <div
+                ref={slide3TopCardRef}
+                style={{ opacity: 0 }}
+                className="bg-white/95 backdrop-blur-md border border-slate-100/90 rounded-2xl sm:rounded-3xl px-5 py-2.5 sm:py-3 shadow-[0_12px_30px_rgba(0,0,0,0.06)] flex items-center gap-3.5 max-w-[320px] will-change-transform"
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-400 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Check className="w-4 h-4 stroke-[3]" />
+                </div>
+                <div className="text-left pr-1">
+                  <div className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
+                    Ready for Plans
+                  </div>
+                  <div className="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-tight mt-0.5">
+                    Turn products into subscription plans
+                  </div>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] ml-auto shrink-0 self-start mt-0.5" />
+              </div>
+
+              {/* S-curved Mint Connecting Spline with terminal dot */}
+              <div className="relative flex flex-col items-center -my-0.5">
+                <svg width="36" height="40" viewBox="0 0 36 40" fill="none" className="overflow-visible">
+                  <path
+                    ref={slide3SplineRef}
+                    d="M 18 0 C 18 16, 28 20, 18 34"
+                    stroke="#10b981"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <circle cx="18" cy="36" r="3" fill="#10b981" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Centered Header: Badge, Heading, Description */}
+            <div ref={slide3HeaderRef} className="relative z-10 flex flex-col items-center text-center max-w-2xl px-2">
+              {/* Badge: SUBSCRIPTION PLANS */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f3e8ff] border border-[#e9d5ff] text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-[#7c3aed] shadow-xs mb-2.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7c3aed]" />
+                <span>SUBSCRIPTION PLANS</span>
+              </div>
+
+              {/* Heading */}
+              <h2 className="text-3xl sm:text-4xl lg:text-[44px] xl:text-[48px] font-black tracking-[-0.035em] text-slate-950 leading-[1.08]">
+                Plans that fit <br />
+                <span className="bg-gradient-to-r from-[#7c3aed] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">
+                  your business.
+                </span>
+              </h2>
+
+              {/* Description */}
+              <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed text-center max-w-xl mt-2.5">
+                Turn your products into flexible subscription plans. <br className="hidden sm:inline" />
+                Set pricing, choose billing cycles and define the terms that work for your business.
+              </p>
+            </div>
+
+            {/* Centered Segmented Billing Cycle Selector */}
+            <div
+              ref={billingToggleRef}
+              className="relative z-10 inline-flex items-center p-1 rounded-full bg-slate-100/90 border border-slate-200/80 shadow-inner mt-4 sm:mt-5 mb-5 sm:mb-6"
+            >
+              {(["daily", "weekly", "monthly", "yearly"] as const).map((cycle) => {
+                const isActive = billingCycle === cycle;
+                const labels = {
+                  daily: "Daily",
+                  weekly: "Weekly",
+                  monthly: "Monthly",
+                  yearly: "Yearly",
+                };
+                return (
+                  <button
+                    key={cycle}
+                    type="button"
+                    onClick={() => setBillingCycle(cycle)}
+                    className={`relative px-4 sm:px-5 py-1.5 rounded-full text-xs transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? "bg-white text-slate-900 font-bold shadow-sm"
+                        : "text-slate-500 font-medium hover:text-slate-800"
+                    }`}
+                  >
+                    <span>{labels[cycle]}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Three Pricing Cards in One Horizontal Row */}
+            <div
+              ref={plansWrapperRef}
+              className="relative z-10 w-full max-w-[1080px] grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 items-stretch"
+            >
+              {/* Card 1: Basic */}
+              <div
+                ref={planCardBasicRef}
+                className="rounded-[26px] sm:rounded-[28px] bg-[#0e121a] border border-white/10 p-6 sm:p-7 flex flex-col justify-between shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/20 group relative"
+              >
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white mb-2">Basic</h3>
+                  <div className="flex items-baseline gap-1.5 mb-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">
+                      {planPrices.basic[billingCycle]}
+                    </span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      /{intervalLabels[billingCycle]}
                     </span>
                   </div>
+                  <p className="text-xs text-slate-400 leading-normal mb-5">
+                    Essential tools to get started.
+                  </p>
 
-                  {/* Right: Notifications & User Account */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      aria-label="Notifications"
-                      className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors relative"
-                    >
-                      <Bell className="w-3.5 h-3.5" />
-                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-amber-400 rounded-full" />
-                    </button>
+                  <div className="border-t border-white/10 my-4" />
 
-                    <div className="flex items-center gap-2 pl-1 border-l border-white/10">
-                      <div className="w-8 h-8 rounded-full bg-white text-slate-900 font-bold text-xs flex items-center justify-center shadow-xs">
-                        AA
-                      </div>
-                      <div className="hidden sm:block text-left">
-                        <div className="text-xs font-semibold text-white leading-tight">
-                          Alosh Antony
+                  <ul className="space-y-3 mb-6">
+                    {[
+                      "1 Product",
+                      "Basic Features",
+                      "Email Support",
+                    ].map((feat) => (
+                      <li key={feat} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-[#352758] border border-[#7c3aed]/40 text-[#c084fc] flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 stroke-[3]" />
                         </div>
-                        <div className="text-[10px] text-slate-400 flex items-center gap-0.5 leading-tight">
-                          <span>Business Account</span>
-                          <ChevronDown className="w-2.5 h-2.5" />
-                        </div>
-                      </div>
-                    </div>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/5 text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer"
+                >
+                  Choose Basic
+                </button>
+              </div>
+
+              {/* Card 2: Pro (HIGHLIGHTED) */}
+              <div
+                ref={planCardProRef}
+                className="relative rounded-[26px] sm:rounded-[28px] bg-gradient-to-b from-[#131742] via-[#0b0e27] to-[#070919] border-2 border-[#6366f1] p-6 sm:p-7 flex flex-col justify-between shadow-[0_20px_55px_-10px_rgba(99,102,241,0.5),0_0_35px_rgba(99,102,241,0.25)] md:-translate-y-2.5 z-20 transition-all duration-300 group"
+              >
+                {/* Floating "Most Popular" Badge */}
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-[#6366f1] via-[#7c3aed] to-[#8b5cf6] text-white text-[10px] font-bold tracking-wide uppercase shadow-[0_4px_12px_rgba(124,58,237,0.4)]">
+                    <Crown className="w-3 h-3 fill-white" />
+                    <span>Most Popular</span>
                   </div>
                 </div>
 
-                {/* -------------------------------------------------------- */}
-                {/* BODY: Sidebar + Main Widgets Layout                      */}
-                {/* -------------------------------------------------------- */}
-                <div className="grid grid-cols-12 gap-4 pt-4">
-                  {/* Left Mini Sidebar */}
-                  <div className="col-span-3 hidden sm:flex flex-col space-y-1 pr-2 border-r border-white/5">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 text-white text-xs font-semibold shadow-xs">
-                      <LayoutDashboard className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Dashboard</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.04] text-xs font-medium transition-colors cursor-pointer">
-                      <Package className="w-3.5 h-3.5" />
-                      <span>Products</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.04] text-xs font-medium transition-colors cursor-pointer">
-                      <Repeat className="w-3.5 h-3.5" />
-                      <span>Subscriptions</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.04] text-xs font-medium transition-colors cursor-pointer">
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>Invoices</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.04] text-xs font-medium transition-colors cursor-pointer">
-                      <Users className="w-3.5 h-3.5" />
-                      <span>Customers</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.04] text-xs font-medium transition-colors cursor-pointer">
-                      <BarChart3 className="w-3.5 h-3.5" />
-                      <span>Analytics</span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.04] text-xs font-medium transition-colors cursor-pointer">
-                      <Settings className="w-3.5 h-3.5" />
-                      <span>Settings</span>
-                    </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white mb-2">Pro</h3>
+                  <div className="flex items-baseline gap-1.5 mb-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">
+                      {planPrices.pro[billingCycle]}
+                    </span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      /{intervalLabels[billingCycle]}
+                    </span>
                   </div>
+                  <p className="text-xs text-slate-400 leading-normal mb-5">
+                    Everything you need to grow.
+                  </p>
 
-                  {/* Right Dashboard Area (Cards & Tables) */}
-                  <div className="col-span-12 sm:col-span-9 space-y-4">
-                    {/* Top Row: 3 Financial Metrics Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {/* Metric 1: Monthly Revenue */}
-                      <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3.5 flex flex-col justify-between">
-                        <div>
-                          <span className="text-[11px] text-slate-400 font-medium">
-                            Monthly Revenue
-                          </span>
-                          <div className="flex items-baseline gap-1.5 mt-0.5">
-                            <span className="text-lg font-bold text-white tracking-tight">
-                              $24,850.00
-                            </span>
-                            <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/15 px-1 py-0.2 rounded">
-                              +18.4%
-                            </span>
-                          </div>
+                  <div className="border-t border-white/10 my-4" />
+
+                  <ul className="space-y-3 mb-6">
+                    {[
+                      "Up to 10 Products",
+                      "Advanced Features",
+                      "Priority Support",
+                    ].map((feat) => (
+                      <li key={feat} className="flex items-center gap-3 text-xs sm:text-sm text-white font-medium">
+                        <div className="w-5 h-5 rounded-full bg-[#3d2c6e] border border-[#8b5cf6]/50 text-[#c084fc] flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 stroke-[3]" />
                         </div>
-
-                        {/* Emerald Glowing Bar Chart */}
-                        <div className="mt-3 flex items-end justify-between gap-1 h-12 pt-1">
-                          {[25, 40, 32, 52, 68, 45, 78, 92, 80, 100].map((height, i) => (
-                            <div
-                              key={i}
-                              className="w-1.5 rounded-t bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.3)]"
-                              style={{ height: `${height}%` }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Metric 2: Active Subscriptions */}
-                      <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3.5 flex flex-col justify-between">
-                        <div>
-                          <span className="text-[11px] text-slate-400 font-medium">
-                            Active Subscriptions
-                          </span>
-                          <div className="flex items-baseline gap-1.5 mt-0.5">
-                            <span className="text-lg font-bold text-white tracking-tight">
-                              1,248
-                            </span>
-                            <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/15 px-1 py-0.2 rounded">
-                              +12%
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Purple Glowing Bar Chart */}
-                        <div className="mt-3 flex items-end justify-between gap-1 h-12 pt-1">
-                          {[20, 35, 48, 42, 60, 75, 65, 88, 72, 95].map((height, i) => (
-                            <div
-                              key={i}
-                              className="w-1.5 rounded-t bg-gradient-to-t from-purple-600 to-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.3)]"
-                              style={{ height: `${height}%` }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Metric 3: Revenue Split Donut */}
-                      <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3.5 flex flex-col justify-between">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] text-slate-400 font-medium">
-                            Revenue Split
-                          </span>
-                          <span className="text-[9px] text-slate-400 flex items-center gap-0.5">
-                            Monthly <ChevronDown className="w-2.5 h-2.5" />
-                          </span>
-                        </div>
-
-                        {/* Donut Chart with Center Percentage */}
-                        <div className="flex items-center justify-center my-1">
-                          <div className="relative w-16 h-16 flex items-center justify-center">
-                            <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
-                              {/* Background Circle */}
-                              <circle
-                                cx="18"
-                                cy="18"
-                                r="14"
-                                fill="none"
-                                stroke="#1e293b"
-                                strokeWidth="3.5"
-                              />
-                              {/* Purple Segment (Recurring: 68%) */}
-                              <circle
-                                cx="18"
-                                cy="18"
-                                r="14"
-                                fill="none"
-                                stroke="#8b5cf6"
-                                strokeWidth="3.5"
-                                strokeDasharray="59.8 100"
-                                strokeDashoffset="0"
-                                strokeLinecap="round"
-                              />
-                              {/* Cyan Segment (Add-ons: 32%) */}
-                              <circle
-                                cx="18"
-                                cy="18"
-                                r="14"
-                                fill="none"
-                                stroke="#06b6d4"
-                                strokeWidth="3.5"
-                                strokeDasharray="28.1 100"
-                                strokeDashoffset="-59.8"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                            <span className="absolute text-[11px] font-bold text-white">
-                              96.4%
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Legend */}
-                        <div className="flex items-center justify-between text-[9px] text-slate-400 pt-1 border-t border-white/5">
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" />
-                            <span>Recurring</span>
-                            <span className="font-semibold text-white ml-0.5">68%</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#06b6d4]" />
-                            <span>Add-ons</span>
-                            <span className="font-semibold text-white ml-0.5">32%</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bottom Row: 2 Data Tables */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Table 1: Recent Subscriptions */}
-                      <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3.5 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-white">
-                            Recent Subscriptions
-                          </span>
-                          <Link
-                            href="/dashboard"
-                            className="text-[10px] text-slate-400 hover:text-white flex items-center gap-0.5 transition-colors"
-                          >
-                            View all <ArrowRight className="w-2.5 h-2.5" />
-                          </Link>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          {/* Row 1 */}
-                          <div className="flex items-center justify-between text-[11px] py-1 border-b border-white/5">
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-indigo-500/30 text-indigo-300 text-[9px] font-bold flex items-center justify-center">
-                                JS
-                              </div>
-                              <span className="font-medium text-white">John Smith</span>
-                            </div>
-                            <span className="text-[10px] text-slate-400">Pro Plan</span>
-                            <span className="font-semibold text-white">$49.00</span>
-                            <span className="text-[9px] font-semibold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded-full">
-                              Active
-                            </span>
-                          </div>
-
-                          {/* Row 2 */}
-                          <div className="flex items-center justify-between text-[11px] py-1 border-b border-white/5">
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-pink-500/30 text-pink-300 text-[9px] font-bold flex items-center justify-center">
-                                SW
-                              </div>
-                              <span className="font-medium text-white">Sarah Wilson</span>
-                            </div>
-                            <span className="text-[10px] text-slate-400">Business Plan</span>
-                            <span className="font-semibold text-white">$129.00</span>
-                            <span className="text-[9px] font-semibold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded-full">
-                              Active
-                            </span>
-                          </div>
-
-                          {/* Row 3 */}
-                          <div className="flex items-center justify-between text-[11px] py-1">
-                            <div className="flex items-center gap-2">
-                              <div className="w-5 h-5 rounded-full bg-emerald-500/30 text-emerald-300 text-[9px] font-bold flex items-center justify-center">
-                                MJ
-                              </div>
-                              <span className="font-medium text-white">Mike Johnson</span>
-                            </div>
-                            <span className="text-[10px] text-slate-400">Starter Plan</span>
-                            <span className="font-semibold text-white">$19.00</span>
-                            <span className="text-[9px] font-semibold text-slate-300 bg-slate-700/50 px-1.5 py-0.5 rounded-full">
-                              Trial
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Table 2: Upcoming Invoices */}
-                      <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3.5 space-y-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold text-white">
-                            Upcoming Invoices
-                          </span>
-                          <Link
-                            href="/dashboard"
-                            className="text-[10px] text-slate-400 hover:text-white flex items-center gap-0.5 transition-colors"
-                          >
-                            View all <ArrowRight className="w-2.5 h-2.5" />
-                          </Link>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          {/* Row 1 */}
-                          <div className="flex items-center justify-between text-[11px] py-1 border-b border-white/5">
-                            <span className="font-mono text-slate-300">#INV-1042</span>
-                            <span className="font-semibold text-white">$49.00</span>
-                            <span className="text-[10px] text-slate-400">Nov 1, 2026</span>
-                          </div>
-
-                          {/* Row 2 */}
-                          <div className="flex items-center justify-between text-[11px] py-1 border-b border-white/5">
-                            <span className="font-mono text-slate-300">#INV-1043</span>
-                            <span className="font-semibold text-white">$129.00</span>
-                            <span className="text-[10px] text-slate-400">Nov 5, 2026</span>
-                          </div>
-
-                          {/* Row 3 */}
-                          <div className="flex items-center justify-between text-[11px] py-1">
-                            <span className="font-mono text-slate-300">#INV-1044</span>
-                            <span className="font-semibold text-white">$19.00</span>
-                            <span className="text-[10px] text-slate-400">Nov 8, 2026</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 rounded-full bg-white hover:bg-slate-100 text-slate-950 text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-98 cursor-pointer"
+                >
+                  Choose Pro
+                </button>
+              </div>
+
+              {/* Card 3: Business */}
+              <div
+                ref={planCardBusinessRef}
+                className="rounded-[26px] sm:rounded-[28px] bg-[#0e121a] border border-white/10 p-6 sm:p-7 flex flex-col justify-between shadow-[0_15px_35px_rgba(0,0,0,0.18)] transition-all duration-300 hover:border-white/20 group relative"
+              >
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white mb-2">Business</h3>
+                  <div className="flex items-baseline gap-1.5 mb-2">
+                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-sans">
+                      {planPrices.business[billingCycle]}
+                    </span>
+                    <span className="text-xs text-slate-400 font-normal">
+                      /{intervalLabels[billingCycle]}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-normal mb-5">
+                    Built for large businesses.
+                  </p>
+
+                  <div className="border-t border-white/10 my-4" />
+
+                  <ul className="space-y-3 mb-6">
+                    {[
+                      "Unlimited Products",
+                      "Advanced Features",
+                      "Dedicated Support",
+                    ].map((feat) => (
+                      <li key={feat} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium">
+                        <div className="w-5 h-5 rounded-full bg-[#352758] border border-[#7c3aed]/40 text-[#c084fc] flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <button
+                  type="button"
+                  className="w-full py-2.5 px-4 rounded-full border border-white/20 hover:border-white/40 hover:bg-white/5 text-white text-xs sm:text-sm font-semibold transition-all cursor-pointer"
+                >
+                  Choose Business
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

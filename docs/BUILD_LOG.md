@@ -173,6 +173,117 @@
     - Local server check: HTTP 200 OK.
 - **Status:** PASS
 
+---
+
+### [Stage 10] FlowGrid Slide 2 Product Management Visual Update
+
+- **Date/Time:** 2026-10-31 12:20 UTC+05:30
+- **Actions:**
+  - Implemented Slide 2 (Product Management) following visual specification:
+    - Left column: `• ORGANIZE PRODUCTS` eyebrow badge, headline `Everything you sell. In one place.`, and 3 vertically stacked highlights: `Organize Products`, `Flexible Pricing`, `Subscription Ready`.
+    - Right column: Floating Product Collection Panel with `Products`, `+ Add product` button, search bar, and 3 entries (`Cloud Software` ₹999/mo, `Gym Membership` ₹500/mo, `Online Course` ₹1,499/mo).
+    - Supporting elements: Tilted FlowGrid brand card and 3 floating notification cards (`Product Created`, `Pricing Updated`, `Ready for Plans`) with curved gradient SVG spline lines (Purple, Blue, Mint Green).
+    - Preserved GSAP pinned ScrollTrigger and Lenis smooth scrolling.
+  - **Quality Checks:**
+    - Vitest unit tests: 4/4 passed.
+    - ESLint: 0 errors, 0 warnings.
+    - Local server check: HTTP 200 OK.
+- **Status:** PASS
+
+---
+
+### [Stage 11] FlowGrid Slide 3 Subscription Plans Creation
+
+- **Date/Time:** 2026-10-31 12:32 UTC+05:30
+- **Actions:**
+  - Created Slide 3 (Subscription Plan Management) transitioning seamlessly from Slide 2:
+    - **Left Column:**
+      - Eyebrow badge: `• SUBSCRIPTION PLANS`.
+      - Headline: `Plans that fit your business.` (with `your business.` in vibrant purple-to-cyan gradient).
+      - Subtitle: "Turn your products into flexible subscription plans. Set pricing, choose billing cycles and define the terms that work for your business."
+      - Three supporting feature highlights:
+        1. `Flexible Billing Cycles` (Daily, weekly, monthly and yearly cycles tailored to your cash flow).
+        2. `Custom Pricing` (Set sales prices, promotional tiers and recurring fees with ease).
+        3. `Subscription Rules` (Define minimum quantity, plan validity terms and automated renewals).
+    - **Main Visual (Floating Subscription-Plan Interface):**
+      - Interactive billing options switcher: `Daily`, `Weekly`, `Monthly`, `Yearly` (-20%).
+      - Three floating plan cards:
+        1. **Basic** — ₹499/month, included products (`Online Course`, `Starter Resources`), `Active` status badge, min. quantity 1 unit, 12 months validity.
+        2. **Pro (Featured & Highlighted)** — ₹999/month, `Most Popular` gradient badge, glowing purple border, included products (`Cloud Software`, `Gym Membership`), `Active` status badge, min. quantity 1 unit, auto-renewing validity.
+        3. **Business** — ₹1,999/month, included products (`All Catalog Items`, `Custom SLA & API`), `Active` status badge, min. quantity 5 seats, annual contract validity.
+    - **Animation System (GSAP ScrollTrigger & Lenis):**
+      - Descending Morph Transition: As Slide 2 elements retreat upward, the selected `Ready for Plans` pill card physically moves DOWN (`y: +90px, x: -120px`) into the center-top position of Slide 3.
+      - Reveals "The Rest": The master card descends into place, its top header preserves the `Ready for Plans` checkmark banner, and the body smoothly expands downward, unveiling the billing cycle switcher, headline, 3 highlights, and the 3 subscription plan cards cascading into place sequentially.
+      - Smooth scroll scrub holding state for interactive exploration.
+      - Final transition moves the completed slide upward toward Customer Subscriptions and Automated Billing.
+  - **Quality Checks:**
+    - Vitest unit tests: 4/4 passed.
+    - ESLint: 0 errors, 0 warnings.
+    - Local server check: HTTP 200 OK.
+- **Status:** PASS
+
+---
+
+### [Stage 12] FlowGrid Slide 3 Subscription Plans UI Refinement (Reference Image Match)
+
+- **Date/Time:** 2026-10-31 12:56 UTC+05:30
+- **Actions:**
+  - Updated Slide 3 in [HeroSection.tsx](file:///home/michael/Projects/Makeaton/apps/web/src/components/landing/HeroSection.tsx) to match the visual reference image:
+    - **Header & Origin Connection:**
+      - Reused the `Ready for Plans` notification from Slide 2, centering it at the top above Slide 3.
+      - Connected with an S-curved mint green spline (`#10b981`) terminating with an anchor dot (`•`).
+      - Centered badge: `• SUBSCRIPTION PLANS` in soft purple pill.
+      - Centered headline: `Plans that fit` / `your business.` with rich purple-to-cyan gradient on `your business.`.
+      - Centered 2-line description paragraph.
+    - **Centered Segmented Billing Selector:**
+      - Pill container with 4 options: `Daily`, `Weekly`, `Monthly` (default active white pill), `Yearly`.
+      - Fully interactive: updates all 3 plan prices with dedicated interval pricing:
+        - Basic: ₹25/day, ₹149/week, ₹499/month, ₹4,990/year.
+        - Pro: ₹49/day, ₹299/week, ₹999/month, ₹9,990/year.
+        - Business: ₹99/day, ₹599/week, ₹1,999/month, ₹19,990/year.
+    - **Three Dark Pricing Cards in One Row:**
+      - **Basic Plan:** Deep charcoal `#0e121a` card, rounded `rounded-[28px]`, subtle border `border-white/10`, `Basic`, `₹499/month`, `Essential tools to get started.`, thin divider, 3 features (`1 Product`, `Basic Features`, `Email Support`) with purple circular check icons, and full-width transparent outline button `Choose Basic`.
+      - **Pro Plan (Highlighted):** Floating purple `👑 Most Popular` badge, deep dark blue gradient background (`bg-gradient-to-b from-[#131742] via-[#0b0e27] to-[#070919]`), vivid purple border (`border-2 border-[#6366f1]`), subtle blue-purple outer glow (`shadow-[0_20px_55px_-10px_rgba(99,102,241,0.5),0_0_35px_rgba(99,102,241,0.25)]`), elevated `md:-translate-y-2.5`, `Pro`, `₹999/month`, `Everything you need to grow.`, thin divider, 3 features (`Up to 10 Products`, `Advanced Features`, `Priority Support`), and solid white CTA button `Choose Pro`.
+      - **Business Plan:** Deep charcoal `#0e121a` card, `Business`, `₹1,999/month`, `Built for large businesses.`, thin divider, 3 features (`Unlimited Products`, `Advanced Features`, `Dedicated Support`), and full-width transparent outline button `Choose Business`.
+    - **GSAP ScrollTrigger Animation Flow:**
+      - Slide 2 elements retreat smoothly.
+      - `Ready for Plans` descends into top-center position.
+      - Connecting mint spline draws downward.
+      - Centered header and billing selector reveal smoothly.
+      - Basic, Pro, and Business cards enter sequentially with staggered entrance (`stagger: 0.08`).
+      - Pro card outer glow activates.
+      - Full holding state for interactive scrubbing and cycle selection.
+      - Graceful exit upward into next billing section.
+  - **Quality Checks:**
+    - Vitest unit tests: 4/4 passed.
+    - Next.js linting: 0 errors, 0 warnings.
+    - HTTP server check: HTTP 200 OK on `http://localhost:3000`.
+- **Status:** PASS
+
+---
+
+### [Stage 13] FlowGrid Slide 2 to Slide 3 Animated Notification Flight
+
+- **Date/Time:** 2026-10-31 13:06 UTC+05:30
+- **Actions:**
+  - Implemented continuous physical animation of the `Ready for Plans` notification moving from Slide 2 to Slide 3 in [HeroSection.tsx](file:///home/michael/Projects/Makeaton/apps/web/src/components/landing/HeroSection.tsx):
+    - **Continuous Visual Flight**:
+      - Rather than fading out and in, the `Ready for Plans` card physically lifts off from the bottom-right of the Slide 2 product collection panel and travels across the screen along a smooth upward-left trajectory.
+      - Dynamic coordinate delta calculation (`getNotif3Target()`) measures the exact subpixel distance between Slide 2's starting position and Slide 3's top-center target anchor across any viewport size.
+      - Card maintains `opacity: 1`, elevated `z-index: 50`, and receives a soft emerald glow shadow (`0 20px 45px -10px rgba(16,185,129,0.35)`) during its flight.
+    - **Coordinated Background Elements**:
+      - Separated idle micro-bobbing onto an inner element (`notif3InnerRef`), preventing property collisions with the scrubbed scroll timeline.
+      - "Product Created" notification lingers at 35% opacity in the background to the right (matching the user's reference screenshot) before gently receding.
+      - Mint green spline in Slide 2 detaches seamlessly.
+    - **Slide 3 Arrival & Integration**:
+      - As the card reaches the center-top position, the mint connecting spline extends downward from beneath it into the `• SUBSCRIPTION PLANS` badge.
+      - The card seamlessly anchors at the top of Slide 3 and coordinates with the sequential entrance of the 3 dark pricing cards.
+      - Fully bidirectional: reverses smoothly on scroll-up without jumping or clipping.
+  - **Quality Checks:**
+    - Vitest unit tests: 4/4 passed.
+    - Next.js linting: 0 errors, 0 warnings.
+    - HTTP server check: HTTP 200 OK on `http://localhost:3000`.
+- **Status:** PASS
 
 
 
