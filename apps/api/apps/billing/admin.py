@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import DiscountRule, Invoice, InvoiceLine, TaxRule
+from apps.discounts.models import DiscountRule
+
+from .models import Invoice, InvoiceLine, TaxRule
 
 
 @admin.register(TaxRule)

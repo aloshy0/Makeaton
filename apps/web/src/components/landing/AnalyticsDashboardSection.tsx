@@ -169,8 +169,8 @@ export function AnalyticsDashboardSection() {
             </h2>
 
             <p className="text-sm text-slate-400 max-w-lg font-normal">
-              Consolidated real-time aggregations calculated directly in the PostgreSQL database layer
-              with guaranteed sub-2-second response SLAs.
+              Consolidated real-time aggregations calculated directly in the PostgreSQL database
+              layer with guaranteed sub-2-second response SLAs.
             </p>
           </div>
 
@@ -221,9 +221,30 @@ export function AnalyticsDashboardSection() {
             <div className="relative h-60 w-full pt-4">
               <svg className="w-full h-full overflow-visible" viewBox="0 0 600 200" fill="none">
                 {/* Horizontal grid lines */}
-                <line x1="0" y1="50" x2="600" y2="50" stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
-                <line x1="0" y1="100" x2="600" y2="100" stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
-                <line x1="0" y1="150" x2="600" y2="150" stroke="rgba(255,255,255,0.06)" strokeDasharray="4 4" />
+                <line
+                  x1="0"
+                  y1="50"
+                  x2="600"
+                  y2="50"
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeDasharray="4 4"
+                />
+                <line
+                  x1="0"
+                  y1="100"
+                  x2="600"
+                  y2="100"
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeDasharray="4 4"
+                />
+                <line
+                  x1="0"
+                  y1="150"
+                  x2="600"
+                  y2="150"
+                  stroke="rgba(255,255,255,0.06)"
+                  strokeDasharray="4 4"
+                />
 
                 {/* Animated Path */}
                 <path
@@ -264,7 +285,10 @@ export function AnalyticsDashboardSection() {
 
               <div ref={barChartRef} className="h-36 flex items-end justify-between gap-3 pt-2">
                 {months.map((m, idx) => (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                  <div
+                    key={idx}
+                    className="flex-1 flex flex-col items-center gap-2 h-full justify-end"
+                  >
                     <span className="text-[9px] text-slate-400 font-mono">{m.val}</span>
                     <div
                       className="growth-bar w-full rounded-t-lg bg-gradient-to-t from-emerald-600 to-teal-400 transition-all shadow-sm"

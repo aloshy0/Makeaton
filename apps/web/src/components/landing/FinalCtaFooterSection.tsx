@@ -111,7 +111,11 @@ export function FinalCtaFooterSection() {
                 className="absolute inset-0 rounded-3xl bg-[#6366f1]/30 blur-xl opacity-60 group-hover:opacity-100 transition-opacity"
                 aria-hidden="true"
               />
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white relative z-10" viewBox="0 0 24 24" fill="currentColor">
+              <svg
+                className="w-8 h-8 sm:w-10 sm:h-10 text-white relative z-10"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
                 <path d="M3 4.5h16l-4.5 6H3v-6z" />
                 <path d="M3 13.5h11l-4.5 6.5H3v-6.5z" />
               </svg>
@@ -194,17 +198,17 @@ export function FinalCtaFooterSection() {
                   <path d="M3 4.5h16l-4.5 6H3v-6z" />
                   <path d="M3 13.5h11l-4.5 6.5H3v-6.5z" />
                 </svg>
-                <span className="text-xl font-black tracking-tight text-white">
-                  FLOWGRID
-                </span>
+                <span className="text-xl font-black tracking-tight text-white">FLOWGRID</span>
               </Link>
               <p className="text-xs text-slate-400 max-w-sm leading-relaxed font-normal">
-                Next-generation modular subscription management and automated billing engine. Keep every
-                product, customer, invoice, and payment in seamless flow.
+                Next-generation modular subscription management and automated billing engine. Keep
+                every product, customer, invoice, and payment in seamless flow.
               </p>
               <div className="pt-2 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-semibold text-emerald-400">All Systems Operational</span>
+                <span className="text-xs font-semibold text-emerald-400">
+                  All Systems Operational
+                </span>
               </div>
             </div>
 
@@ -313,7 +317,10 @@ export function FinalCtaFooterSection() {
               </span>
               <ul className="space-y-2 text-xs text-slate-400">
                 <li>
-                  <Link href="/dashboard" className="hover:text-white transition-colors font-medium">
+                  <Link
+                    href="/dashboard"
+                    className="hover:text-white transition-colors font-medium"
+                  >
                     Pricing Plans
                   </Link>
                 </li>
@@ -347,12 +354,18 @@ export function FinalCtaFooterSection() {
               </span>
               <ul className="space-y-2 text-xs text-slate-400">
                 <li>
-                  <Link href="/dashboard" className="hover:text-white transition-colors font-semibold text-white">
+                  <Link
+                    href="/dashboard"
+                    className="hover:text-white transition-colors font-semibold text-white"
+                  >
                     Login
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard" className="hover:text-white transition-colors font-semibold text-white">
+                  <Link
+                    href="/dashboard"
+                    className="hover:text-white transition-colors font-semibold text-white"
+                  >
                     Sign up
                   </Link>
                 </li>

@@ -145,7 +145,11 @@ export function AutomatedBillingSection() {
       if (splineRef.current) {
         const len = splineRef.current.getTotalLength ? splineRef.current.getTotalLength() : 300;
         gsap.set(splineRef.current, { strokeDasharray: len, strokeDashoffset: len });
-        tl.to(splineRef.current, { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" }, "-=0.5");
+        tl.to(
+          splineRef.current,
+          { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" },
+          "-=0.5"
+        );
       }
 
       // 9. Floating notifications appear
@@ -248,7 +252,8 @@ export function AutomatedBillingSection() {
                     Automatic Invoice Generation
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Generate deterministic, sequenced tax invoices automatically on the exact renewal date.
+                    Generate deterministic, sequenced tax invoices automatically on the exact
+                    renewal date.
                   </p>
                 </div>
               </div>
@@ -263,7 +268,8 @@ export function AutomatedBillingSection() {
                     Recurring Billing Schedules
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Seamlessly orchestrate daily, weekly, monthly, and annual subscription cycles with zero failure.
+                    Seamlessly orchestrate daily, weekly, monthly, and annual subscription cycles
+                    with zero failure.
                   </p>
                 </div>
               </div>
@@ -278,7 +284,8 @@ export function AutomatedBillingSection() {
                     Tax and Discount Management
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Real-time GST and VAT compliance with dynamic discount codes applied right at invoice checkout.
+                    Real-time GST and VAT compliance with dynamic discount codes applied right at
+                    invoice checkout.
                   </p>
                 </div>
               </div>
@@ -325,7 +332,9 @@ export function AutomatedBillingSection() {
               <div ref={customerBadgeRef} className="pb-3 relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-50/80 border border-purple-200/60 text-xs text-purple-900 font-medium">
                   <Sparkles className="w-3.5 h-3.5 text-[#8b5cf6]" />
-                  <span>Generating from: <strong>John Smith (Pro Plan)</strong></span>
+                  <span>
+                    Generating from: <strong>John Smith (Pro Plan)</strong>
+                  </span>
                 </div>
               </div>
 
@@ -424,7 +433,9 @@ export function AutomatedBillingSection() {
                       <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
                     <span className="font-bold text-slate-900">Payment received.</span>
-                    <span className="text-[10px] font-semibold text-emerald-600 ml-auto">₹1,178.82</span>
+                    <span className="text-[10px] font-semibold text-emerald-600 ml-auto">
+                      ₹1,178.82
+                    </span>
                   </div>
 
                   {/* Step 4: Next billing scheduled */}
@@ -433,7 +444,9 @@ export function AutomatedBillingSection() {
                       <Clock className="w-3.5 h-3.5 stroke-[2.5]" />
                     </div>
                     <span className="font-medium text-purple-900">Next billing scheduled.</span>
-                    <span className="text-[10px] text-purple-600 font-medium ml-auto">Nov 30, 2026</span>
+                    <span className="text-[10px] text-purple-600 font-medium ml-auto">
+                      Nov 30, 2026
+                    </span>
                   </div>
                 </div>
               </div>

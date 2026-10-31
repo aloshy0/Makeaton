@@ -147,9 +147,7 @@ export function PricingSection({ mode, setMode }: PricingSectionProps) {
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-base font-bold text-white tracking-tight">
-                    {tier.name}
-                  </span>
+                  <span className="text-base font-bold text-white tracking-tight">{tier.name}</span>
                   {tier.popular && (
                     <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
                       Popular

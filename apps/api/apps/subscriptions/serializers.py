@@ -7,7 +7,7 @@ from apps.catalog.serializers import (
 )
 from apps.customers.serializers import CustomerSerializer
 
-from .models import Subscription, SubscriptionLine
+from .models import Subscription, SubscriptionEvent, SubscriptionLine
 
 
 class SubscriptionLineSerializer(serializers.ModelSerializer):
@@ -25,14 +25,29 @@ class SubscriptionLineSerializer(serializers.ModelSerializer):
             "variant_details",
             "quantity",
             "unit_price",
-            "tax_rate",
             "subtotal",
         ]
         read_only_fields = ["id", "unit_price", "subtotal"]
 
 
+class SubscriptionEventSerializer(serializers.ModelSerializer):
+    changed_by_email = serializers.CharField(source="changed_by.email", read_only=True)
+
+    class Meta:
+        model = SubscriptionEvent
+        fields = [
+            "id",
+            "previous_status",
+            "new_status",
+            "changed_by_email",
+            "reason",
+            "timestamp",
+        ]
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
     lines = SubscriptionLineSerializer(many=True, read_only=True)
+    events = SubscriptionEventSerializer(many=True, read_only=True)
     customer_details = CustomerSerializer(source="customer", read_only=True)
     plan_details = SubscriptionPlanSerializer(source="plan", read_only=True)
 
@@ -40,6 +55,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = [
             "id",
+            "workspace",
             "subscription_number",
             "customer",
             "customer_details",
@@ -56,20 +72,14 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             "total_amount",
             "notes",
             "lines",
+            "events",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
             "id",
+            "workspace",
             "subscription_number",
-            "subtotal",
-            "tax_amount",
-            "discount_amount",
-            "total_amount",
             "created_at",
             "updated_at",
         ]
-
-
-class SubscriptionTransitionSerializer(serializers.Serializer):
-    target_status = serializers.ChoiceField(choices=Subscription.Status.choices)

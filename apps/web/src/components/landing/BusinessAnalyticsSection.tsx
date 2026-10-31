@@ -215,7 +215,11 @@ export function BusinessAnalyticsSection() {
       if (splineRef.current) {
         const len = splineRef.current.getTotalLength ? splineRef.current.getTotalLength() : 300;
         gsap.set(splineRef.current, { strokeDasharray: len, strokeDashoffset: len });
-        tl.to(splineRef.current, { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" }, "-=0.6");
+        tl.to(
+          splineRef.current,
+          { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" },
+          "-=0.6"
+        );
       }
 
       // 10. Floating telemetry notifications
@@ -311,7 +315,8 @@ export function BusinessAnalyticsSection() {
                     Revenue Tracking
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Real-time Monthly Recurring Revenue (MRR) and net volume tracking updated on every settlement.
+                    Real-time Monthly Recurring Revenue (MRR) and net volume tracking updated on
+                    every settlement.
                   </p>
                 </div>
               </div>
@@ -326,7 +331,8 @@ export function BusinessAnalyticsSection() {
                     Subscription Insights
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Analyze tier distribution between Basic, Pro, and Business plans with churn cohort predictions.
+                    Analyze tier distribution between Basic, Pro, and Business plans with churn
+                    cohort predictions.
                   </p>
                 </div>
               </div>
@@ -341,7 +347,8 @@ export function BusinessAnalyticsSection() {
                     Payment Monitoring
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Keep tabs on settled receivables, gateway success rates, and outstanding overdue invoices.
+                    Keep tabs on settled receivables, gateway success rates, and outstanding overdue
+                    invoices.
                   </p>
                 </div>
               </div>
@@ -388,7 +395,9 @@ export function BusinessAnalyticsSection() {
               <div ref={paymentTransferPillRef} className="pb-3 relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50/80 border border-emerald-200/60 text-xs text-emerald-900 font-medium">
                   <Sparkles className="w-3.5 h-3.5 text-[#10b981]" />
-                  <span>Settlement Synced: <strong>₹1,178.82 from INV-1042</strong></span>
+                  <span>
+                    Settlement Synced: <strong>₹1,178.82 from INV-1042</strong>
+                  </span>
                 </div>
               </div>
 
@@ -410,7 +419,10 @@ export function BusinessAnalyticsSection() {
               </div>
 
               {/* 4 Compact Metric Cards (2x2 Grid) */}
-              <div ref={metricsGridRef} className="grid grid-cols-2 gap-3.5 pt-4 pb-5 relative z-10">
+              <div
+                ref={metricsGridRef}
+                className="grid grid-cols-2 gap-3.5 pt-4 pb-5 relative z-10"
+              >
                 {/* Metric 1: Monthly Recurring Revenue */}
                 <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/70 hover:bg-slate-50 transition-colors">
                   <div className="flex items-center justify-between text-slate-500 mb-1">
@@ -485,7 +497,9 @@ export function BusinessAnalyticsSection() {
               {/* Elegant Revenue Line Chart */}
               <div className="pt-2 pb-4 border-t border-slate-100 relative z-10">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-900">Revenue Growth Trajectory</span>
+                  <span className="text-xs font-bold text-slate-900">
+                    Revenue Growth Trajectory
+                  </span>
                   <span className="text-[11px] text-slate-400">May – Oct 2026</span>
                 </div>
 

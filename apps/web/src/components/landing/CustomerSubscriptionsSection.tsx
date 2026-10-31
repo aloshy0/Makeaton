@@ -113,7 +113,11 @@ export function CustomerSubscriptionsSection() {
       if (splineRef.current) {
         const len = splineRef.current.getTotalLength ? splineRef.current.getTotalLength() : 300;
         gsap.set(splineRef.current, { strokeDasharray: len, strokeDashoffset: len });
-        tl.to(splineRef.current, { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" }, "-=0.4");
+        tl.to(
+          splineRef.current,
+          { strokeDashoffset: 0, duration: 0.8, ease: "power2.inOut" },
+          "-=0.4"
+        );
       }
 
       // 7. Floating notifications appear with bounce
@@ -200,8 +204,8 @@ export function CustomerSubscriptionsSection() {
 
               {/* Description */}
               <p className="text-sm sm:text-base text-slate-500 font-normal leading-relaxed max-w-lg">
-                Keep track of your customers, manage their subscriptions and stay on top of renewals,
-                all from one place.
+                Keep track of your customers, manage their subscriptions and stay on top of
+                renewals, all from one place.
               </p>
             </div>
 
@@ -217,7 +221,8 @@ export function CustomerSubscriptionsSection() {
                     Customer Management
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Maintain a unified directory with contact details, plan assignments, and full billing history.
+                    Maintain a unified directory with contact details, plan assignments, and full
+                    billing history.
                   </p>
                 </div>
               </div>
@@ -232,7 +237,8 @@ export function CustomerSubscriptionsSection() {
                     Subscription Tracking
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Track live lifecycle status, plan upgrades, pauses, and cancellations automatically in real time.
+                    Track live lifecycle status, plan upgrades, pauses, and cancellations
+                    automatically in real time.
                   </p>
                 </div>
               </div>
@@ -247,7 +253,8 @@ export function CustomerSubscriptionsSection() {
                     Renewal Management
                   </h3>
                   <p className="text-xs sm:text-sm text-slate-500 leading-relaxed mt-0.5">
-                    Stay ahead of renewals with automated notifications, upcoming re-billing schedules, and zero churn.
+                    Stay ahead of renewals with automated notifications, upcoming re-billing
+                    schedules, and zero churn.
                   </p>
                 </div>
               </div>
@@ -311,7 +318,9 @@ export function CustomerSubscriptionsSection() {
               <div ref={planTransferPillRef} className="pt-3 pb-1 relative z-10">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-50/80 border border-purple-200/60 text-xs text-purple-900 font-medium">
                   <Sparkles className="w-3.5 h-3.5 text-[#8b5cf6]" />
-                  <span>Assigned from <strong>Pro Plan (₹999/mo)</strong></span>
+                  <span>
+                    Assigned from <strong>Pro Plan (₹999/mo)</strong>
+                  </span>
                 </div>
               </div>
 

@@ -53,8 +53,9 @@ export function ProductIntroSection() {
           </h3>
 
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-            FlowGrid orchestrates recurring batch runs, automatically schedules invoices according to
-            plan intervals, and applies regional taxes and discount rules without manual intervention.
+            FlowGrid orchestrates recurring batch runs, automatically schedules invoices according
+            to plan intervals, and applies regional taxes and discount rules without manual
+            intervention.
           </p>
 
           <div className="pt-2 flex items-center gap-4 text-xs font-medium text-slate-500">
@@ -111,9 +112,7 @@ export function ProductIntroSection() {
                       JS
                     </div>
                     <div>
-                      <span className="text-xs font-semibold text-slate-800 block">
-                        John Smith
-                      </span>
+                      <span className="text-xs font-semibold text-slate-800 block">John Smith</span>
                       <span className="text-[10px] text-slate-400">john.smith@acme.com</span>
                     </div>
                   </div>
@@ -129,8 +128,8 @@ export function ProductIntroSection() {
                   btnState === "idle"
                     ? "bg-black text-white hover:bg-slate-800"
                     : btnState === "loading"
-                    ? "bg-black text-white cursor-wait"
-                    : "bg-[#7ee787] text-slate-950 font-bold shadow-emerald-200"
+                      ? "bg-black text-white cursor-wait"
+                      : "bg-[#7ee787] text-slate-950 font-bold shadow-emerald-200"
                 }`}
               >
                 {btnState === "idle" && <span>Confirm & Generate Invoice</span>}

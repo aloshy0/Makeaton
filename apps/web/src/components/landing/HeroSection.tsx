@@ -34,7 +34,9 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Billing Cycle Toggle State for Slide 3 Plans
-  const [billingCycle, setBillingCycle] = useState<"daily" | "weekly" | "monthly" | "yearly">("monthly");
+  const [billingCycle, setBillingCycle] = useState<"daily" | "weekly" | "monthly" | "yearly">(
+    "monthly"
+  );
 
   const planPrices = {
     basic: { daily: "₹25", weekly: "₹149", monthly: "₹499", yearly: "₹4,990" },
@@ -224,19 +226,23 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
       });
 
       // Setup Transform Spline paths lengths
-      [transformPath1Ref.current, transformPath2Ref.current, transformPath3Ref.current].forEach((spline) => {
-        if (spline) {
-          const len = spline.getTotalLength ? spline.getTotalLength() : 450;
-          gsap.set(spline, {
-            strokeDasharray: len,
-            strokeDashoffset: len,
-          });
+      [transformPath1Ref.current, transformPath2Ref.current, transformPath3Ref.current].forEach(
+        (spline) => {
+          if (spline) {
+            const len = spline.getTotalLength ? spline.getTotalLength() : 450;
+            gsap.set(spline, {
+              strokeDasharray: len,
+              strokeDashoffset: len,
+            });
+          }
         }
-      });
+      );
 
       // Setup Slide 3 Connecting Spline path length and terminal dot
       if (slide3SplineRef.current) {
-        const len = slide3SplineRef.current.getTotalLength ? slide3SplineRef.current.getTotalLength() : 60;
+        const len = slide3SplineRef.current.getTotalLength
+          ? slide3SplineRef.current.getTotalLength()
+          : 60;
         gsap.set(slide3SplineRef.current, {
           strokeDasharray: len,
           strokeDashoffset: len,
@@ -266,14 +272,19 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
         // Account for illustrationWrapperRef horizontal shift if called before shift completes
         const currentWrapperX = illustrationWrapperRef.current
-          ? ((gsap.getProperty(illustrationWrapperRef.current, "x") as number) || 0)
+          ? (gsap.getProperty(illustrationWrapperRef.current, "x") as number) || 0
           : 0;
         const targetWrapperX = typeof window !== "undefined" && window.innerWidth >= 1280 ? 40 : 0;
         const wrapperShift = targetWrapperX - currentWrapperX;
 
         return {
-          x: curX + ((anchorRect.left + wrapperShift + anchorRect.width / 2) - (cardRect.left + cardRect.width / 2)),
-          y: curY + ((anchorRect.top + anchorRect.height / 2) - (cardRect.top + cardRect.height / 2)),
+          x:
+            curX +
+            (anchorRect.left +
+              wrapperShift +
+              anchorRect.width / 2 -
+              (cardRect.left + cardRect.width / 2)),
+          y: curY + (anchorRect.top + anchorRect.height / 2 - (cardRect.top + cardRect.height / 2)),
         };
       };
 
@@ -471,7 +482,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           slide3SplineWrapperRef.current,
           { opacity: 0 },
           { opacity: 1, duration: 0.15 },
-          1.20
+          1.2
         );
       }
 
@@ -484,7 +495,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
             duration: 0.22,
             ease: "power1.inOut",
           },
-          1.20
+          1.2
         );
       }
 
@@ -513,15 +524,15 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
       scrollTl.fromTo(
         billingToggleRef.current,
         { opacity: 0, y: -15 },
-        { opacity: 1, y: 0, duration: 0.30, ease: "power2.out" },
-        1.40
+        { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" },
+        1.4
       );
 
       // G. Basic, Pro, Business cards enter sequentially
       scrollTl.fromTo(
         planCardBasicRef.current,
         { opacity: 0, y: 35, scale: 0.94 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.40, ease: "back.out(1.2)" },
+        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.2)" },
         1.46
       );
 
@@ -535,7 +546,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
       scrollTl.fromTo(
         planCardBusinessRef.current,
         { opacity: 0, y: 35, scale: 0.94 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.40, ease: "back.out(1.2)" },
+        { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "back.out(1.2)" },
         1.58
       );
 
@@ -544,21 +555,17 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
         planCardProRef.current,
         {
           boxShadow: "0 22px 65px -8px rgba(99,102,241,0.55), 0 0 45px rgba(99,102,241,0.32)",
-          duration: 0.30,
+          duration: 0.3,
           ease: "power2.out",
         },
         1.68
       );
 
       // Enable pointer events on Slide 3
-      scrollTl.set(
-        slide3ContainerRef.current,
-        { pointerEvents: "auto" },
-        1.46
-      );
+      scrollTl.set(slide3ContainerRef.current, { pointerEvents: "auto" }, 1.46);
 
       // Holding state: keeps Slide 3 in full view for user to inspect & interact
-      scrollTl.to({}, { duration: 0.80 });
+      scrollTl.to({}, { duration: 0.8 });
 
       // ================================================================
       // PHASE 3: FINAL TRANSITION INTO CUSTOMER SUBSCRIPTIONS & BILLING
@@ -574,7 +581,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
           duration: 0.45,
           ease: "power2.inOut",
         },
-        2.50
+        2.5
       );
     }, pinSectionRef);
 
@@ -636,8 +643,8 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
             {/* Subtitle Description */}
             <p className="text-base sm:text-lg text-slate-500 font-normal leading-relaxed max-w-lg">
-              Manage subscriptions, automate recurring billing and keep every
-              payment on track. All from one unified platform.
+              Manage subscriptions, automate recurring billing and keep every payment on track. All
+              from one unified platform.
             </p>
 
             {/* CTAs Row */}
@@ -676,27 +683,21 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                 <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
                   10K+
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">
-                  Businesses
-                </div>
+                <div className="text-xs font-medium text-slate-500 mt-0.5">Businesses</div>
               </div>
 
               <div>
                 <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
                   2M+
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">
-                  Subscriptions
-                </div>
+                <div className="text-xs font-medium text-slate-500 mt-0.5">Subscriptions</div>
               </div>
 
               <div>
                 <div className="text-2xl sm:text-3xl font-black tracking-tight text-slate-950">
                   99.9%
                 </div>
-                <div className="text-xs font-medium text-slate-500 mt-0.5">
-                  Uptime
-                </div>
+                <div className="text-xs font-medium text-slate-500 mt-0.5">Uptime</div>
               </div>
             </div>
           </div>
@@ -728,8 +729,8 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
               {/* Subtitle Description */}
               <p className="text-sm sm:text-base text-slate-500 font-normal leading-relaxed max-w-md">
-                Add your products, organize your services and manage pricing effortlessly.
-                Build the foundation for your subscription business with FlowGrid.
+                Add your products, organize your services and manage pricing effortlessly. Build the
+                foundation for your subscription business with FlowGrid.
               </p>
             </div>
 
@@ -864,9 +865,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     <path d="M3 4.5h16l-4.5 6H3v-6z" />
                     <path d="M3 13.5h11l-4.5 6.5H3v-6.5z" />
                   </svg>
-                  <span className="text-sm font-black tracking-tight text-slate-950">
-                    FLOWGRID
-                  </span>
+                  <span className="text-sm font-black tracking-tight text-slate-950">FLOWGRID</span>
                 </div>
               </div>
 
@@ -905,7 +904,9 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                 <div className="relative z-10 mb-4">
                   <div className="flex items-center gap-2 bg-slate-50/90 border border-slate-200/60 rounded-xl px-3 py-1.5 text-xs text-slate-400 shadow-inner">
                     <Search className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="text-[11px] text-slate-400 font-normal">Search products...</span>
+                    <span className="text-[11px] text-slate-400 font-normal">
+                      Search products...
+                    </span>
                   </div>
                 </div>
 
@@ -1084,7 +1085,13 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                 style={{ opacity: 0 }}
                 className="relative flex flex-col items-center -my-0.5"
               >
-                <svg width="36" height="40" viewBox="0 0 36 40" fill="none" className="overflow-visible">
+                <svg
+                  width="36"
+                  height="40"
+                  viewBox="0 0 36 40"
+                  fill="none"
+                  className="overflow-visible"
+                >
                   <path
                     ref={slide3SplineRef}
                     d="M 18 0 C 18 16, 28 20, 18 34"
@@ -1093,13 +1100,7 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                     strokeLinecap="round"
                     fill="none"
                   />
-                  <circle
-                    ref={slide3SplineDotRef}
-                    cx="18"
-                    cy="36"
-                    r="3"
-                    fill="#10b981"
-                  />
+                  <circle ref={slide3SplineDotRef} cx="18" cy="36" r="3" fill="#10b981" />
                 </svg>
               </div>
             </div>
@@ -1126,7 +1127,8 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
 
               {/* Description */}
               <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed text-center max-w-xl mt-2.5">
-                Turn your products into flexible subscription plans. <br className="hidden sm:inline" />
+                Turn your products into flexible subscription plans.{" "}
+                <br className="hidden sm:inline" />
                 Set pricing, choose billing cycles and define the terms that work for your business.
               </p>
             </div>
@@ -1190,12 +1192,11 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                   <div className="border-t border-white/10 my-4" />
 
                   <ul className="space-y-3 mb-6">
-                    {[
-                      "1 Product",
-                      "Basic Features",
-                      "Email Support",
-                    ].map((feat) => (
-                      <li key={feat} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium">
+                    {["1 Product", "Basic Features", "Email Support"].map((feat) => (
+                      <li
+                        key={feat}
+                        className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium"
+                      >
                         <div className="w-5 h-5 rounded-full bg-[#352758] border border-[#7c3aed]/40 text-[#c084fc] flex items-center justify-center shrink-0">
                           <Check className="w-3 h-3 stroke-[3]" />
                         </div>
@@ -1244,12 +1245,11 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                   <div className="border-t border-white/10 my-4" />
 
                   <ul className="space-y-3 mb-6">
-                    {[
-                      "Up to 10 Products",
-                      "Advanced Features",
-                      "Priority Support",
-                    ].map((feat) => (
-                      <li key={feat} className="flex items-center gap-3 text-xs sm:text-sm text-white font-medium">
+                    {["Up to 10 Products", "Advanced Features", "Priority Support"].map((feat) => (
+                      <li
+                        key={feat}
+                        className="flex items-center gap-3 text-xs sm:text-sm text-white font-medium"
+                      >
                         <div className="w-5 h-5 rounded-full bg-[#3d2c6e] border border-[#8b5cf6]/50 text-[#c084fc] flex items-center justify-center shrink-0">
                           <Check className="w-3 h-3 stroke-[3]" />
                         </div>
@@ -1290,18 +1290,19 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
                   <div className="border-t border-white/10 my-4" />
 
                   <ul className="space-y-3 mb-6">
-                    {[
-                      "Unlimited Products",
-                      "Advanced Features",
-                      "Dedicated Support",
-                    ].map((feat) => (
-                      <li key={feat} className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium">
-                        <div className="w-5 h-5 rounded-full bg-[#352758] border border-[#7c3aed]/40 text-[#c084fc] flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 stroke-[3]" />
-                        </div>
-                        <span>{feat}</span>
-                      </li>
-                    ))}
+                    {["Unlimited Products", "Advanced Features", "Dedicated Support"].map(
+                      (feat) => (
+                        <li
+                          key={feat}
+                          className="flex items-center gap-3 text-xs sm:text-sm text-slate-200 font-medium"
+                        >
+                          <div className="w-5 h-5 rounded-full bg-[#352758] border border-[#7c3aed]/40 text-[#c084fc] flex items-center justify-center shrink-0">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                          <span>{feat}</span>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
 

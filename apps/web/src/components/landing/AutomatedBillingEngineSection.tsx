@@ -133,9 +133,9 @@ export function AutomatedBillingEngineSection() {
           </h2>
 
           <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal">
-            Scheduled Celery beat workers evaluate billing cycles at midnight. Invoices are generated
-            with unique deterministic deduplication keys, automatically factoring in attribute price
-            deltas, percentage coupons, and local tax requirements.
+            Scheduled Celery beat workers evaluate billing cycles at midnight. Invoices are
+            generated with unique deterministic deduplication keys, automatically factoring in
+            attribute price deltas, percentage coupons, and local tax requirements.
           </p>
 
           <div className="space-y-3 pt-2">
@@ -244,8 +244,12 @@ export function AutomatedBillingEngineSection() {
               {/* Total Calculation */}
               <div className="pt-4 border-t border-slate-200 flex items-baseline justify-between">
                 <div>
-                  <span className="text-xs font-bold text-slate-900 block">Total Amount Settled</span>
-                  <span className="text-[10px] text-slate-400">Captured via Primary Credit Card</span>
+                  <span className="text-xs font-bold text-slate-900 block">
+                    Total Amount Settled
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Captured via Primary Credit Card
+                  </span>
                 </div>
                 <span
                   ref={totalAmountRef}

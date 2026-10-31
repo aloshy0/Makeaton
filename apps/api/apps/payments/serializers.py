@@ -11,6 +11,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = [
             "id",
+            "workspace",
             "payment_number",
             "invoice",
             "invoice_number",
@@ -23,4 +24,4 @@ class PaymentSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "payment_number", "created_at", "updated_at"]
+        read_only_fields = ["id", "workspace", "payment_number", "created_at", "updated_at"]

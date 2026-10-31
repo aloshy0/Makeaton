@@ -36,8 +36,8 @@ export function ReliabilityBentoSection() {
         </h2>
 
         <p className="text-sm sm:text-base text-slate-500 max-w-lg mx-auto font-normal">
-          Engineered for digital businesses, retail services, fitness clubs, and SaaS teams requiring
-          sub-second uptime and flawless financial accuracy.
+          Engineered for digital businesses, retail services, fitness clubs, and SaaS teams
+          requiring sub-second uptime and flawless financial accuracy.
         </p>
       </div>
 
@@ -128,7 +128,9 @@ export function ReliabilityBentoSection() {
                   €
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-slate-900 block">Euro SEPA Direct</span>
+                  <span className="text-xs font-semibold text-slate-900 block">
+                    Euro SEPA Direct
+                  </span>
                   <span className="text-[10px] text-slate-400">Automated Direct Debit</span>
                 </div>
               </div>
@@ -146,8 +148,8 @@ export function ReliabilityBentoSection() {
             Flexible Plan Hierarchies
           </span>
           <p className="text-xs text-slate-500 leading-relaxed font-normal">
-            Configure base product prices with attribute deltas (e.g., Brand Add-on +$560.00,
-            Extra Storage +$40.00).
+            Configure base product prices with attribute deltas (e.g., Brand Add-on +$560.00, Extra
+            Storage +$40.00).
           </p>
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-600 font-medium">Standard + SLA Addon</span>
@@ -157,9 +159,7 @@ export function ReliabilityBentoSection() {
 
         {/* Bento Column 2 */}
         <div className="p-8 rounded-[2rem] bg-white border border-slate-200 shadow-sm space-y-4">
-          <span className="text-base font-bold text-slate-900 block">
-            Idempotent State Machine
-          </span>
+          <span className="text-base font-bold text-slate-900 block">Idempotent State Machine</span>
           <p className="text-xs text-slate-500 leading-relaxed font-normal">
             State flow: Draft → Quotation → Confirmed → Active → Paused → Closed. Protect every
             transition with backend safety locks.

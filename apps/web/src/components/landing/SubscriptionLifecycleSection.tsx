@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import {
   Repeat,
   Receipt,
@@ -116,7 +109,9 @@ export function SubscriptionLifecycleSection() {
                     />
                     <span
                       className={`text-sm font-semibold transition-colors ${
-                        isActive ? "text-slate-950 font-bold" : "text-slate-500 group-hover:text-slate-800"
+                        isActive
+                          ? "text-slate-950 font-bold"
+                          : "text-slate-500 group-hover:text-slate-800"
                       }`}
                     >
                       {step.title}
@@ -161,9 +156,7 @@ export function SubscriptionLifecycleSection() {
             {/* Real-time Green Glowing Area Chart (Matching MONELIQ frame_16s.jpg) */}
             <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
               <div className="flex items-center justify-between pb-4">
-                <span className="text-xs font-bold text-slate-800">
-                  Recurring Revenue Velocity
-                </span>
+                <span className="text-xs font-bold text-slate-800">Recurring Revenue Velocity</span>
                 <div className="flex items-center gap-2 text-[11px] text-slate-500">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   <span>Sub-second aggregation</span>
@@ -217,7 +210,9 @@ export function SubscriptionLifecycleSection() {
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Timestamp range: Today 24h</span>
-                <span className="font-semibold text-slate-800">Deterministic Key: RECUR-BATCH-2026-10-31</span>
+                <span className="font-semibold text-slate-800">
+                  Deterministic Key: RECUR-BATCH-2026-10-31
+                </span>
               </div>
             </div>
 
@@ -227,7 +222,8 @@ export function SubscriptionLifecycleSection() {
                 Tailored financial solutions for modern commerce:
               </span>{" "}
               Whether managing monthly $15 add-ons for boutique retail or $50k annual enterprise
-              contracts, FlowGrid guarantees real-time financial accuracy and automated tax handling.
+              contracts, FlowGrid guarantees real-time financial accuracy and automated tax
+              handling.
             </div>
           </div>
         </div>

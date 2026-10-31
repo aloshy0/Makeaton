@@ -47,7 +47,10 @@ export function FooterSection({ mode, setMode }: FooterSectionProps) {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard" className="hover:text-black transition-colors font-medium">
+                  <Link
+                    href="/dashboard"
+                    className="hover:text-black transition-colors font-medium"
+                  >
                     Platform App
                   </Link>
                 </li>

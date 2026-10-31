@@ -105,11 +105,14 @@ export function WorkflowStorytellingSection() {
 
       // Initial States
       gsap.set(stepProductsRef.current, { opacity: 1, scale: 1, y: 0 });
-      gsap.set([stepPlansRef.current, stepSubsRef.current, stepInvoiceRef.current, stepPaymentRef.current], {
-        opacity: 0,
-        y: 60,
-        scale: 0.9,
-      });
+      gsap.set(
+        [stepPlansRef.current, stepSubsRef.current, stepInvoiceRef.current, stepPaymentRef.current],
+        {
+          opacity: 0,
+          y: 60,
+          scale: 0.9,
+        }
+      );
 
       // STEP 1 -> STEP 2: Products Connect to Plans (Progress 0 -> 0.25)
       masterTl
@@ -488,7 +491,9 @@ export function WorkflowStorytellingSection() {
                   </div>
                   <span className="text-[10px] uppercase font-bold text-slate-400">Step 5</span>
                 </div>
-                <h3 className="text-sm font-bold text-white tracking-tight">Settlement Reconciled</h3>
+                <h3 className="text-sm font-bold text-white tracking-tight">
+                  Settlement Reconciled
+                </h3>
                 <p className="text-[11px] text-slate-400">
                   Instant balance settlement with zero reconciliation variance.
                 </p>

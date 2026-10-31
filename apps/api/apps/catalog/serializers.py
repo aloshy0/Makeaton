@@ -17,6 +17,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             "id",
+            "workspace",
             "name",
             "code",
             "product_type",
@@ -28,7 +29,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "workspace", "created_at", "updated_at"]
 
 
 class SubscriptionPlanSerializer(serializers.ModelSerializer):
@@ -36,11 +37,12 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
         model = SubscriptionPlan
         fields = [
             "id",
+            "workspace",
             "name",
             "code",
-            "billing_frequency",
-            "cost",
-            "minimum_quantity",
+            "billing_interval",
+            "base_price",
+            "min_seats",
             "start_date",
             "end_date",
             "auto_close_on_end",
@@ -51,4 +53,4 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "workspace", "created_at", "updated_at"]
