@@ -1,8 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import { Building2, ChevronDown, PlusCircle, Check, Sparkles } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Building2,
+  ChevronDown,
+  PlusCircle,
+  Check,
+  ExternalLink,
+  User,
+  Settings,
+  Sparkles,
+} from "lucide-react";
 import { Workspace } from "../../types";
+import { useAccount } from "../../context/account-context";
 
 interface WorkspaceSwitcherProps {
   workspaces: Workspace[];
@@ -20,10 +30,22 @@ export function WorkspaceSwitcher({
   ownedCount,
 }: WorkspaceSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { switchContext } = useAccount();
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const maxSlots = 5;
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between gap-2.5 rounded-xl border border-[#E8ECF3] bg-white px-3 py-2 text-left text-xs transition-all hover:border-purple-300 hover:bg-purple-50/20 shadow-2xs"
@@ -51,10 +73,10 @@ export function WorkspaceSwitcher({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-2xl border border-[#E8ECF3] bg-white p-2 shadow-xl animate-in fade-in zoom-in-95 duration-150">
-          {/* Slots usage indicator */}
-          <div className="mb-2 rounded-xl bg-slate-50 p-2.5 text-[11px] border border-[#E8ECF3]">
-            <div className="flex justify-between font-medium text-[#64748B]">
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-72 rounded-2xl border border-[#E8ECF3] bg-white p-2.5 shadow-xl animate-in fade-in zoom-in-95 duration-150">
+          {/* Header & Slots indicator */}
+          <div className="mb-2.5 rounded-xl bg-slate-50 p-2.5 text-[11px] border border-[#E8ECF3]">
+            <div className="flex justify-between font-semibold text-[#64748B]">
               <span>Workspaces Owned</span>
               <span className="font-bold text-[#7651F5]">
                 {ownedCount} / {maxSlots}
@@ -70,8 +92,14 @@ export function WorkspaceSwitcher({
             </div>
           </div>
 
+          {/* Section: Business Workspaces */}
+          <div className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider px-2 py-1 flex items-center justify-between">
+            <span>Business Workspaces</span>
+            <span>{workspaces.length}</span>
+          </div>
+
           {/* List of accessible workspaces */}
-          <div className="max-h-48 space-y-1 overflow-y-auto">
+          <div className="max-h-48 space-y-1 overflow-y-auto no-scrollbar">
             {workspaces.map((ws) => {
               const isSelected = currentWorkspace?.id === ws.id;
               return (
@@ -83,32 +111,52 @@ export function WorkspaceSwitcher({
                   }}
                   className={`flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs transition-colors ${
                     isSelected
-                      ? "bg-purple-50 font-bold text-[#7651F5]"
-                      : "text-[#0B1020] hover:bg-slate-50"
+                      ? "bg-purple-50 font-bold text-[#7651F5] border border-purple-200"
+                      : "text-[#0B1020] hover:bg-slate-50 border border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-2 truncate">
-                    <span className="truncate">{ws.name}</span>
-                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-[#64748B] uppercase">
-                      {ws.user_role || "MEMBER"}
-                    </span>
+                    <div className="h-6 w-6 rounded-md bg-purple-100 text-[#7651F5] flex items-center justify-center font-bold text-[10px] shrink-0">
+                      {ws.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="truncate">
+                      <div className="truncate text-xs font-semibold">{ws.name}</div>
+                      <div className="text-[10px] text-[#64748B]">
+                        {ws.slug || "flowgrid.cloud"} • {ws.user_role || "MEMBER"}
+                      </div>
+                    </div>
                   </div>
-                  {isSelected && <Check className="h-3.5 w-3.5 text-[#7651F5] shrink-0" />}
+                  {isSelected && <Check className="h-4 w-4 text-[#7651F5] shrink-0 ml-1" />}
                 </button>
               );
             })}
           </div>
 
-          <div className="mt-2 border-t border-[#E8ECF3] pt-2">
+          <div className="mt-2 pt-2 border-t border-[#E8ECF3] space-y-1">
             <button
               onClick={() => {
                 setIsOpen(false);
                 onCreateWorkspaceClick();
               }}
-              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs font-semibold text-[#7651F5] hover:bg-purple-50 transition-colors"
+              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs font-bold text-[#7651F5] hover:bg-purple-50 transition-colors"
             >
               <PlusCircle className="h-3.5 w-3.5" />
               <span>Create New Workspace</span>
+            </button>
+
+            {/* Personal Customer Switch Link (Ref Image 2) */}
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                switchContext("PERSONAL");
+              }}
+              className="flex w-full items-center justify-between rounded-xl px-2.5 py-1.5 text-left text-xs font-semibold text-emerald-700 bg-emerald-50/60 hover:bg-emerald-50 border border-emerald-200/80 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <User className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Personal Customer Portal</span>
+              </div>
+              <ExternalLink className="h-3 w-3 text-emerald-600" />
             </button>
           </div>
         </div>

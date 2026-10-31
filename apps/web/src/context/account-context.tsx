@@ -29,6 +29,10 @@ interface AccountContextValue {
   personalCustomer: PersonalCustomerProfile;
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  login: (credentials: {
+    email: string;
+    password: string;
+  }) => Promise<{ success: boolean; redirectUrl: string }>;
   switchContext: (type: FlowGridContextType, workspaceId?: string) => Promise<void>;
   switchWorkspace: (workspace: Workspace | string) => Promise<void>;
   createWorkspace: (data: {
@@ -43,9 +47,9 @@ interface AccountContextValue {
 
 const DEFAULT_USER: User = {
   id: "usr-alexander",
-  email: "alexander.wright@flowgrid.com",
-  first_name: "Alexander",
-  last_name: "Wright",
+  email: "demo@flowgrid.local",
+  first_name: "Demo",
+  last_name: "User",
   role: "ADMIN",
   is_active: true,
   owned_workspaces_count: 2,
@@ -55,7 +59,7 @@ const DEFAULT_USER: User = {
 
 const DEFAULT_PERSONAL_CUSTOMER: PersonalCustomerProfile = {
   name: "Alexander Wright",
-  email: "alexander.wright@flowgrid.com",
+  email: "demo@flowgrid.local",
   hasCustomerRelationship: true,
   linkedBusinesses: [
     {
@@ -66,7 +70,7 @@ const DEFAULT_PERSONAL_CUSTOMER: PersonalCustomerProfile = {
     },
     {
       workspace_id: "22222222-2222-2222-2222-222222222222",
-      workspace_name: "FlowGrid Creative Studio",
+      workspace_name: "FlowGrid Hardware Labs",
       subscriptions_count: 1,
       unpaid_invoices_count: 1,
     },
@@ -101,29 +105,62 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       setContextType("PERSONAL");
     } else if (
       !pathname?.startsWith("/portal") &&
+      pathname !== "/" &&
       !pathname?.startsWith("/login") &&
       !pathname?.startsWith("/register") &&
-      !pathname?.startsWith("/checkout") &&
-      pathname !== "/" &&
+      !pathname?.startsWith("/workspaces") &&
       contextType !== "PROFESSIONAL"
     ) {
       setContextType("PROFESSIONAL");
     }
   }, [pathname, contextType]);
 
+  const login = async ({ email, password }: { email: string; password: string }) => {
+    setIsLoading(true);
+    try {
+      const res = await api.login({ email, password });
+      if (res.access && typeof window !== "undefined") {
+        localStorage.setItem("access_token", res.access);
+      }
+      if (res.user) {
+        setUser(res.user);
+      }
+      if (res.workspaces && res.workspaces.length > 0) {
+        setWorkspaces(res.workspaces);
+        setActiveWorkspace(res.workspaces[0]);
+      }
+
+      const isCustomer =
+        email.toLowerCase().includes("customer") ||
+        email.toLowerCase().includes("globex") ||
+        res.user?.role === "CUSTOMER";
+
+      if (isCustomer) {
+        setContextType("PERSONAL");
+        router.push("/portal");
+        return { success: true, redirectUrl: "/portal" };
+      } else {
+        setContextType("PROFESSIONAL");
+        router.push("/dashboard");
+        return { success: true, redirectUrl: "/dashboard" };
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const switchContext = async (type: FlowGridContextType, targetWorkspaceId?: string) => {
     setIsLoading(true);
     try {
       if (type === "PERSONAL") {
         setContextType("PERSONAL");
-        // Try backend active-context switch
         try {
           await api.setActiveContext({
             context_type: "PERSONAL_CUSTOMER",
             workspace_id: activeWorkspace?.id,
           });
         } catch {
-          // Fallback graceful
+          // Graceful fallback
         }
         router.push("/portal");
       } else {
@@ -137,10 +174,10 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         try {
           await api.setActiveContext({
             context_type: "BUSINESS",
-            workspace_id: nextWorkspace.id,
+            workspace_id: nextWorkspace?.id,
           });
         } catch {
-          // Fallback graceful
+          // Graceful fallback
         }
         router.push("/dashboard");
       }
@@ -163,7 +200,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           workspace_id: ws.id,
         });
       } catch {
-        // Fallback graceful
+        // Graceful fallback
       }
       if (pathname === "/portal" || pathname === "/workspaces") {
         router.push("/dashboard");
@@ -192,7 +229,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         created.description = data.description;
         created.last_accessed = "Just now";
       } catch {
-        // Generate client-side workspace if backend DB is in mock mode
         created = {
           id: `ws-${Date.now()}`,
           name: data.name,
@@ -218,6 +254,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("access_token");
+    }
     setUser(null);
     router.push("/login");
   };
@@ -233,6 +272,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         personalCustomer,
         isSidebarCollapsed,
         toggleSidebar,
+        login,
         switchContext,
         switchWorkspace,
         createWorkspace,

@@ -180,6 +180,24 @@ class Command(BaseCommand):
             },
         )
 
+        WorkspaceMembership.objects.get_or_create(
+            workspace=ws1,
+            user=demo_user,
+            defaults={
+                "role": WorkspaceMembership.Role.OWNER,
+                "status": WorkspaceMembership.Status.ACTIVE,
+            },
+        )
+
+        WorkspaceMembership.objects.get_or_create(
+            workspace=ws2,
+            user=demo_user,
+            defaults={
+                "role": WorkspaceMembership.Role.ADMIN,
+                "status": WorkspaceMembership.Status.ACTIVE,
+            },
+        )
+
         m_admin_ws2, _ = WorkspaceMembership.objects.get_or_create(
             workspace=ws2,
             user=admin_user,

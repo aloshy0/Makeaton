@@ -32,8 +32,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 3. Dedicated Workspace Selection screen (/workspaces)
-  if (pathname === "/workspaces") {
+  // 3. Dedicated Workspace Selection screen (/workspaces) & Onboarding (/onboarding)
+  if (pathname === "/workspaces" || pathname?.startsWith("/onboarding")) {
     return (
       <div className="min-h-screen bg-[#F8F9FC] text-[#0B1020] font-sans antialiased">
         {children}
