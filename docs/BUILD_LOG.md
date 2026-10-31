@@ -147,25 +147,32 @@
 
 ---
 
-### [Stage 8] Slice.bank.in 3D Layered Card Deck & Story Tabs Hero Slide
+### [Stage 9] FlowGrid 2.0 3D Angled Glowing Dark Dashboard Hero Slide Redesign
 
-- **Date/Time:** 2026-10-31 11:18 UTC+05:30
+- **Date/Time:** 2026-10-31 11:35 UTC+05:30
 - **Actions:**
-  - Analyzed `slice.bank.in` hero architecture: 3D perspective (`perspective: 1400px`), layered bottom card deck (3 stacked cards in z-depth), floating glassmorphic story capsule, and interactive story tabs with animated progress bar indicators.
-  - Adapted design to FlowGrid:
-    - Retained FlowGrid identity, signature obsidian `#0c0c0e` card, and purple/emerald atmospheric lighting.
-    - Built 3D stacked deck: Back card (width 86%, depth offset), Middle card (width 91%), and Front Active card (width 96%-100%, `rounded-t-[3.25rem]`).
-    - Implemented floating story capsule with dynamic story states:
-      1. `Recurring Engine` (Instant automated recurring billing)
-      2. `Smart Dunning` (Zero-loss automated payment recovery)
-      3. `Executive MRR` (Real-time revenue velocity & telemetry)
-    - Created auto-advancing 4.5s story tab progress bar with instant tab click switching.
-    - Integrated dynamic live telemetry widget on the right of the card updating alongside active story slides.
-  - Quality checks:
+  - Redesigned the first slide hero section (`HeroSection.tsx`) and navigation header (`Navbar.tsx`) to match the user-provided reference mockup:
+    - **Navbar:** Geometric icon mark (two stacked angled polygonal blocks) + `FLOWGRID` bold typography, navigation links (`Product`, `Solutions ⌄`, `Pricing`, `Resources ⌄`), and right-aligned `Log in` text link + `Sign up` solid black pill button.
+    - **Hero Left Column:**
+      - Pill badge: Purple glow dot + `FlowGrid 2.0` | `Next-Gen Subscription Platform`.
+      - Massive clean headline: `Keep your business` with gradient `in flow.` (`#7c3aed` via `#6366f1` to `#06b6d4`).
+      - Supporting description: "Manage subscriptions, automate recurring billing and keep every payment on track. All from one unified platform."
+      - CTAs: `Open FlowGrid account →` (black pill) and `▶ Watch demo` (white pill with outline).
+      - Stats metrics row: `10K+ Businesses`, `2M+ Subscriptions`, `99.9% Uptime`, and `4.8/5 Customer rating`.
+    - **Hero Right Column (3D Angled Glowing Dashboard Mockup):**
+      - Rendered in 3D perspective (`perspective(1300px) rotateY(-11deg) rotateX(5deg)`) with interactive hover leveling and subtle floating breathing effect.
+      - Dual ambient aurora glow: Vibrant cyan glow on the bottom-left edge and violet/purple glow on the top-right.
+      - Complete pixel-accurate dark dashboard recreation:
+        - Top bar with `Search anything... ⌘K`, notification bell with alert dot, and `Alosh Antony` (`Business Account ⌄`) profile.
+        - Mini sidebar with `FG FlowGrid`, active `Dashboard` tab, `Products`, `Subscriptions`, `Invoices`, `Customers`, `Analytics`, `Settings`.
+        - 3 Metric cards: `Monthly Revenue` (`$24,850.00` `+18.4%` + glowing green bars), `Active Subscriptions` (`1,248` `+12%` + glowing violet bars), `Revenue Split` (Donut with `96.4%` center + `Recurring 68%`, `Add-ons 32%`).
+        - 2 Tables: `Recent Subscriptions` (`John Smith` Pro $49 Active, `Sarah Wilson` Business $129 Active, `Mike Johnson` Starter $19 Trial) and `Upcoming Invoices` (`#INV-1042`, `#INV-1043`, `#INV-1044`).
+  - **Quality Checks:**
     - Vitest unit tests: 4/4 passed.
     - ESLint: 0 errors, 0 warnings.
-    - Backend Pytest: 4/4 passed.
+    - Local server check: HTTP 200 OK.
 - **Status:** PASS
+
 
 
 

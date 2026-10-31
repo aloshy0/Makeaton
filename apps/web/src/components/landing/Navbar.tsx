@@ -16,148 +16,94 @@ export function Navbar({ mode, setMode }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 w-full bg-white/90 backdrop-blur-md border-b border-slate-100 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        {/* Left Navigation with Dropdowns */}
-        <div className="hidden lg:flex items-center gap-7 text-[13px] font-medium text-slate-700">
-          {/* Dropdown 1: Personal */}
-          <div
-            className="relative"
-            onMouseEnter={() => setActiveDropdown("personal")}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <button className="flex items-center gap-1.5 hover:text-black transition-colors py-2">
-              <span>Personal</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-            {activeDropdown === "personal" && (
-              <div className="absolute top-full left-0 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="p-3 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-colors cursor-pointer group">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-900">
-                      Discover FlowGrid Personal
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Solo-entrepreneur and creator recurring billing.
-                  </p>
-                </div>
-                <div className="mt-2 space-y-1">
-                  <Link
-                    href="#pricing"
-                    className="block px-3 py-2 text-xs text-slate-600 hover:text-black rounded-lg hover:bg-slate-50"
-                  >
-                    Simple Price List
-                  </Link>
-                  <Link
-                    href="/portal"
-                    className="block px-3 py-2 text-xs text-slate-600 hover:text-black rounded-lg hover:bg-slate-50"
-                  >
-                    Customer Self-Service Portal
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Dropdown 2: Business */}
-          <div
-            className="relative"
-            onMouseEnter={() => setActiveDropdown("business")}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <button className="flex items-center gap-1.5 hover:text-black transition-colors py-2 font-semibold text-black">
-              <span>Business</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-            {activeDropdown === "business" && (
-              <div className="absolute top-full left-0 w-80 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="p-3 rounded-xl bg-slate-50 hover:bg-slate-100/80 transition-colors cursor-pointer group">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-900">
-                      FlowGrid for High-Growth Teams
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    SaaS, coaching platforms, gyms, and service firms.
-                  </p>
-                </div>
-                <div className="mt-2 space-y-1">
-                  <Link
-                    href="#lifecycle"
-                    className="block px-3 py-2 text-xs text-slate-600 hover:text-black rounded-lg hover:bg-slate-50"
-                  >
-                    Automated Recurring Billing Engine
-                  </Link>
-                  <Link
-                    href="#analytics"
-                    className="block px-3 py-2 text-xs text-slate-600 hover:text-black rounded-lg hover:bg-slate-50"
-                  >
-                    Real-time MRR & ARR Analytics
-                  </Link>
-                  <Link
-                    href="#features"
-                    className="block px-3 py-2 text-xs text-slate-600 hover:text-black rounded-lg hover:bg-slate-50"
-                  >
-                    Enterprise Dunning & Idempotency
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Dropdown 3: Company */}
-          <div
-            className="relative"
-            onMouseEnter={() => setActiveDropdown("company")}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <button className="flex items-center gap-1.5 hover:text-black transition-colors py-2">
-              <span>Company</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-            {activeDropdown === "company" && (
-              <div className="absolute top-full left-0 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                <Link
-                  href="#reliability"
-                  className="block px-3 py-2 text-xs text-slate-600 hover:text-black rounded-lg hover:bg-slate-50"
-                >
-                  Security & Compliance
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="block px-3 py-2 text-xs text-slate-600 hover:text-black rounded-lg hover:bg-slate-50"
-                >
-                  Architecture & APIs
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Center Brand Logo (MONELIQ inspired: FLOWGRID) */}
-        <div className="flex items-center justify-center">
-          <Link href="/" className="group flex items-center gap-2">
-            <span className="text-xl lg:text-2xl font-black tracking-tight text-black transition-transform group-hover:scale-[1.02]">
+        {/* Left: Brand Logo & Main Navigation */}
+        <div className="flex items-center gap-10">
+          <Link href="/" className="group flex items-center gap-2.5">
+            <svg
+              className="w-5 h-5 text-black transition-transform group-hover:scale-105"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M3 4.5h16l-4.5 6H3v-6z" />
+              <path d="M3 13.5h11l-4.5 6.5H3v-6.5z" />
+            </svg>
+            <span className="text-lg font-black tracking-tight text-black">
               FLOWGRID
             </span>
           </Link>
+
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-slate-700">
+            <Link href="#features" className="hover:text-black transition-colors">
+              Product
+            </Link>
+
+            <div
+              className="relative"
+              onMouseEnter={() => setActiveDropdown("solutions")}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button className="flex items-center gap-1 hover:text-black transition-colors py-2">
+                <span>Solutions</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+              {activeDropdown === "solutions" && (
+                <div className="absolute top-full left-0 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Link
+                    href="#lifecycle"
+                    className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="text-xs font-semibold text-slate-900">Subscription Automation</div>
+                    <div className="text-[11px] text-slate-500">Scheduled batch cycles & autopilot.</div>
+                  </Link>
+                  <Link
+                    href="#analytics"
+                    className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="text-xs font-semibold text-slate-900">Revenue & MRR Telemetry</div>
+                    <div className="text-[11px] text-slate-500">Real-time financial analytics.</div>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <Link href="#pricing" className="hover:text-black transition-colors">
+              Pricing
+            </Link>
+
+            <div
+              className="relative"
+              onMouseEnter={() => setActiveDropdown("resources")}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button className="flex items-center gap-1 hover:text-black transition-colors py-2">
+                <span>Resources</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+              {activeDropdown === "resources" && (
+                <div className="absolute top-full left-0 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Link
+                    href="/dashboard"
+                    className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="text-xs font-semibold text-slate-900">API Documentation</div>
+                    <div className="text-[11px] text-slate-500">RESTful specs & webhooks.</div>
+                  </Link>
+                  <Link
+                    href="/portal"
+                    className="block p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="text-xs font-semibold text-slate-900">Customer Portal</div>
+                    <div className="text-[11px] text-slate-500">Self-service billing for customers.</div>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </nav>
         </div>
 
         {/* Right Navigation & CTAs */}
-        <div className="hidden lg:flex items-center gap-6 text-[13px] font-medium text-slate-700">
-          <Link href="#features" className="hover:text-black transition-colors">
-            Help
-          </Link>
-          <Link href="#pricing" className="hover:text-black transition-colors">
-            Pricing
-          </Link>
-
-          <div className="flex items-center gap-1 text-slate-500 hover:text-black cursor-pointer text-xs transition-colors">
-            <span>EN</span>
-            <ChevronDown className="w-3 h-3" />
-          </div>
-
+        <div className="hidden md:flex items-center gap-6 text-[13px] font-medium">
           <Link
             href="/dashboard"
             className="text-slate-800 hover:text-black font-semibold transition-colors px-2"
