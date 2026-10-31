@@ -87,3 +87,13 @@ html.lenis, html.lenis body {
   box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+

@@ -145,4 +145,27 @@
     - Backend Pytest: 4/4 passed.
 - **Status:** PASS
 
+---
+
+### [Stage 8] Slice.bank.in 3D Layered Card Deck & Story Tabs Hero Slide
+
+- **Date/Time:** 2026-10-31 11:18 UTC+05:30
+- **Actions:**
+  - Analyzed `slice.bank.in` hero architecture: 3D perspective (`perspective: 1400px`), layered bottom card deck (3 stacked cards in z-depth), floating glassmorphic story capsule, and interactive story tabs with animated progress bar indicators.
+  - Adapted design to FlowGrid:
+    - Retained FlowGrid identity, signature obsidian `#0c0c0e` card, and purple/emerald atmospheric lighting.
+    - Built 3D stacked deck: Back card (width 86%, depth offset), Middle card (width 91%), and Front Active card (width 96%-100%, `rounded-t-[3.25rem]`).
+    - Implemented floating story capsule with dynamic story states:
+      1. `Recurring Engine` (Instant automated recurring billing)
+      2. `Smart Dunning` (Zero-loss automated payment recovery)
+      3. `Executive MRR` (Real-time revenue velocity & telemetry)
+    - Created auto-advancing 4.5s story tab progress bar with instant tab click switching.
+    - Integrated dynamic live telemetry widget on the right of the card updating alongside active story slides.
+  - Quality checks:
+    - Vitest unit tests: 4/4 passed.
+    - ESLint: 0 errors, 0 warnings.
+    - Backend Pytest: 4/4 passed.
+- **Status:** PASS
+
+
 

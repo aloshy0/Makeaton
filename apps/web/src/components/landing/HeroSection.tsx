@@ -11,6 +11,8 @@ import {
   Sparkles,
   ShieldCheck,
   Zap,
+  ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -22,156 +24,92 @@ interface HeroSectionProps {
 
 export function HeroSection({ mode, setMode }: HeroSectionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const headlineLine1Ref = useRef<HTMLSpanElement>(null);
-  const headlineLine2Ref = useRef<HTMLSpanElement>(null);
-  const badgeRef = useRef<HTMLDivElement>(null);
+  const headlineRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const ctaButtonsRef = useRef<HTMLDivElement>(null);
-  const mockupRef = useRef<HTMLDivElement>(null);
-  const revenueCounterRef = useRef<HTMLSpanElement>(null);
-  const donutProgressRef = useRef<SVGCircleElement>(null);
-  const cardsContainerRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const deckRef = useRef<HTMLDivElement>(null);
 
-  const [counterValue, setCounterValue] = useState(
-    mode === "business" ? "$24,850.00" : "$6,950.00"
-  );
+  // Slice-style story tabs carousel state
+  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+
+  const stories = [
+    {
+      tab: "Recurring Engine",
+      title: "Instant automated recurring billing",
+      desc: "Scheduled batch cycles execute without manual intervention. Zero double-charging with deterministic keys.",
+      tag: "Batch Autopilot",
+      badgeColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+      previewType: "recurring",
+      mrr: "$24,850.00",
+      growth: "+18.4%",
+    },
+    {
+      tab: "Smart Dunning",
+      title: "Zero-loss automated payment recovery",
+      desc: "Recover up to 48% of failed customer renewals with intelligent card retries, SEPA fallbacks and instant email triggers.",
+      tag: "Dunning AI",
+      badgeColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+      previewType: "dunning",
+      mrr: "$14,320.00",
+      growth: "48% Recovered",
+    },
+    {
+      tab: "Executive MRR",
+      title: "Real-time revenue velocity & telemetry",
+      desc: "Direct database-layer SQL aggregations guarantee sub-2-second insights into cash flow, ARR, and subscriber churn.",
+      tag: "Live Telemetry",
+      badgeColor: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+      previewType: "mrr",
+      mrr: "$148,250.00",
+      growth: "+34.2% YoY",
+    },
+  ];
+
+  // Auto-advance story timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveStoryIndex((prev) => (prev + 1) % stories.length);
+    }, 4500);
+
+    return () => clearInterval(timer);
+  }, [stories.length]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      // 1. Create a master coordinated timeline for Hero entrance
-      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
-
-      // Badge entrance
-      tl.fromTo(
-        badgeRef.current,
-        { opacity: 0, y: -20, scale: 0.9 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.8 }
+      // Hero headline entrance
+      gsap.fromTo(
+        headlineRef.current,
+        { opacity: 0, y: 35, filter: "blur(6px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "power4.out" }
       );
 
-      // Headline line-by-line split reveal
-      tl.fromTo(
-        [headlineLine1Ref.current, headlineLine2Ref.current],
-        { opacity: 0, y: 40, filter: "blur(6px)" },
-        {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 1,
-          stagger: 0.2,
-        },
-        "-=0.5"
-      );
-
-      // Subtitle reveal
-      tl.fromTo(
+      // Subtitle
+      gsap.fromTo(
         subtitleRef.current,
         { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.8 },
-        "-=0.6"
+        { opacity: 1, y: 0, duration: 0.8, delay: 0.2, ease: "power3.out" }
       );
 
-      // CTA Buttons upward movement
-      tl.fromTo(
-        ctaButtonsRef.current,
+      // CTA Buttons
+      gsap.fromTo(
+        ctaRef.current,
         { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, duration: 0.8 },
-        "-=0.5"
+        { opacity: 1, y: 0, duration: 0.8, delay: 0.35, ease: "power3.out" }
       );
 
-      // Dashboard preview: starts lower and smoothly scales into view
-      tl.fromTo(
-        mockupRef.current,
-        { opacity: 0, y: 90, scale: 0.92 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1.4,
-          ease: "expo.out",
-        },
-        "-=0.6"
+      // 3D Deck Entrance: cards slide up in depth
+      gsap.fromTo(
+        deckRef.current,
+        { opacity: 0, y: 90, scale: 0.94 },
+        { opacity: 1, y: 0, scale: 1, duration: 1.3, delay: 0.3, ease: "expo.out" }
       );
-
-      // Numeric counter animation: counts up from 0 to target revenue
-      const targetNum = mode === "business" ? 24850 : 6950;
-      const counterObj = { val: 0 };
-      tl.to(
-        counterObj,
-        {
-          val: targetNum,
-          duration: 1.8,
-          ease: "power2.out",
-          onUpdate: () => {
-            if (revenueCounterRef.current) {
-              revenueCounterRef.current.innerText =
-                "$" +
-                Math.round(counterObj.val).toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                });
-            }
-          },
-        },
-        "-=1.0"
-      );
-
-      // Subscription cards appear sequentially
-      if (cardsContainerRef.current) {
-        const subCards = cardsContainerRef.current.children;
-        tl.fromTo(
-          subCards,
-          { opacity: 0, x: -20, scale: 0.95 },
-          {
-            opacity: 1,
-            x: 0,
-            scale: 1,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: "back.out(1.4)",
-          },
-          "-=1.2"
-        );
-      }
-
-      // Revenue Donut chart draws progressively
-      if (donutProgressRef.current) {
-        tl.fromTo(
-          donutProgressRef.current,
-          { strokeDasharray: "0 100" },
-          { strokeDasharray: "72 100", duration: 1.6, ease: "power2.out" },
-          "-=1.4"
-        );
-      }
-
-      // Subtle continuous floating motion for the dashboard mockup
-      gsap.to(mockupRef.current, {
-        y: "-=8",
-        duration: 3.5,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-        delay: 1.5,
-      });
-
-      // Parallax scroll on the dashboard as user leaves the hero
-      gsap.to(mockupRef.current, {
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "bottom top",
-          scrub: 1.2,
-        },
-        y: 60,
-        scale: 0.96,
-        opacity: 0.85,
-      });
     }, containerRef);
 
     return () => ctx.revert();
-  }, [mode]);
+  }, []);
 
   const scrollToWorkflow = () => {
     const target = document.getElementById("workflow-storytelling");
@@ -180,244 +118,266 @@ export function HeroSection({ mode, setMode }: HeroSectionProps) {
     }
   };
 
+  const activeStory = stories[activeStoryIndex];
+
   return (
-    <section className="px-4 sm:px-6 lg:px-8 pt-4 pb-12 w-full max-w-7xl mx-auto">
-      {/* Outer Obsidian Container with Rounded Corners & Aurora Glow */}
+    <section className="px-3 sm:px-6 lg:px-8 pt-2 pb-12 w-full max-w-7xl mx-auto">
+      {/* Slice-Style 100vh Immersive Hero Canvas with 3D Perspective */}
       <div
         ref={containerRef}
-        className="relative rounded-[2.5rem] lg:rounded-[3rem] bg-[#0c0c0e] text-white overflow-hidden border border-white/10 shadow-2xl p-6 sm:p-10 lg:p-16 min-h-[860px] flex flex-col justify-between"
+        className="relative w-full min-h-[92vh] flex flex-col justify-between overflow-hidden isolate"
+        style={{ perspective: "1400px" }}
       >
-        {/* Subtle Cyber Grid and Emerald Aurora Ambient Background */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-25 pointer-events-none" />
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/15 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute top-1/3 -right-32 w-96 h-96 bg-purple-600/15 rounded-full blur-[120px] pointer-events-none" />
-
-        {/* Hero Top Content: Heading, Subtitle & Primary CTA */}
-        <div className="relative z-10 max-w-3xl mx-auto text-center pt-4 sm:pt-6 space-y-6">
-          <div
-            ref={badgeRef}
-            className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-[11px] font-semibold tracking-wide"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            Next-Gen Subscription Engine
+        {/* Top Hero Typography: Slice.bank.in inspired Massive Bricolage Headline */}
+        <div className="pt-6 sm:pt-10 max-w-4xl mx-auto text-center space-y-5 z-20">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200/90 shadow-xs text-xs font-semibold text-slate-800">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-slate-500 font-medium">FlowGrid 2.0 •</span>
+            <span>Next-Gen Subscription Platform</span>
           </div>
 
-          {/* Line-by-line Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08]">
-            <span ref={headlineLine1Ref} className="block">
-              Keep your business
-            </span>
-            <span
-              ref={headlineLine2Ref}
-              className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-slate-400"
-            >
+          <h1
+            ref={headlineRef}
+            className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-[-2px] text-slate-950 leading-[1.04]"
+          >
+            Keep your business <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-emerald-600">
               in flow.
             </span>
           </h1>
 
           <p
             ref={subtitleRef}
-            className="text-sm sm:text-base lg:text-lg text-slate-400 max-w-xl mx-auto font-normal leading-relaxed"
+            className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto font-normal leading-relaxed"
           >
             Manage subscriptions, automate recurring billing and keep every payment on track. All from
-            one place.
+            one unified platform.
           </p>
 
           <div
-            ref={ctaButtonsRef}
-            className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3"
+            ref={ctaRef}
+            className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3.5"
           >
             <Link
               href="/dashboard"
-              className="px-7 py-3 rounded-full bg-white text-black font-semibold text-xs sm:text-sm hover:bg-slate-200 transition-all active:scale-95 shadow-lg shadow-white/10"
+              className="px-8 py-3.5 rounded-full bg-black text-white font-semibold text-sm hover:bg-slate-800 transition-all shadow-lg active:scale-95"
             >
               Open FlowGrid account
             </Link>
             <button
               onClick={scrollToWorkflow}
-              className="px-6 py-3 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium text-xs sm:text-sm transition-all"
+              className="px-7 py-3.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-medium text-sm transition-all shadow-xs"
             >
-              View Interactive Workflow ↓
+              Explore interactive story ↓
             </button>
           </div>
         </div>
 
-        {/* Realistic FlowGrid Dashboard Product Mockup with Coordinated GSAP Timeline */}
+        {/* Slice Bank Signature 3D Layered Card Deck (Bottom Stack) */}
         <div
-          ref={mockupRef}
-          className="relative z-10 mt-10 w-full max-w-5xl mx-auto rounded-3xl bg-[#141418]/90 border border-white/15 p-4 sm:p-6 shadow-2xl backdrop-blur-xl"
+          ref={deckRef}
+          className="relative w-full max-w-6xl mx-auto mt-10 min-h-[460px] sm:min-h-[500px] flex items-end justify-center"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            {/* Mockup Sidebar */}
-            <div className="hidden lg:flex lg:col-span-3 flex-col space-y-4 border-r border-white/10 pr-6">
-              <div className="flex items-center gap-2 px-2 pb-2 border-b border-white/10">
-                <div className="w-6 h-6 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">
-                  FG
-                </div>
-                <span className="text-xs font-bold tracking-tight text-white">FlowGrid OS</span>
-              </div>
-              <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/10 text-white font-medium">
-                  <Repeat className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Subscriptions</span>
-                </div>
-                <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
-                  <Receipt className="w-3.5 h-3.5" />
-                  <span>Recurring Invoices</span>
-                </div>
-                <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Customers</span>
-                </div>
-                <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-400 hover:text-white transition-colors">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  <span>Financial KPIs</span>
-                </div>
-              </div>
-            </div>
+          {/* Card 1 (Back, smallest, width 86%, highest translateY) */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 rounded-t-[2.5rem] bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border border-white/10 shadow-2xl transition-all duration-500 pointer-events-none"
+            style={{
+              width: "86%",
+              height: "440px",
+              bottom: "40px",
+              zIndex: 1,
+              opacity: 0.7,
+            }}
+          />
 
-            {/* Mockup Main Display: Dynamic Counting Balance & Subscription Tiers */}
-            <div className="lg:col-span-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider block">
-                    {mode === "business" ? "Monthly Recurring Revenue (MRR)" : "Active Subscriptions"}
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-0.5">
-                    <span
-                      ref={revenueCounterRef}
-                      className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight"
-                    >
-                      $0.00
-                    </span>
-                    <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded">
-                      +18.4%
-                    </span>
-                  </div>
-                </div>
+          {/* Card 2 (Middle, width 91%, medium translateY) */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 rounded-t-[2.75rem] bg-gradient-to-r from-[#12131a] to-[#161722] border border-white/15 shadow-2xl transition-all duration-500 pointer-events-none"
+            style={{
+              width: "91%",
+              height: "460px",
+              bottom: "20px",
+              zIndex: 2,
+              opacity: 0.9,
+            }}
+          />
 
-                <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-3 py-1 text-[11px] text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Live Automated</span>
-                </div>
-              </div>
-
-              {/* Subscriptions Card Preview with Sequential Entrance */}
-              <div ref={cardsContainerRef} className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white">Acme Enterprise</span>
-                    <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                      Active
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-slate-400 block mt-1">Annual SLA • $1,200/mo</span>
-                  <div className="mt-3 w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-emerald-400 h-full w-[82%]" />
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white">Apex SaaS Pro</span>
-                    <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                      Active
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-slate-400 block mt-1">Monthly 20 Seats • $480/mo</span>
-                  <div className="mt-3 w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-purple-400 h-full w-[65%]" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Mockup Right Display: Progressive Donut Statistic */}
-            <div className="lg:col-span-3 flex flex-col items-center justify-center p-3 rounded-2xl bg-white/[0.03] border border-white/10">
-              <div className="flex items-center justify-between w-full pb-2 text-[11px] text-slate-400">
-                <span>Revenue Split</span>
-                <span className="text-white font-medium">Month ⌄</span>
-              </div>
-              <div className="relative w-24 h-24 my-2 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <circle
-                    cx="18"
-                    cy="18"
-                    r="14"
-                    fill="none"
-                    stroke="#27272a"
-                    strokeWidth="4"
-                  />
-                  <circle
-                    ref={donutProgressRef}
-                    cx="18"
-                    cy="18"
-                    r="14"
-                    fill="none"
-                    stroke="#10B981"
-                    strokeWidth="4"
-                    strokeDasharray="0 100"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="absolute text-center">
-                  <span className="text-[10px] font-bold text-white block">98.4%</span>
-                  <span className="text-[8px] text-slate-400">Paid</span>
-                </div>
-              </div>
-              <div className="w-full text-[10px] text-slate-400 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    Recurring
-                  </span>
-                  <span className="text-slate-200">72%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                    Seats & Addons
-                  </span>
-                  <span className="text-slate-200">28%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero Footer Controls (Scroll down & Personal/Business Switch pill) */}
-        <div className="relative z-10 pt-8 flex items-center justify-between">
-          {/* Scroll Down Button */}
-          <button
-            onClick={scrollToWorkflow}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-slate-300 transition-all group"
+          {/* Card 3 (Front Active Card, width 96% - 100%, highest z-index) */}
+          <div
+            className="relative w-full rounded-t-[2.5rem] sm:rounded-t-[3.25rem] bg-[#0c0c0e] text-white p-6 sm:p-10 lg:p-12 border-t border-x border-white/20 shadow-2xl overflow-hidden flex flex-col justify-between"
+            style={{
+              zIndex: 3,
+              minHeight: "480px",
+            }}
           >
-            <ArrowDown className="w-3.5 h-3.5 group-hover:translate-y-0.5 transition-transform text-emerald-400" />
-            <span>Scroll to Explore</span>
-          </button>
+            {/* Cyber Grid & Ambient Glowing Lights */}
+            <div className="absolute inset-0 bg-grid-pattern opacity-25 pointer-events-none" />
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-[110px] pointer-events-none" />
+            <div className="absolute top-1/2 -right-24 w-80 h-80 bg-purple-600/15 rounded-full blur-[110px] pointer-events-none" />
 
-          {/* Mode Switch Pill (MONELIQ Reference Style) */}
-          <div className="flex rounded-full bg-black/60 p-1 border border-white/15 text-xs font-semibold backdrop-blur-md">
-            <button
-              onClick={() => setMode("personal")}
-              className={`px-4 py-1 rounded-full transition-all ${
-                mode === "personal"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Personal
-            </button>
-            <button
-              onClick={() => setMode("business")}
-              className={`px-4 py-1 rounded-full transition-all ${
-                mode === "business"
-                  ? "bg-white text-black shadow-sm"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Business
-            </button>
+            {/* Inner Content Grid */}
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center flex-1">
+              {/* Left Side: Slice.bank.in Floating Glassmorphic Story Capsule */}
+              <div className="lg:col-span-7 space-y-4">
+                <div
+                  className="rounded-3xl border border-white/20 bg-white/[0.08] backdrop-blur-[20px] p-6 sm:p-8 space-y-4 transition-all duration-500"
+                >
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border ${activeStory.badgeColor}`}
+                    >
+                      {activeStory.tag}
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      Story 0{activeStoryIndex + 1} / 03
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                    {activeStory.title}
+                  </h2>
+
+                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                    {activeStory.desc}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Side: Dynamic Interactive Preview Widget */}
+              <div className="lg:col-span-5 flex justify-center">
+                <div className="w-full max-w-sm rounded-3xl bg-white/[0.05] border border-white/15 p-6 backdrop-blur-xl shadow-xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                        {mode === "business" ? "Active Revenue Stream" : "Personal Subscriptions"}
+                      </span>
+                      <div className="flex items-baseline gap-2 mt-0.5">
+                        <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                          {activeStory.mrr}
+                        </span>
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                          {activeStory.growth}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold">
+                      FG
+                    </div>
+                  </div>
+
+                  {/* Dynamic Micro-Card Preview */}
+                  {activeStory.previewType === "recurring" && (
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-semibold text-white block">Acme SaaS Tier</span>
+                          <span className="text-[10px] text-slate-400">Scheduled: 1st of month</span>
+                        </div>
+                        <span className="text-emerald-400 font-bold">$1,200.00</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-semibold text-white block">Gym Pro Annual</span>
+                          <span className="text-[10px] text-slate-400">Auto-Renewed</span>
+                        </div>
+                        <span className="text-emerald-400 font-bold">$480.00</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStory.previewType === "dunning" && (
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-semibold text-purple-200 block">Smart Card Retry #2</span>
+                          <span className="text-[10px] text-purple-300">Recovered via Visa Backup</span>
+                        </div>
+                        <span className="text-emerald-400 font-bold">+$850.00</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
+                        <span className="text-slate-400">Zero Subscriber Churn</span>
+                        <span className="text-emerald-400 font-semibold">Active</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeStory.previewType === "mrr" && (
+                    <div className="space-y-2">
+                      <div className="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-semibold text-indigo-200 block">SQL Aggregation</span>
+                          <span className="text-[10px] text-indigo-300">PostgreSQL 16 Cluster</span>
+                        </div>
+                        <span className="text-emerald-400 font-bold">0.12s SLA</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
+                        <span className="text-slate-400">ARR Run-Rate</span>
+                        <span className="text-white font-bold">$1.78M</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Slice.bank.in Carousel Tabs & Progress Bar Indicators */}
+            <div className="relative z-10 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
+              {/* 3 Story Tabs with Active Progress Bars */}
+              <div className="flex w-full sm:max-w-xl gap-4 sm:gap-6">
+                {stories.map((s, idx) => {
+                  const isActive = activeStoryIndex === idx;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveStoryIndex(idx)}
+                      className="flex-1 flex flex-col gap-2 text-left transition-colors focus:outline-none"
+                    >
+                      <span
+                        className={`text-xs sm:text-sm font-bold tracking-tight transition-colors ${
+                          isActive ? "text-white" : "text-white/40 hover:text-white/70"
+                        }`}
+                      >
+                        {s.tab}
+                      </span>
+                      {/* Animated Progress Bar Line */}
+                      <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/15">
+                        <div
+                          className={`absolute inset-y-0 left-0 rounded-full transition-all duration-300 ${
+                            isActive
+                              ? "bg-white w-full animate-[progress_4.5s_linear]"
+                              : "bg-transparent w-0"
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Mode Toggle Switch Pill (Personal | Business) */}
+              <div className="flex rounded-full bg-white/10 p-1 border border-white/15 text-xs font-semibold backdrop-blur-md">
+                <button
+                  onClick={() => setMode("personal")}
+                  className={`px-3.5 py-1 rounded-full transition-all ${
+                    mode === "personal"
+                      ? "bg-white text-black shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Personal
+                </button>
+                <button
+                  onClick={() => setMode("business")}
+                  className={`px-3.5 py-1 rounded-full transition-all ${
+                    mode === "business"
+                      ? "bg-white text-black shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Business
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
