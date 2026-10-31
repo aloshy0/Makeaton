@@ -1,4 +1,5 @@
 # Brightloop Software — Subscription Management System
+
 ## Final Setup & System Verification Report
 
 **Date/Time:** 2026-10-31  
@@ -10,14 +11,14 @@
 
 ## 1. Completed Stages
 
-| Stage | Name | Status | Summary |
-|---|---|:---:|---|
-| **Stage 0** | Repository and Requirements Audit | **PASS** | Evaluated full requirements PDF, verified all system runtimes, configured `.gitignore`, and formulated source of truth. |
-| **Stage 1** | Architecture and Design Planning | **PASS** | Designed modular monolith architecture, relational schema with ER diagrams, minimal REST API contracts, and commercial SaaS design tokens. |
-| **Stage 2** | Environment Setup & Infrastructure | **PASS** | Created Next.js 14 App Router, Django 5 backend with `uv`, multi-container Docker compose orchestration, and `.env.example`. |
-| **Stage 3** | Frontend Foundation | **PASS** | Built enterprise dashboard shell, navigation, financial KPI cards, Recharts cash flow visualization, status badges, subscription manager, invoice manager, and customer portal. |
+| Stage       | Name                                |  Status  | Summary                                                                                                                                                                             |
+| ----------- | ----------------------------------- | :------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Stage 0** | Repository and Requirements Audit   | **PASS** | Evaluated full requirements PDF, verified all system runtimes, configured `.gitignore`, and formulated source of truth.                                                             |
+| **Stage 1** | Architecture and Design Planning    | **PASS** | Designed modular monolith architecture, relational schema with ER diagrams, minimal REST API contracts, and commercial SaaS design tokens.                                          |
+| **Stage 2** | Environment Setup & Infrastructure  | **PASS** | Created Next.js 14 App Router, Django 5 backend with `uv`, multi-container Docker compose orchestration, and `.env.example`.                                                        |
+| **Stage 3** | Frontend Foundation                 | **PASS** | Built enterprise dashboard shell, navigation, financial KPI cards, Recharts cash flow visualization, status badges, subscription manager, invoice manager, and customer portal.     |
 | **Stage 4** | Backend Foundation & Domain Modules | **PASS** | Implemented 8 modular apps (`accounts`, `customers`, `catalog`, `quotations`, `subscriptions`, `billing`, `payments`, `reporting`), automated billing engine, and OpenAPI 3.0 docs. |
-| **Stage 5** | Verification & Polish | **PASS** | Automated Pytest suite passing 100%, Ruff linting passing 100%, zero Django check issues, database migrations applied and demo seed data verified. |
+| **Stage 5** | Verification & Polish               | **PASS** | Automated Pytest suite passing 100%, Ruff linting passing 100%, zero Django check issues, database migrations applied and demo seed data verified.                                  |
 
 ---
 
@@ -102,27 +103,28 @@ subscription-management-system/
 
 ## 6. APIs Implemented
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/health/` | System health check (DB, Redis, Env) |
-| `POST` | `/api/v1/auth/register/` | Customer sign-up (strictly validated password) |
-| `POST` | `/api/v1/auth/token/` | JWT token obtain (login) |
-| `GET` | `/api/v1/auth/me/` | Current user profile and role |
-| `GET` | `/api/v1/reporting/dashboard/` | Consolidated KPI aggregations (MRR, ARR, overdue, trends) |
-| `GET/POST` | `/api/v1/subscriptions/` | List and create subscriptions |
-| `POST` | `/api/v1/subscriptions/{id}/transition/` | State machine transition (`draft` $\to$ `quotation` $\to$ `confirmed` $\to$ `active` $\leftrightarrow$ `paused` $\to$ `closed`) |
-| `GET/POST` | `/api/v1/billing/invoices/` | List and filter invoices (`?overdue=true`) |
-| `POST` | `/api/v1/billing/invoices/{id}/confirm/` | Confirm invoice from Draft |
-| `POST` | `/api/v1/billing/invoices/{id}/cancel/` | Cancel invoice |
-| `POST` | `/api/v1/billing/run/` | Execute automated idempotent billing run |
-| `GET/POST` | `/api/v1/payments/` | Record payment against invoice and settle balance |
-| `GET` | `/api/docs/` | Interactive Swagger OpenAPI 3.0 documentation |
+| Method     | Endpoint                                 | Description                                                                                                                     |
+| ---------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`      | `/api/v1/health/`                        | System health check (DB, Redis, Env)                                                                                            |
+| `POST`     | `/api/v1/auth/register/`                 | Customer sign-up (strictly validated password)                                                                                  |
+| `POST`     | `/api/v1/auth/token/`                    | JWT token obtain (login)                                                                                                        |
+| `GET`      | `/api/v1/auth/me/`                       | Current user profile and role                                                                                                   |
+| `GET`      | `/api/v1/reporting/dashboard/`           | Consolidated KPI aggregations (MRR, ARR, overdue, trends)                                                                       |
+| `GET/POST` | `/api/v1/subscriptions/`                 | List and create subscriptions                                                                                                   |
+| `POST`     | `/api/v1/subscriptions/{id}/transition/` | State machine transition (`draft` $\to$ `quotation` $\to$ `confirmed` $\to$ `active` $\leftrightarrow$ `paused` $\to$ `closed`) |
+| `GET/POST` | `/api/v1/billing/invoices/`              | List and filter invoices (`?overdue=true`)                                                                                      |
+| `POST`     | `/api/v1/billing/invoices/{id}/confirm/` | Confirm invoice from Draft                                                                                                      |
+| `POST`     | `/api/v1/billing/invoices/{id}/cancel/`  | Cancel invoice                                                                                                                  |
+| `POST`     | `/api/v1/billing/run/`                   | Execute automated idempotent billing run                                                                                        |
+| `GET/POST` | `/api/v1/payments/`                      | Record payment against invoice and settle balance                                                                               |
+| `GET`      | `/api/docs/`                             | Interactive Swagger OpenAPI 3.0 documentation                                                                                   |
 
 ---
 
 ## 7. Tests Executed & Results
 
 Automated Pytest suite execution:
+
 - `test_password_policy_enforcement` — **PASS**
 - `test_product_variant_pricing` — **PASS**
 - `test_subscription_state_machine` — **PASS**
@@ -152,6 +154,7 @@ Automated Pytest suite execution:
 ### Option A: Local Development Mode
 
 #### Start Backend (Terminal 1)
+
 ```bash
 cd apps/api
 .venv\Scripts\activate
@@ -159,13 +162,16 @@ python manage.py runserver 0.0.0.0:8000
 ```
 
 #### Start Frontend (Terminal 2)
+
 ```bash
 cd apps/web
 pnpm run dev
 ```
+
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ### Option B: Docker Compose (Full Stack)
+
 ```bash
 docker compose up --build
 ```

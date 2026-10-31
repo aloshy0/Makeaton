@@ -7,9 +7,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const variantStyles = {
-  primary: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm border border-transparent font-medium",
+  primary:
+    "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm border border-transparent font-medium",
   secondary: "bg-slate-100 hover:bg-slate-200 text-slate-900 border border-transparent font-medium",
-  outline: "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm font-medium",
+  outline:
+    "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm font-medium",
   ghost: "hover:bg-slate-100 text-slate-600 hover:text-slate-900",
   danger: "bg-rose-600 hover:bg-rose-700 text-white shadow-sm font-medium",
 };

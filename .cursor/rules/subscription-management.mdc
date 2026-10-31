@@ -1,0 +1,13 @@
+---
+description: Brightloop Subscription Management System Architectural Guidelines
+globs: **/*
+---
+
+# Cursor AI Rules for Brightloop Software
+
+- Follow the modular monolith architecture (`apps/web` + `apps/api`).
+- Authoritative requirements are in `docs/REQUIREMENTS.md`. Do not invent business rules.
+- Follow the minimal API catalog in `docs/API_CATALOG.md`.
+- Enforce strict password rules and financial Decimal precision.
+- Run `pytest` and `vitest` to verify changes.
+- Refer to `AGENTS.md` for full developer directives.

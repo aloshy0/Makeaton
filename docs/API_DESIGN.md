@@ -1,94 +1,46 @@
 # Brightloop Software — Subscription Management System
-## Minimal REST API Specification
+
+## Minimal REST API Specification & Architecture Design
 
 **API Base URL:** `/api/v1/`  
 **OpenAPI Schema:** `/api/schema/`  
-**Swagger UI:** `/api/docs/`
+**Interactive Swagger UI:** `/api/docs/`  
+**Status:** Canonical Design
 
 ---
 
-## 1. Design Philosophy
+## 1. Architectural Principles
 
-- **Resource-Oriented**: Clear standard CRUD endpoints with DRF ViewSets.
-- **Minimal API Surface**: High efficiency, no redundant single-purpose endpoints.
-- **Search, Filter & Pagination**: Standard `django-filter`, search parameters (`?search=`), and unified page-number pagination:
-  ```json
-  {
-    "count": 120,
-    "next": "http://api/v1/subscriptions/?page=2",
-    "previous": null,
-    "results": [...]
-  }
-  ```
-- **Consolidated Dashboard Endpoint**: Single round-trip for financial KPIs and charts.
-
----
-
-## 2. API Endpoints Map
-
-### 2.1 System & Auth
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET` | `/api/v1/health/` | Service health status (DB, Redis, Celery) | Public |
-| `POST` | `/api/v1/auth/register/` | Customer sign-up (strictly validated password) | Public |
-| `POST` | `/api/v1/auth/token/` | JWT obtain pair (login) | Public |
-| `POST` | `/api/v1/auth/token/refresh/` | JWT token refresh | Public |
-| `GET` | `/api/v1/auth/me/` | Current user profile & role | Authenticated |
-
-### 2.2 Product Catalog & Plans
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET/POST` | `/api/v1/catalog/products/` | List/filter products; create product | Staff/Admin |
-| `GET/PUT/PATCH/DELETE` | `/api/v1/catalog/products/{id}/` | Retrieve, update or archive product | Staff/Admin |
-| `GET/POST` | `/api/v1/catalog/plans/` | List/filter subscription plans | Authenticated |
-| `GET/PUT/PATCH/DELETE` | `/api/v1/catalog/plans/{id}/` | Plan detail & lifecycle policy configuration | Staff/Admin |
-
-### 2.3 Customers
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET/POST` | `/api/v1/customers/` | List/search customers; create customer | Staff/Admin |
-| `GET/PUT/PATCH` | `/api/v1/customers/{id}/` | Retrieve or update customer profile | Staff/Admin / Own Customer |
-
-### 2.4 Quotations & Templates
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET/POST` | `/api/v1/quotations/templates/` | Manage reusable quotation templates | Staff/Admin |
-| `GET/PUT/PATCH/DELETE` | `/api/v1/quotations/templates/{id}/` | Template detail and line items | Staff/Admin |
-
-### 2.5 Subscriptions
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET/POST` | `/api/v1/subscriptions/` | List/filter subscriptions; create draft | Authenticated (scoped) |
-| `GET/PUT/PATCH` | `/api/v1/subscriptions/{id}/` | Subscription details & lines | Authenticated (scoped) |
-| `POST` | `/api/v1/subscriptions/{id}/transition/` | Perform state change (`to_quotation`, `confirm`, `activate`, `pause`, `resume`, `close`) | Staff/Admin |
-
-### 2.6 Billing, Invoices & Taxes
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET/POST` | `/api/v1/billing/taxes/` | List/create tax rules | Admin |
-| `GET/POST` | `/api/v1/billing/discounts/` | List/create discount rules | Admin |
-| `GET` | `/api/v1/billing/invoices/` | List/filter invoices (`?status=`, `?customer=`, `?overdue=true`) | Authenticated (scoped) |
-| `GET` | `/api/v1/billing/invoices/{id}/` | Invoice details & printable lines | Authenticated (scoped) |
-| `POST` | `/api/v1/billing/invoices/{id}/confirm/` | Transition invoice from Draft to Confirmed | Staff/Admin |
-| `POST` | `/api/v1/billing/invoices/{id}/cancel/` | Cancel an uncollected invoice | Staff/Admin |
-| `POST` | `/api/v1/billing/run/` | Trigger automated recurring billing run | Admin/Staff |
-
-### 2.7 Payments
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET/POST` | `/api/v1/payments/` | List payments; record payment against invoice | Staff/Admin |
-| `GET` | `/api/v1/payments/{id}/` | Retrieve payment record details | Staff/Admin / Own Customer |
-
-### 2.8 Reporting & Dashboard Aggregation
-| Method | Endpoint | Description | Access |
-|---|---|---|---|
-| `GET` | `/api/v1/reporting/dashboard/` | Consolidated KPIs: MRR, ARR, Active Subscriptions, Collected Revenue, Overdue Totals, Revenue Trends | Staff/Admin |
+1. **Minimal API Surface**:
+   - Provide the minimum number of reusable, resource-oriented endpoints required to satisfy all business goals.
+   - Avoid creating an endpoint for every frontend button; use standard RESTful methods (`GET`, `POST`, `PATCH`, `DELETE`) and explicit action transitions (`/actions/`).
+2. **Backend Authority**:
+   - All business logic, tax calculations, discount evaluations, and lifecycle rules reside exclusively on the backend.
+   - The frontend never performs authoritative calculations.
+3. **Idempotency & Financial Consistency**:
+   - Automated billing runs use deterministic keys (`sub_{subscription_id}_{billing_date}`) to guarantee no double billing.
+   - Payment settlements execute within atomic database transactions.
+4. **Performance SLA**:
+   - Every list, detail, and aggregation endpoint must respond in **under 2.0 seconds** with tens of thousands of subscription records.
+   - Single-query SQL aggregations replace in-memory calculation loops.
 
 ---
 
-## 3. Standard Response Format
+## 2. Authentication & Secure Token Strategy
 
-Success:
+- **Authentication Scheme**: Django REST Framework SimpleJWT.
+- **Short-Lived Access Tokens**: Lifetime of 30 minutes, delivered in authorization headers (`Bearer <token>`).
+- **Secure Refresh Token Handling**:
+  - Refresh tokens have a lifetime of 7 days with token rotation.
+  - Refresh tokens are transmitted and stored strictly in secure, `httpOnly`, `SameSite=Lax` cookies.
+  - Long-lived credentials are **never stored in browser `localStorage`**, mitigating XSS token extraction vectors.
+
+---
+
+## 3. Standard Request & Response Contracts
+
+### 3.1 Standard Success Response
+
 ```json
 {
   "status": "success",
@@ -96,25 +48,81 @@ Success:
 }
 ```
 
-Standard Paginated List:
+### 3.2 Standard Paginated List Response
+
+All list endpoints implement unified pagination:
+
 ```json
 {
-  "count": 45,
-  "next": null,
+  "count": 1420,
+  "next": "http://api.brightloop.com/api/v1/subscriptions/?page=2",
   "previous": null,
-  "results": [ ... ]
+  "results": [
+    { ... }
+  ]
 }
 ```
 
-Standard Error:
+### 3.3 Standard Error Response
+
 ```json
 {
   "status": "error",
-  "code": "validation_error",
-  "message": "Invalid subscription transition.",
-  "errors": {
-    "status": ["Cannot transition directly from Draft to Active. Must be Confirmed first."]
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "The subscription cannot be paused because the assigned plan policy prohibits pausing.",
+    "field_errors": {
+      "action": ["Invalid lifecycle transition for plan policy."]
+    }
   }
 }
 ```
 
+---
+
+## 4. Query Parameters: Filtering, Searching & Ordering
+
+Endpoints support unified query filtering via `django-filter`:
+
+| Parameter   | Type    | Example                 | Description                                  |
+| ----------- | ------- | ----------------------- | -------------------------------------------- |
+| `page`      | Integer | `?page=2`               | Page number (default size: 20).              |
+| `page_size` | Integer | `?page_size=50`         | Custom page size (max: 100).                 |
+| `search`    | String  | `?search=Acme`          | Full-text search across primary text fields. |
+| `ordering`  | String  | `?ordering=-created_at` | Sort field (prefix `-` for descending).      |
+| `status`    | String  | `?status=active`        | Filter by entity state.                      |
+| `overdue`   | Boolean | `?overdue=true`         | Invoices past due date with balance $> 0$.   |
+
+---
+
+## 5. Operational Health Probes
+
+Per cloud-native standards:
+
+1. **Liveness Probe**:
+   - **Endpoint:** `GET /api/v1/health/live/`
+   - **Purpose:** Process liveness probe returning HTTP 200 if the WSGI/ASGI application worker is running.
+2. **Readiness Probe**:
+   - **Endpoint:** `GET /api/v1/health/ready/`
+   - **Purpose:** Verifies that required dependencies (PostgreSQL connection pool and Redis cache/broker) are healthy before routing traffic.
+   - **Response:**
+     ```json
+     {
+       "status": "ready",
+       "database": "connected",
+       "redis": "connected"
+     }
+     ```
+
+---
+
+## 6. Asynchronous Background Tasks (Celery)
+
+Background operations are executed via Celery Beat schedules and are **not exposed as public APIs**:
+
+1. `billing.tasks.run_recurring_billing_cycle` (Daily at 00:05 UTC)
+2. `subscriptions.tasks.check_subscription_renewals` (Daily at 01:00 UTC)
+3. `subscriptions.tasks.enforce_subscription_expiry` (Daily at 01:15 UTC)
+4. `billing.tasks.check_overdue_invoices` (Hourly)
+5. `billing.tasks.enforce_discount_limits` (Daily at 02:00 UTC)
+6. `notifications.tasks.dispatch_invoice_emails` (Event triggered)

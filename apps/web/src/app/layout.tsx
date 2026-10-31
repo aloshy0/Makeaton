@@ -8,7 +8,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: "Brightloop Software — Subscription Management Platform",
-  description: "Enterprise Digital Backbone for Recurring Billing, Quotations, Plans & Financial Analytics",
+  description:
+    "Enterprise Digital Backbone for Recurring Billing, Quotations, Plans & Financial Analytics",
 };
 
 export default function RootLayout({

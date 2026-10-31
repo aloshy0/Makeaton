@@ -145,7 +145,9 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Revenue Recognition & Cash Flow</CardTitle>
-                <CardDescription>Monthly collections trajectory across all billing cycles</CardDescription>
+                <CardDescription>
+                  Monthly collections trajectory across all billing cycles
+                </CardDescription>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                 <TrendingUp className="h-3.5 w-3.5" />
@@ -156,7 +158,10 @@ export default function DashboardPage() {
           <CardContent>
             <div className="h-[280px] w-full pt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={metrics?.revenue_trend || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <AreaChart
+                  data={metrics?.revenue_trend || []}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                >
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.2} />
@@ -164,7 +169,12 @@ export default function DashboardPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 12 }} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: "#64748b", fontSize: 12 }}
+                  />
                   <YAxis
                     tickLine={false}
                     axisLine={false}
@@ -203,12 +213,31 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4 pt-2">
             {[
-              { label: "Active Billing", count: metrics?.status_distribution.active ?? 0, variant: "active" as const },
-              { label: "Pending Quotations", count: metrics?.status_distribution.quotation ?? 0, variant: "quotation" as const },
-              { label: "Paused Subscriptions", count: metrics?.status_distribution.paused ?? 0, variant: "paused" as const },
-              { label: "Closed / Terminated", count: metrics?.status_distribution.closed ?? 0, variant: "closed" as const },
+              {
+                label: "Active Billing",
+                count: metrics?.status_distribution.active ?? 0,
+                variant: "active" as const,
+              },
+              {
+                label: "Pending Quotations",
+                count: metrics?.status_distribution.quotation ?? 0,
+                variant: "quotation" as const,
+              },
+              {
+                label: "Paused Subscriptions",
+                count: metrics?.status_distribution.paused ?? 0,
+                variant: "paused" as const,
+              },
+              {
+                label: "Closed / Terminated",
+                count: metrics?.status_distribution.closed ?? 0,
+                variant: "closed" as const,
+              },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+              <div
+                key={item.label}
+                className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100"
+              >
                 <div className="flex items-center gap-2">
                   <Badge variant={item.variant} withDot={false}>
                     {item.label}
@@ -243,14 +272,24 @@ export default function DashboardPage() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {overdueInvoices.map((inv) => (
-                  <div key={inv.id} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                  <div
+                    key={inv.id}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+                  >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-slate-900">{inv.invoice_number}</span>
-                        <span className="text-xs text-slate-600 font-medium">{inv.customer_details?.company_name}</span>
+                        <span className="font-mono text-xs font-bold text-slate-900">
+                          {inv.invoice_number}
+                        </span>
+                        <span className="text-xs text-slate-600 font-medium">
+                          {inv.customer_details?.company_name}
+                        </span>
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5">
-                        Due: {formatDate(inv.due_date)} • Balance: <span className="text-rose-600 font-semibold">{formatCurrency(inv.outstanding_balance)}</span>
+                        Due: {formatDate(inv.due_date)} • Balance:{" "}
+                        <span className="text-rose-600 font-semibold">
+                          {formatCurrency(inv.outstanding_balance)}
+                        </span>
                       </div>
                     </div>
                     <Button
@@ -276,7 +315,10 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Recent Subscriptions</CardTitle>
-              <Link href="/subscriptions" className="text-xs font-medium text-indigo-600 hover:text-indigo-800">
+              <Link
+                href="/subscriptions"
+                className="text-xs font-medium text-indigo-600 hover:text-indigo-800"
+              >
                 View all &rarr;
               </Link>
             </div>
@@ -286,14 +328,21 @@ export default function DashboardPage() {
             {subsLoading ? (
               <div className="p-6 text-center text-sm text-slate-400">Loading subscriptions...</div>
             ) : subscriptions.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">No subscriptions created yet.</div>
+              <div className="p-6 text-center text-sm text-slate-500">
+                No subscriptions created yet.
+              </div>
             ) : (
               <div className="divide-y divide-slate-100">
                 {subscriptions.slice(0, 5).map((sub) => (
-                  <div key={sub.id} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                  <div
+                    key={sub.id}
+                    className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+                  >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-slate-900">{sub.subscription_number}</span>
+                        <span className="font-mono text-xs font-bold text-slate-900">
+                          {sub.subscription_number}
+                        </span>
                         <Badge variant={sub.status}>{sub.status}</Badge>
                       </div>
                       <div className="text-[11px] text-slate-500 mt-1">
@@ -301,8 +350,12 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-mono text-xs font-bold text-slate-900">{formatCurrency(sub.total_amount)}</div>
-                      <div className="text-[10px] text-slate-400">{sub.plan_details?.billing_frequency}</div>
+                      <div className="font-mono text-xs font-bold text-slate-900">
+                        {formatCurrency(sub.total_amount)}
+                      </div>
+                      <div className="text-[10px] text-slate-400">
+                        {sub.plan_details?.billing_frequency}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -333,15 +386,21 @@ export default function DashboardPage() {
               <div>
                 <label className="text-xs font-semibold uppercase text-slate-500">Invoice</label>
                 <div className="mt-1 font-mono text-sm font-semibold text-slate-900">
-                  {selectedInvoice.invoice_number} ({selectedInvoice.customer_details?.company_name})
+                  {selectedInvoice.invoice_number} ({selectedInvoice.customer_details?.company_name}
+                  )
                 </div>
                 <div className="text-xs text-slate-500 mt-0.5">
-                  Outstanding: <span className="font-semibold text-rose-600">{formatCurrency(selectedInvoice.outstanding_balance)}</span>
+                  Outstanding:{" "}
+                  <span className="font-semibold text-rose-600">
+                    {formatCurrency(selectedInvoice.outstanding_balance)}
+                  </span>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">Amount Received ($)</label>
+                <label className="text-xs font-semibold uppercase text-slate-500">
+                  Amount Received ($)
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -353,7 +412,9 @@ export default function DashboardPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">Payment Method</label>
+                <label className="text-xs font-semibold uppercase text-slate-500">
+                  Payment Method
+                </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
@@ -368,7 +429,12 @@ export default function DashboardPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedInvoice(null)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedInvoice(null)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" size="sm" disabled={paymentMutation.isPending}>

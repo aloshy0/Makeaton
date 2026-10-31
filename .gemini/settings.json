@@ -1,0 +1,11 @@
+{
+  "project": {
+    "name": "Brightloop Subscription Management System",
+    "description": "Production-grade digital backbone for subscription plans, recurring billing, invoices and financial analytics"
+  },
+  "context": {
+    "primaryDocumentation": "docs/REQUIREMENTS.md",
+    "architectureGuide": "docs/ARCHITECTURE.md",
+    "apiCatalog": "docs/API_CATALOG.md"
+  }
+}

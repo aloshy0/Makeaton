@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'STAFF' | 'CUSTOMER';
+export type Role = "ADMIN" | "STAFF" | "CUSTOMER";
 
 export interface User {
   id: string;
@@ -35,7 +35,7 @@ export interface Product {
   id: string;
   name: string;
   code: string;
-  product_type: 'software' | 'addon' | 'service' | 'physical';
+  product_type: "software" | "addon" | "service" | "physical";
   sales_price: string;
   cost_price: string;
   notes: string;
@@ -48,7 +48,7 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   code: string;
-  billing_frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  billing_frequency: "daily" | "weekly" | "monthly" | "yearly";
   cost: string;
   minimum_quantity: number;
   start_date: string | null;
@@ -60,7 +60,8 @@ export interface SubscriptionPlan {
   is_active: boolean;
 }
 
-export type SubscriptionStatus = 'draft' | 'quotation' | 'confirmed' | 'active' | 'paused' | 'closed';
+export type SubscriptionStatus =
+  "draft" | "quotation" | "confirmed" | "active" | "paused" | "closed";
 
 export interface SubscriptionLine {
   id: string;
@@ -85,7 +86,7 @@ export interface Subscription {
   start_date: string;
   expiry_date: string | null;
   next_billing_date: string | null;
-  payment_terms: 'due_on_receipt' | 'net_15' | 'net_30' | 'net_60';
+  payment_terms: "due_on_receipt" | "net_15" | "net_30" | "net_60";
   subtotal: string;
   tax_amount: string;
   discount_amount: string;
@@ -96,7 +97,7 @@ export interface Subscription {
   updated_at: string;
 }
 
-export type InvoiceStatus = 'draft' | 'confirmed' | 'paid' | 'cancelled';
+export type InvoiceStatus = "draft" | "confirmed" | "paid" | "cancelled";
 
 export interface InvoiceLine {
   id: string;
@@ -140,7 +141,7 @@ export interface Payment {
   invoice_number: string;
   customer_name: string;
   amount: string;
-  payment_method: 'credit_card' | 'bank_transfer' | 'cash' | 'check' | 'online' | 'other';
+  payment_method: "credit_card" | "bank_transfer" | "cash" | "check" | "online" | "other";
   payment_date: string;
   reference: string;
   notes: string;

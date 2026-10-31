@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.venv/
+dist/
+coverage/
+*.lock
+*.sqlite3
+.git/

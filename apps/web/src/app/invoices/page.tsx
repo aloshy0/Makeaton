@@ -68,9 +68,7 @@ export default function InvoicesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Billing & Invoices
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Billing & Invoices</h1>
           <p className="text-sm text-slate-500 mt-0.5">
             Automated recurring invoices, tax schedules, discounts, and payment reconciliations.
           </p>
@@ -90,7 +88,9 @@ export default function InvoicesPage() {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-12 text-center text-sm text-slate-400">Loading billing records...</div>
+            <div className="p-12 text-center text-sm text-slate-400">
+              Loading billing records...
+            </div>
           ) : invoices.length === 0 ? (
             <div className="p-12 text-center text-sm text-slate-500">
               <Receipt className="h-8 w-8 text-slate-400 mx-auto mb-2" />
@@ -129,11 +129,13 @@ export default function InvoicesPage() {
                           {inv.customer_details?.email}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5 text-slate-600">
-                        {formatDate(inv.issue_date)}
-                      </td>
+                      <td className="px-5 py-3.5 text-slate-600">{formatDate(inv.issue_date)}</td>
                       <td className="px-5 py-3.5">
-                        <span className={inv.is_overdue ? "text-rose-600 font-semibold" : "text-slate-600"}>
+                        <span
+                          className={
+                            inv.is_overdue ? "text-rose-600 font-semibold" : "text-slate-600"
+                          }
+                        >
                           {formatDate(inv.due_date)}
                         </span>
                       </td>
@@ -146,7 +148,13 @@ export default function InvoicesPage() {
                         {formatCurrency(inv.total_amount)}
                       </td>
                       <td className="px-5 py-3.5 text-right font-mono font-bold">
-                        <span className={parseFloat(inv.outstanding_balance) > 0 ? "text-rose-600" : "text-emerald-600"}>
+                        <span
+                          className={
+                            parseFloat(inv.outstanding_balance) > 0
+                              ? "text-rose-600"
+                              : "text-emerald-600"
+                          }
+                        >
                           {formatCurrency(inv.outstanding_balance)}
                         </span>
                       </td>
@@ -222,7 +230,8 @@ export default function InvoicesPage() {
             {selectedInvoice.status === "draft" && (
               <div className="mt-4 p-3 rounded-lg bg-blue-50/50 border border-blue-200/60 flex items-center justify-between">
                 <span className="text-xs text-blue-900 font-medium">
-                  This invoice is currently in Draft state. Confirm it to send to customer and request payment.
+                  This invoice is currently in Draft state. Confirm it to send to customer and
+                  request payment.
                 </span>
                 <Button
                   size="sm"
@@ -239,19 +248,44 @@ export default function InvoicesPage() {
               {/* Metadata */}
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <span className="text-slate-400 uppercase text-[10px] font-semibold tracking-wider block">Billed To</span>
-                  <div className="font-bold text-slate-900 text-sm mt-0.5">{selectedInvoice.customer_details?.company_name}</div>
-                  <div className="text-slate-500">{selectedInvoice.customer_details?.contact_name}</div>
-                  <div className="text-slate-500">{selectedInvoice.customer_details?.billing_address}</div>
+                  <span className="text-slate-400 uppercase text-[10px] font-semibold tracking-wider block">
+                    Billed To
+                  </span>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">
+                    {selectedInvoice.customer_details?.company_name}
+                  </div>
+                  <div className="text-slate-500">
+                    {selectedInvoice.customer_details?.contact_name}
+                  </div>
+                  <div className="text-slate-500">
+                    {selectedInvoice.customer_details?.billing_address}
+                  </div>
                   {selectedInvoice.customer_details?.tax_id && (
-                    <div className="text-slate-500 mt-1">Tax ID: {selectedInvoice.customer_details?.tax_id}</div>
+                    <div className="text-slate-500 mt-1">
+                      Tax ID: {selectedInvoice.customer_details?.tax_id}
+                    </div>
                   )}
                 </div>
                 <div className="text-right">
-                  <span className="text-slate-400 uppercase text-[10px] font-semibold tracking-wider block">Payment Dates</span>
-                  <div className="text-slate-700 mt-0.5">Issue Date: <span className="font-semibold">{formatDate(selectedInvoice.issue_date)}</span></div>
-                  <div className="text-slate-700">Due Date: <span className="font-semibold text-rose-600">{formatDate(selectedInvoice.due_date)}</span></div>
-                  <div className="text-slate-700">Paid Amount: <span className="font-semibold text-emerald-600">{formatCurrency(selectedInvoice.paid_amount)}</span></div>
+                  <span className="text-slate-400 uppercase text-[10px] font-semibold tracking-wider block">
+                    Payment Dates
+                  </span>
+                  <div className="text-slate-700 mt-0.5">
+                    Issue Date:{" "}
+                    <span className="font-semibold">{formatDate(selectedInvoice.issue_date)}</span>
+                  </div>
+                  <div className="text-slate-700">
+                    Due Date:{" "}
+                    <span className="font-semibold text-rose-600">
+                      {formatDate(selectedInvoice.due_date)}
+                    </span>
+                  </div>
+                  <div className="text-slate-700">
+                    Paid Amount:{" "}
+                    <span className="font-semibold text-emerald-600">
+                      {formatCurrency(selectedInvoice.paid_amount)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -272,9 +306,15 @@ export default function InvoicesPage() {
                       <tr key={l.id}>
                         <td className="px-4 py-2.5 font-medium text-slate-800">{l.description}</td>
                         <td className="px-4 py-2.5 text-center font-mono">{l.quantity}</td>
-                        <td className="px-4 py-2.5 text-right font-mono">{formatCurrency(l.unit_price)}</td>
-                        <td className="px-4 py-2.5 text-right font-mono">{formatCurrency(l.tax_amount)}</td>
-                        <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">{formatCurrency(l.line_total)}</td>
+                        <td className="px-4 py-2.5 text-right font-mono">
+                          {formatCurrency(l.unit_price)}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono">
+                          {formatCurrency(l.tax_amount)}
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-mono font-bold text-slate-900">
+                          {formatCurrency(l.line_total)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -294,15 +334,21 @@ export default function InvoicesPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Discount:</span>
-                    <span className="font-mono text-emerald-600">-{formatCurrency(selectedInvoice.discount_amount)}</span>
+                    <span className="font-mono text-emerald-600">
+                      -{formatCurrency(selectedInvoice.discount_amount)}
+                    </span>
                   </div>
                   <div className="flex justify-between border-t border-slate-200 pt-1.5 font-bold text-slate-900 text-sm">
                     <span>Total Amount:</span>
-                    <span className="font-mono text-indigo-600">{formatCurrency(selectedInvoice.total_amount)}</span>
+                    <span className="font-mono text-indigo-600">
+                      {formatCurrency(selectedInvoice.total_amount)}
+                    </span>
                   </div>
                   <div className="flex justify-between font-bold text-rose-600">
                     <span>Outstanding Balance:</span>
-                    <span className="font-mono">{formatCurrency(selectedInvoice.outstanding_balance)}</span>
+                    <span className="font-mono">
+                      {formatCurrency(selectedInvoice.outstanding_balance)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -321,17 +367,18 @@ export default function InvoicesPage() {
                 </Button>
               )}
               <div className="flex items-center gap-2 ml-auto">
-                {parseFloat(selectedInvoice.outstanding_balance) > 0 && selectedInvoice.status !== "draft" && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setPaymentModalInvoice(selectedInvoice);
-                      setPaymentAmount(selectedInvoice.outstanding_balance);
-                    }}
-                  >
-                    Record Payment
-                  </Button>
-                )}
+                {parseFloat(selectedInvoice.outstanding_balance) > 0 &&
+                  selectedInvoice.status !== "draft" && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setPaymentModalInvoice(selectedInvoice);
+                        setPaymentAmount(selectedInvoice.outstanding_balance);
+                      }}
+                    >
+                      Record Payment
+                    </Button>
+                  )}
                 <Button variant="outline" size="sm" onClick={() => setSelectedInvoice(null)}>
                   Close
                 </Button>
@@ -362,15 +409,21 @@ export default function InvoicesPage() {
               <div>
                 <label className="text-xs font-semibold uppercase text-slate-500">Invoice</label>
                 <div className="font-mono text-sm font-semibold text-slate-900 mt-1">
-                  {paymentModalInvoice.invoice_number} ({paymentModalInvoice.customer_details?.company_name})
+                  {paymentModalInvoice.invoice_number} (
+                  {paymentModalInvoice.customer_details?.company_name})
                 </div>
                 <div className="text-xs text-slate-500 mt-0.5">
-                  Due: <span className="font-semibold text-rose-600">{formatCurrency(paymentModalInvoice.outstanding_balance)}</span>
+                  Due:{" "}
+                  <span className="font-semibold text-rose-600">
+                    {formatCurrency(paymentModalInvoice.outstanding_balance)}
+                  </span>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">Amount Received ($)</label>
+                <label className="text-xs font-semibold uppercase text-slate-500">
+                  Amount Received ($)
+                </label>
                 <input
                   type="number"
                   step="0.01"
@@ -382,7 +435,9 @@ export default function InvoicesPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase text-slate-500">Payment Method</label>
+                <label className="text-xs font-semibold uppercase text-slate-500">
+                  Payment Method
+                </label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
@@ -397,7 +452,12 @@ export default function InvoicesPage() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <Button type="button" variant="outline" size="sm" onClick={() => setPaymentModalInvoice(null)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPaymentModalInvoice(null)}
+                >
                   Cancel
                 </Button>
                 <Button type="submit" size="sm" disabled={paymentMutation.isPending}>

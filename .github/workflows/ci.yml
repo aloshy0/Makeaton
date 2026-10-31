@@ -1,0 +1,104 @@
+name: CI — Continuous Integration Quality Gate
+
+on:
+  push:
+    branches: [develop, main, master]
+  pull_request:
+    branches: [develop, main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend Quality & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.10.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check Code Formatting (Prettier)
+        run: pnpm run format:check
+
+      - name: Lint Frontend (ESLint)
+        run: pnpm run lint:web
+
+      - name: TypeScript Type Check
+        run: pnpm --filter brightloop-web exec tsc --noEmit
+
+      - name: Run Unit Tests (Vitest)
+        run: pnpm run test:web
+
+      - name: Production Build (Next.js)
+        run: pnpm run build:web
+
+  backend:
+    name: Backend Lint, Checks & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
+        with:
+          version: "0.11.33"
+
+      - name: Install Backend Dependencies
+        run: |
+          cd apps/api
+          uv venv
+          uv pip install -r requirements.txt
+
+      - name: Lint with Ruff
+        run: |
+          cd apps/api
+          uv run ruff check .
+
+      - name: Check Formatting with Ruff
+        run: |
+          cd apps/api
+          uv run ruff format --check .
+
+      - name: Django System Check
+        run: |
+          cd apps/api
+          USE_SQLITE=True uv run python manage.py check
+
+      - name: Migration Consistency Check
+        run: |
+          cd apps/api
+          USE_SQLITE=True uv run python manage.py makemigrations --check --dry-run
+
+      - name: Run Pytest Suite
+        run: |
+          cd apps/api
+          USE_SQLITE=True uv run pytest
+
+  infrastructure:
+    name: Docker Infrastructure Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configuration
+        run: docker compose config

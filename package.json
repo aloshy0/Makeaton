@@ -1,0 +1,26 @@
+{
+  "name": "brightloop-subscription-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Brightloop Software Subscription Management System Monorepo",
+  "scripts": {
+    "prepare": "husky",
+    "lint:web": "pnpm --filter brightloop-web lint",
+    "lint:api": "cd apps/api && ruff check .",
+    "lint": "pnpm lint:web && pnpm lint:api",
+    "format:check": "prettier --check \"**/*.{js,ts,tsx,json,md}\"",
+    "format:write": "prettier --write \"**/*.{js,ts,tsx,json,md}\"",
+    "test:web": "pnpm --filter brightloop-web test",
+    "test:api": "cd apps/api && pytest",
+    "test": "pnpm test:web && pnpm test:api",
+    "build:web": "pnpm --filter brightloop-web build"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "eslint": "^8.57.0",
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.3"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+.venv/
+.next/
+*.sqlite3
+*.log
+dist/
+coverage/
+.git/

@@ -1,4 +1,5 @@
 # Brightloop Software — Subscription Management System
+
 ## Production Deployment & Operational Guide
 
 ---
@@ -26,18 +27,18 @@ flowchart LR
 
 Ensure these variables are provided in production:
 
-| Variable | Description | Recommendation |
-|---|---|---|
-| `ENVIRONMENT` | Runtime mode | `production` |
-| `DEBUG` | Django debug toggle | `False` |
-| `SECRET_KEY` | Cryptographic key | Generate with `openssl rand -hex 32` |
-| `ALLOWED_HOSTS` | Whitelisted hostnames | Domain name(s) e.g., `app.brightloop.com` |
-| `DB_ENGINE` | Database backend | `django.db.backends.postgresql` |
-| `DB_NAME` | Database name | Dedicated production database |
-| `DB_USER` / `DB_PASSWORD` | DB Credentials | Secure generated credentials |
-| `DB_HOST` / `DB_PORT` | Postgres host & port | RDS / Cloud SQL cluster address |
-| `REDIS_URL` | Redis connection URL | Managed Redis / ElastiCache instance |
-| `JWT_COOKIE_SECURE` | HTTPS cookie flag | `True` |
+| Variable                  | Description           | Recommendation                            |
+| ------------------------- | --------------------- | ----------------------------------------- |
+| `ENVIRONMENT`             | Runtime mode          | `production`                              |
+| `DEBUG`                   | Django debug toggle   | `False`                                   |
+| `SECRET_KEY`              | Cryptographic key     | Generate with `openssl rand -hex 32`      |
+| `ALLOWED_HOSTS`           | Whitelisted hostnames | Domain name(s) e.g., `app.brightloop.com` |
+| `DB_ENGINE`               | Database backend      | `django.db.backends.postgresql`           |
+| `DB_NAME`                 | Database name         | Dedicated production database             |
+| `DB_USER` / `DB_PASSWORD` | DB Credentials        | Secure generated credentials              |
+| `DB_HOST` / `DB_PORT`     | Postgres host & port  | RDS / Cloud SQL cluster address           |
+| `REDIS_URL`               | Redis connection URL  | Managed Redis / ElastiCache instance      |
+| `JWT_COOKIE_SECURE`       | HTTPS cookie flag     | `True`                                    |
 
 ---
 

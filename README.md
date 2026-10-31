@@ -1,179 +1,265 @@
 # Brightloop Software — Subscription Management System
 
+[![CI Quality Gate](https://github.com/aloshy0/Makeaton/actions/workflows/ci.yml/badge.svg)](https://github.com/aloshy0/Makeaton/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14%2B-black.svg)](https://nextjs.org/)
-[![Django](https://img.shields.io/badge/Django-5.x-green.svg)](https://www.djangoproject.com/)
+[![Django](https://img.shields.io/badge/Django-5.x%2F6.x-green.svg)](https://www.djangoproject.com/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4%2B-38bdf8.svg)](https://tailwindcss.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2B-336791.svg)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-Proprietary-slate.svg)](#)
 
 > **Enterprise Digital Backbone for Recurring Billing, Quotations, Plans & Financial Analytics**
 
-Brightloop Software provides subscription-based software and service solutions ranging from monthly add-ons for small retail shops to complex annual enterprise contracts. This system replaces error-prone spreadsheets, manual invoice drafting, disconnected payment reconciliations, and quarterly manual reports with a unified, high-performance digital backbone.
+---
+
+## 1. Project Overview
+
+Brightloop Software provides subscription-based software and service solutions ranging from monthly add-ons for small retail shops to complex annual enterprise contracts. This system serves as the mission-critical digital backbone managing the entire recurring revenue lifecycle.
 
 ---
 
-## 1. Feature Summary
+## 2. Business Problem & Purpose
 
-- **Multi-Role Access Control**: Granular permissions for `Admin`, `Internal Staff`, and `Customer` portal users.
-- **Product & Variant Catalog**: Base sales/cost pricing with configurable attribute-based price adjustments (e.g., Odoo brand delta).
-- **Flexible Subscription Plans**: Daily, weekly, monthly, and yearly billing intervals with lifecycle policies (`auto_close_on_end`, `allow_early_close`, `allow_pause`, `allow_renew`).
-- **Quotation Templates & Offers**: Quick quotation generation with fixed-day validity windows and line items.
-- **Full Subscription Lifecycle**: Strict state machine: $\text{Draft} \to \text{Quotation} \to \text{Confirmed} \to \text{Active} \leftrightarrow \text{Paused} \to \text{Closed}$.
-- **Automated Idempotent Billing Engine**: Generates invoices automatically with taxes and applicable discounts; guaranteed zero double-billing or skipped cycles.
-- **Admin Tax & Discount Engine**: Percentage and fixed discount rules with minimum purchase, date range, max usage limits, and automatic expiration.
-- **Payment Reconciliation & Overdue Tracking**: Multi-method recording, real-time outstanding balance calculation, and aging overdue tracking.
-- **Real-Time Financial Dashboard**: Consolidated KPIs (MRR, ARR, Active Subscriptions, Collected Revenue, Overdue Totals) with sub-2-second response SLA for thousands of records.
+Prior to this system, Brightloop operated with fragmented spreadsheets, remembered renewals by chance, typed up invoices manually each month, matched payments by scrolling bank statements, and built manual revenue reports quarterly. Renewals were missed, invoices went out incorrectly, and real-time visibility into Monthly Recurring Revenue (MRR) was absent. This platform provides automated, low-latency execution for all billing operations.
 
 ---
 
-## 2. Technology Stack
+## 3. Functional Scope
 
-| Layer | Technologies |
-|---|---|
-| **Frontend** | Next.js (App Router), React, TypeScript (strict), Tailwind CSS, Radix UI / shadcn/ui, Lucide React, TanStack Query, React Hook Form + Zod, Recharts |
-| **Backend** | Python 3.12+, Django 5+, Django REST Framework (DRF), SimpleJWT (httpOnly refresh tokens), django-filter, drf-spectacular (OpenAPI 3.0), Celery |
-| **Database & Cache** | PostgreSQL 16+, Redis 7 (Celery broker and query cache) |
-| **Tooling & Quality** | `uv` (fast Python package manager), `pnpm` (fast frontend package manager), Ruff (linter/formatter), Pytest + pytest-django |
-| **Containerization** | Docker, Docker Compose |
+1. **User Authentication & Permissions**: Multi-role access (`ADMIN`, `STAFF`, `CUSTOMER`), password complexity enforcement, token authentication.
+2. **Product Catalog & Attribute Variants**: Base pricing with attribute price deltas (e.g., Odoo Brand `+$560.00`).
+3. **Subscription Plans**: Flexible intervals (`daily`, `weekly`, `monthly`, `yearly`) with policies (`auto_close_on_end`, `allow_early_close`, `allow_pause`, `allow_renew`).
+4. **Quotations & Templates**: Pre-configured offers with validity windows in days.
+5. **Subscription Lifecycle Machine**: $\text{Draft} \to \text{Quotation} \to \text{Confirmed} \to \text{Active} \longleftrightarrow \text{Paused} \to \text{Closed}$.
+6. **Automated Idempotent Billing Engine**: Scheduled batch invoice generation with deterministic deduplication keys.
+7. **Taxes & Discounts**: Admin-configured tax rules and percentage/fixed discount rules with usage limits.
+8. **Payment Reconciliation & Overdue Tracking**: Multi-method recording, atomic balance calculation, and real-time overdue alerts.
+9. **Customer Portal**: Scoped self-service view for customers to manage plans and pay invoices.
+10. **Executive Analytics**: Consolidated real-time KPIs (MRR, ARR, overdue receivables, cash flow trends) with sub-2-second response SLA.
 
 ---
 
-## 3. Architecture Overview
+## 4. Technology Stack
 
-Built as a **Modular Monolith** to maximize transactional consistency, speed of delivery, and maintainability:
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, shadcn/ui + Radix UI, Lucide React, TanStack Query, Recharts, Vitest, Playwright.
+- **Backend**: Python 3.12+, Django 5/6, Django REST Framework, SimpleJWT, django-filter, drf-spectacular (OpenAPI 3.0), Celery.
+- **Database & Cache**: PostgreSQL 16+, Redis 7.
+- **Tooling & Infrastructure**: `uv`, `pnpm` (monorepo workspaces), Docker & Docker Compose, Ruff, Prettier, ESLint, Husky, Commitlint.
+
+---
+
+## 5. Architecture Overview
+
+Architected as a high-performance **Modular Monolith** with clean business domain boundaries:
 
 ```text
 subscription-management-system/
 │
 ├── apps/
-│   ├── web/                    # Next.js 14 App Router enterprise frontend
-│   │   ├── src/
-│   │   │   ├── app/            # App router pages (Admin dashboard & Customer portal)
-│   │   │   ├── components/     # UI kit, layout shells, and shared widgets
-│   │   │   ├── features/       # Domain UI modules (subscriptions, billing, catalog)
-│   │   │   ├── hooks/          # React hooks & TanStack Query integrations
-│   │   │   ├── lib/            # Utilities, API client & auth handlers
-│   │   │   └── types/          # Strict TypeScript interfaces
-│   │   └── public/
+│   ├── web/                    # Next.js App Router frontend
+│   │   ├── src/app/            # Routes (Dashboard, Subscriptions, Invoices, Catalog, Portal)
+│   │   ├── src/components/     # UI kit and application layout shells
+│   │   ├── src/lib/api.ts      # Typed REST API integration layer
+│   │   └── tests/              # Vitest unit tests & Playwright specs
 │   │
-│   └── api/                    # Django REST Framework modular backend
-│       ├── config/             # Project settings, URLs, Celery setup
-│       ├── apps/
-│       │   ├── accounts/       # User identity, roles (Admin/Staff/Customer), JWT
-│       │   ├── customers/      # Customer organization & contact profiles
-│       │   ├── catalog/        # Products, Variants, Subscription Plans
-│       │   ├── quotations/     # Quotation templates & lines
-│       │   ├── subscriptions/  # Subscriptions, lines, and lifecycle state machine
-│       │   ├── billing/        # Taxes, Discounts, Invoices, and automated billing
-│       │   ├── payments/       # Payment records & overdue balance calculation
-│       │   └── reporting/      # High-performance dashboard KPI aggregations
-│       ├── tests/              # Backend test suite (Pytest)
-│       └── manage.py
+│   └── api/                    # Django REST Framework backend
+│       ├── config/             # Settings, URLs, Celery, OpenAPI, Health Check
+│       ├── apps/               # Modular domain apps (accounts, customers, catalog,
+│       │                       # quotations, subscriptions, billing, payments, reporting)
+│       └── tests/              # Pytest automated test suite
 │
-├── docs/                       # Complete architectural and domain specifications
-│   ├── REQUIREMENTS.md         # Source of truth extracted from requirements PDF
-│   ├── ARCHITECTURE.md         # Modular monolith structure & performance SLA
-│   ├── DATABASE_DESIGN.md      # Schema specifications & ER diagrams
-│   ├── API_DESIGN.md           # Minimal REST API contracts (/api/v1/)
-│   ├── DESIGN_SYSTEM.md        # Commercial SaaS design tokens & UI guidelines
-│   ├── IMPLEMENTATION_PLAN.md  # Stage-by-stage engineering plan
-│   ├── OPEN_QUESTIONS.md       # Architectural decisions & assumptions
-│   └── BUILD_LOG.md            # Audited stage execution log
-│
-├── infrastructure/
-│   └── docker/                 # Container Dockerfiles (api, web)
-├── .env.example                # Sample environment variables
+├── docs/                       # Comprehensive specifications and manuals
+├── infrastructure/docker/      # Container Dockerfiles
+├── .github/workflows/          # CI quality gate workflows
+├── .husky/                     # Git pre-commit & commit-msg hooks
 ├── docker-compose.yml          # Multi-container orchestration
-├── Makefile                    # Standard developer convenience commands
+├── Makefile                    # Developer CLI commands
 └── README.md
 ```
 
 ---
 
-## 4. Getting Started & Installation
+## 6. Directory Structure
 
-### Prerequisites
-- Python 3.12+ and [`uv`](https://docs.astral.sh/uv/)
-- Node.js 20+ and [`pnpm`](https://pnpm.io/)
-- PostgreSQL 16+ (or Docker Desktop)
-- Redis 7+ (or Docker Desktop)
+Detailed file breakdown is documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-### Environment Configuration
-Copy `.env.example` to `.env` and review configuration values:
+---
+
+## 7. Dependencies
+
+Complete dependency lists and locked versions are cataloged in [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md).
+
+---
+
+## 8. Prerequisites
+
+- **Node.js**: v20+ or v22+
+- **pnpm**: v11+
+- **Python**: v3.12+
+- **uv**: v0.11+
+- **Docker & Docker Compose**: v24+ (optional for local non-containerized dev)
+- **PostgreSQL**: 16+ (or local fallback mode)
+
+---
+
+## 9. Installation
+
+Clone and install dependencies:
+
+```bash
+# 1. Install root & frontend dependencies
+pnpm install
+
+# 2. Setup backend virtual environment and dependencies
+cd apps/api
+uv venv
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
+uv pip install -r requirements.txt
+```
+
+---
+
+## 10. Environment Configuration
+
+Copy `.env.example` to `.env`:
+
 ```bash
 cp .env.example .env
 ```
 
-### Local Development Setup
+Key variables:
 
-#### 1. Backend (Django REST Framework)
-```bash
-cd apps/api
-uv venv
-# On Windows:
-.venv\Scripts\activate
-# On Linux/macOS:
-source .venv/bin/activate
-
-uv pip install -r pyproject.toml
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
-```
-
-#### 2. Frontend (Next.js)
-```bash
-cd apps/web
-pnpm install
-pnpm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+- `DB_ENGINE`: `django.db.backends.postgresql` (or `django.db.backends.sqlite3` for local mode)
+- `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
+- `REDIS_URL`: `redis://localhost:6379/0`
+- `NEXT_PUBLIC_API_URL`: `http://localhost:8000/api/v1`
 
 ---
 
-## 5. Docker Orchestration
+## 11. Local Development Commands
+
+```bash
+# Terminal 1 — Start Django Backend
+cd apps/api
+python manage.py runserver 0.0.0.0:8000
+
+# Terminal 2 — Start Next.js Frontend
+cd apps/web
+pnpm run dev
+```
+
+Open **[http://localhost:3000](http://localhost:3000)**.
+
+---
+
+## 12. Docker Instructions
 
 Run the complete multi-service stack with Docker Compose:
+
 ```bash
 docker compose up --build
 ```
-This starts:
-- `db`: PostgreSQL 16 on port 5432
-- `redis`: Redis 7 on port 6379
-- `api`: Django backend on port 8000
+
+Services started:
+
+- `db`: PostgreSQL 16 (Port 5432)
+- `redis`: Redis 7 (Port 6379)
+- `api`: Django backend (Port 8000)
 - `celery_worker` & `celery_beat`: Background billing scheduler
-- `web`: Next.js web application on port 3000
+- `web`: Next.js web application (Port 3000)
 
 ---
 
-## 6. API Documentation
-
-- **OpenAPI 3.0 Schema**: `http://localhost:8000/api/schema/`
-- **Interactive Swagger UI**: `http://localhost:8000/api/docs/`
-- **Health Check**: `http://localhost:8000/api/v1/health/`
-
----
-
-## 7. Testing & Quality Control
+## 13. Database Setup & Migrations
 
 ```bash
-# Backend tests & linting
+cd apps/api
+# Run migrations
+python manage.py migrate
+
+# Seed demonstration & benchmark records
+python manage.py seed_demo_data
+```
+
+**Seeded Demo Accounts:**
+
+- **Admin**: `admin@brightloop.com` / `BrightloopAdmin2026!`
+- **Staff**: `staff@brightloop.com` / `BrightloopStaff2026!`
+- **Customer**: `customer@acme.com` / `BrightloopCustomer2026!`
+
+---
+
+## 14. API Documentation
+
+- **OpenAPI 3.0 Schema**: `http://localhost:8000/api/schema/`
+- **Swagger UI Documentation**: `http://localhost:8000/api/docs/`
+- **Complete Endpoint Inventory**: [`docs/API_CATALOG.md`](docs/API_CATALOG.md)
+- **RBAC Permission Matrix**: [`docs/API_PERMISSION_MATRIX.md`](docs/API_PERMISSION_MATRIX.md)
+- **Operational Health Probes**:
+  - Liveness: `http://localhost:8000/api/v1/health/live/`
+  - Readiness: `http://localhost:8000/api/v1/health/ready/`
+
+---
+
+## 15. Testing Instructions
+
+```bash
+# Run backend tests
 cd apps/api
 pytest
+
+# Run backend linter
 ruff check .
 
-# Frontend build & typecheck
+# Run frontend unit tests
 cd apps/web
+pnpm run test
+
+# Run frontend build check
 pnpm run build
-pnpm run lint
 ```
 
 ---
 
-## 8. Deployment & Production Considerations
+## 16. Git Conventions & Quality Hooks
 
-- Ensure `DEBUG=False` and supply a strong unique `SECRET_KEY`.
-- Run migrations (`python manage.py migrate`) before traffic routing.
-- Execute automated billing runs via Celery Beat or a scheduled cloud cron job invoking `python manage.py run_billing_cycle`.
-- Serve static assets via Cloudflare CDN or AWS S3/CloudFront.
-- Terminate SSL at Nginx/Traefik reverse proxy or cloud load balancer.
+- **Husky Git Hooks**:
+  - `pre-commit`: Automatically runs `pnpm lint-staged` against staged files (formatting with Prettier and linting with Ruff).
+  - `commit-msg`: Strictly validates commit messages against the **Conventional Commits** specification.
+- **Commit Message Format**:
+  - `feat: add subscription management`
+  - `fix: prevent duplicate invoice generation`
+  - `chore: configure development environment`
+  - `docs: update API catalog`
+
+---
+
+## 17. CI Workflow
+
+GitHub Actions workflow configured in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) executes on every push and pull request:
+
+1. **Frontend Job**: pnpm install, Prettier check, ESLint, TypeScript compilation check, Vitest unit tests, Next.js production build.
+2. **Backend Job**: uv install, Ruff lint check, Ruff format check, Django system check, migration consistency check, Pytest suite.
+3. **Infrastructure Job**: Docker Compose configuration validation.
+
+---
+
+## 18. AI Agent Instructions
+
+Authoritative directives for all AI coding assistants are centralized in [`AGENTS.md`](AGENTS.md) and mirrored in [`GEMINI.md`](GEMINI.md), [`.cursor/rules/`](.cursor/rules/), and [`.github/copilot-instructions.md`](.github/copilot-instructions.md).
+
+---
+
+## 19. Known Limitations & Open Questions
+
+Non-blocking architectural assumptions (such as daily proration policies and grace periods) are logged in [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md).
+
+---
+
+## 20. Current Development Status
+
+**Stage Status:** Completed Environment Setup, Architecture Audit & Development Readiness.  
+**Verdict:** **READY FOR FEATURE DEVELOPMENT**.
