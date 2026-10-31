@@ -1,53 +1,51 @@
-# Brightloop Software — Subscription Management System
+# Brightloop Software — Multi-Tenant Subscription SaaS Platform
 
-## API Role-Based Permission Matrix (RBAC)
+## Role-Based Access Control (RBAC) & API Permission Matrix
 
-**Document Version:** 1.0.0  
-**Scope:** Authorization enforcement across `/api/v1/` endpoints.
-
----
-
-## 1. Permission Matrix Summary
-
-| Resource / Endpoint                                             | Administrator |  Internal Staff  |            Customer (Portal)             | Public (Unauthenticated) |
-| --------------------------------------------------------------- | :-----------: | :--------------: | :--------------------------------------: | :----------------------: |
-| **Auth Register** (`/auth/register/`)                           |    Allowed    |     Allowed      |                 Allowed                  |       **Allowed**        |
-| **Auth Login / Token** (`/auth/login/`, `/auth/token/refresh/`) |    Allowed    |     Allowed      |                 Allowed                  |       **Allowed**        |
-| **Auth Password Reset** (`/auth/password-reset/`)               |    Allowed    |     Allowed      |                 Allowed                  |       **Allowed**        |
-| **Auth Current User** (`/auth/me/`)                             |   **Full**    |     **Full**     |                 **Full**                 |       Denied (401)       |
-| **Staff Management** (`/staff/`, `/staff/{id}/deactivate/`)     |   **Full**    | **DENIED (403)** |             **DENIED (403)**             |       Denied (401)       |
-| **Customers Collection** (`/customers/`)                        |   **Full**    |     **Full**     |             **DENIED (403)**             |       Denied (401)       |
-| **Customer Detail** (`/customers/{id}/`, `/customers/me/`)      |   **Full**    |     **Full**     |           **Own Account Only**           |       Denied (401)       |
-| **Products & Variants** (`/products/`, `/variants/`)            |   **Full**    |    Read-Only     |            Read-Only (Active)            |    Read-Only (Active)    |
-| **Subscription Plans** (`/plans/`)                              |   **Full**    |    Read-Only     |            Read-Only (Active)            |    Read-Only (Active)    |
-| **Quotation Templates** (`/quotation-templates/`)               |   **Full**    |     **Full**     |             **DENIED (403)**             |       Denied (401)       |
-| **Quotations** (`/quotations/`)                                 |   **Full**    |     **Full**     |          **View Assigned Only**          |       Denied (401)       |
-| **Subscriptions** (`/subscriptions/`)                           |   **Full**    |     **Full**     |          **View Assigned Only**          |       Denied (401)       |
-| **Subscription Actions** (`/subscriptions/{id}/actions/`)       |   **Full**    |     **Full**     | **Self Actions Only (if policy allows)** |       Denied (401)       |
-| **Invoices** (`/invoices/`)                                     |   **Full**    |     **Full**     |          **View Assigned Only**          |       Denied (401)       |
-| **Invoice Actions** (`/invoices/{id}/actions/`)                 |   **Full**    |     **Full**     |             **DENIED (403)**             |       Denied (401)       |
-| **Invoice PDF** (`/invoices/{id}/pdf/`)                         |   **Full**    |     **Full**     |           **Download Own PDF**           |       Denied (401)       |
-| **Tax Rules** (`/tax-rules/`)                                   |   **Full**    |    Read-Only     |             **DENIED (403)**             |       Denied (401)       |
-| **Discount Rules** (`/discount-rules/`)                         |   **Full**    |    Read-Only     |             **DENIED (403)**             |       Denied (401)       |
-| **Payment Recording** (`/payments/` POST)                       |   **Full**    |     **Full**     |     **Online Payment Gateway Only**      |       Denied (401)       |
-| **Payment History** (`/payments/` GET)                          |   **Full**    |     **Full**     |        **View Assigned Payments**        |       Denied (401)       |
-| **Dashboard Summary** (`/dashboard/summary/`)                   |   **Full**    |     **Full**     |             **DENIED (403)**             |       Denied (401)       |
-| **Financial Reports** (`/reports/`)                             |   **Full**    |     **Full**     |             **DENIED (403)**             |       Denied (401)       |
-| **Health Liveness & Readiness** (`/health/live/`, `/ready/`)    |    Allowed    |     Allowed      |                 Allowed                  |       **Allowed**        |
+**Document Version:** 3.0.0 (Multi-Tenant SaaS Architecture)  
+**Roles:** `OWNER`, `ADMIN`, `STAFF`, `CUSTOMER`
 
 ---
 
-## 2. Explicitly Denied & Forbidden Operations
+## 1. Multi-Tenant Role Matrix
 
-1. **Staff Account Creation by Non-Admins:**
-   - Staff and Customers attempting to access `/api/v1/staff/` are immediately rejected with `403 Forbidden`.
-2. **Direct Status Modification via PATCH:**
-   - Modifying `status` directly on `/api/v1/subscriptions/{id}/` or `/api/v1/invoices/{id}/` via `PATCH` is rejected. Status changes must flow through `/actions/` to enforce business invariants.
-3. **Cross-Customer Data Exposure:**
-   - Customers cannot access subscriptions, invoices, payments, or customer records where `customer.user != request.user`. Attempting to retrieve another customer's ID returns `404 Not Found` (to avoid ID enumeration) or `403 Forbidden`.
-4. **Altering Settled Financial Records:**
-   - Invoices in `PAID` status cannot be cancelled or deleted.
-   - Payment records cannot be modified or deleted once recorded.
-5. **Unauthorized Plan Actions:**
-   - Customers attempting to `pause` a subscription whose plan has `allow_pause == false` are rejected with `400 Bad Request`.
-   - Customers attempting to `close` a subscription early whose plan has `allow_early_close == false` are rejected with `400 Bad Request`.
+| Endpoint / Action                                   | OWNER |    ADMIN    |         STAFF         |             CUSTOMER              |     Anonymous     |
+| :-------------------------------------------------- | :---: | :---------: | :-------------------: | :-------------------------------: | :---------------: |
+| **Auth Register / Login / Refresh**                 | Allow |    Allow    |         Allow         |               Allow               |       Allow       |
+| **List / Create Workspaces**                        | Allow |    Allow    |         Allow         |      Allow (Creates new WS)       |       Deny        |
+| **Update / Delete Workspace Settings**              | Allow | Deny Delete |         Deny          |               Deny                |       Deny        |
+| **List Workspace Memberships**                      | Allow |    Allow    |     Allow (Read)      |               Deny                |       Deny        |
+| **Invite Staff / Revoke Invites**                   | Allow |    Allow    |         Deny          |               Deny                |       Deny        |
+| **Accept Staff Invitation**                         | Allow |    Allow    |         Allow         |               Allow               | Allow (via Token) |
+| **Catalog Products & Variants (Create/Update)**     | Allow |    Allow    |       Read-Only       |               Deny                |       Deny        |
+| **Subscription Plans (Create/Update)**              | Allow |    Allow    |       Read-Only       |        Read-Only (Portal)         |       Deny        |
+| **Customers Management**                            | Allow |    Allow    |         Allow         |      Deny (Own Profile only)      |       Deny        |
+| **Quotations & Templates**                          | Allow |    Allow    |         Allow         |      Deny (Own Quotes only)       |       Deny        |
+| **Subscriptions (Create / Transitions)**            | Allow |    Allow    |      Operational      |   Own Active (Allowed Actions)    |       Deny        |
+| **Sensitive Transitions (Early Close / Write-off)** | Allow |    Allow    | **Requires Approval** |               Deny                |       Deny        |
+| **Invoices (Confirm / Cancel)**                     | Allow |    Allow    |     Allow Confirm     |       Deny (Read Own only)        |       Deny        |
+| **Payments (Record Settlement)**                    | Allow |    Allow    |         Allow         |        Settle Own Invoices        |       Deny        |
+| **Tax & Discount Rules (Create/Update)**            | Allow |    Allow    |       Read-Only       |               Deny                |       Deny        |
+| **Dashboard Summary & Executive Reports**           | Allow |    Allow    |   Operational KPIs    |               Deny                |       Deny        |
+| **Audit Logs Inspection**                           | Allow |    Allow    |         Deny          |               Deny                |       Deny        |
+| **Customer Portal Routes**                          | Allow |    Allow    |  Deny (Portal View)   | **Allow (Scoped to Own Profile)** |       Deny        |
+
+---
+
+## 2. Staff Limited Power & Approval Rules
+
+- Staff can perform daily operational actions: drafting quotes, confirming orders, recording payments, and initiating invoices.
+- **Sensitive Operations Requiring Admin/Owner Approval**:
+  - Subscription early cancellation without contract fulfillment.
+  - Applying custom discounts exceeding standard rules.
+  - Invoice write-offs or manual cancellations of confirmed invoices.
+  - Changing customer tax exemptions.
+
+---
+
+## 3. Strict Cross-Tenant Denials
+
+Any request made with valid authentication credentials for Workspace A against resources belonging to Workspace B returns:
+
+- HTTP 403 Forbidden (if user has no membership in Workspace B).
+- HTTP 404 Not Found (if resource does not exist within the scoped tenant).

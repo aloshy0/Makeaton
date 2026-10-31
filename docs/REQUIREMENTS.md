@@ -1,127 +1,135 @@
-# Brightloop Software — Subscription Management System
+# Brightloop Software — Multi-Tenant Subscription SaaS Platform
 
 ## Functional Requirements Specification & Source of Truth
 
-**Document Version:** 2.0.0  
-**Source Document:** `Subscription_Management_System_goal.pdf`  
-**Target Organization:** Brightloop Software  
-**Status:** Canonical Source of Truth
+**Document Version:** 3.0.0 (Multi-Tenant SaaS Architecture)  
+**System Model:** Multi-Tenant Modular Monolith  
+**Status:** Authoritative Canonical Source of Truth
 
 ---
 
-## 1. Executive Summary & Vision
+## 1. Executive Summary & Product Goal
 
-Brightloop Software provides subscription-based software and service solutions ranging from monthly add-ons for small retail shops to complex annual enterprise contracts. The objective of this system is to replace error-prone spreadsheets, manual invoice drafting, disconnected payment reconciliations, and quarterly manual reports with a unified, high-performance digital backbone.
+The platform enables any user to register an account and instantly launch and operate their own subscription business.
 
-The system is architected to handle thousands of subscriptions with all dashboard and page responses strictly under two seconds.
+Rather than serving a single fixed organization, the system operates as a **secure multi-tenant SaaS platform**. Each business operates within an independent **Workspace**.
+
+### Core Creator Capabilities:
+
+1. **Personal Account Creation**: Universal user account with email authentication.
+2. **Business Workspaces**: Any user can become a business creator and own up to **five (5) independent business workspaces**, enforced transactionally at the database level.
+3. **Workspace Configuration**: Independent configuration per business (currency, tax rules, discount rules, products, plans).
+4. **Staff Management & Invitations**: Invite team members with workspace-scoped roles (`ADMIN`, `STAFF`) via secure expiring tokens. Staff have defined privileges and require Admin approval for sensitive actions.
+5. **Customer Management**: Add customers and link user accounts to workspace-specific customer profiles.
+6. **Quotations & Subscriptions**: Generate custom quotes, templates, and transition subscriptions through explicit lifecycles.
+7. **Automated Recurring Invoicing**: Scheduled billing engine generating deterministic invoices per workspace.
+8. **Payment Settlement & Overdue Tracking**: Record payments, track outstanding receivables, and detect overdue accounts.
+9. **Executive Reporting**: Workspace-scoped financial metrics (MRR, ARR, Cashflow, Aging Receivables) with sub-2-second response times.
+10. **Customer Self-Service Portal**: Customers log in, view their assigned workspace subscriptions, download invoices, and execute permitted renewal actions.
 
 ---
 
-## 2. Functional Requirements Matrix (The 12 Source Capabilities)
+## 2. Multi-Tenant Identity, Workspaces & Permissions
 
-### 2.1 User Authentication and Registration
+### 2.1 Identity Hierarchy
 
-- **Customer Sign-Up**: Public self-registration via email, password, and company details.
-- **Email Uniqueness**: Each email belongs to only one account.
-- **Password Strength Rules**:
-  - Minimum 8 characters.
-  - At least one uppercase letter (`[A-Z]`).
-  - At least one lowercase letter (`[a-z]`).
-  - At least one special character (`[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]`).
-- **Password Reset**: Cryptographically secure token delivered to the registered email address.
-- **Secure Browser Authentication**: Access tokens short-lived; refresh tokens stored securely in httpOnly cookies (never stored long-lived in localStorage).
+- **Global User (`User`)**:
+  - Global identity defined by email, password hash, first/last name, and status.
+  - Participates across multiple workspaces with distinct roles.
+- **Workspace (`Workspace`)**:
+  - Isolated tenant boundary. Has slug, name, currency, timezone, settings, and owner (`created_by`).
+  - Owner limit: Maximum 5 owned workspaces per user.
+- **Workspace Membership (`WorkspaceMembership`)**:
+  - Maps `(user, workspace)` with a workspace-scoped role (`OWNER`, `ADMIN`, `STAFF`, `CUSTOMER`).
+  - Stores membership status (`ACTIVE`, `SUSPENDED`).
+- **Staff Invitation (`StaffInvitation`)**:
+  - Secure, expiring token-based invitation sent by Owner/Admin.
+  - Recipient establishes their own password securely upon accepting the invitation.
+- **Customer Profile (`CustomerProfile`) & Link (`CustomerUserLink`)**:
+  - Workspace-specific customer entity.
+  - Linked to a global user account so customers can log in to view their workspace-specific subscriptions and invoices.
 
-### 2.2 Role-Based Permissions & Access Control
+### 2.2 Workspace Roles & Access Control Matrix
 
-- **Administrator**:
-  - Full control of products, variants, subscription plans, tax rules, and discount rules.
-  - Exclusively authorized to create, update, and deactivate internal staff accounts.
-- **Internal Staff**:
-  - Manage operational day-to-day workflows: draft/send quotations, manage subscription state transitions, confirm/cancel invoices, record payments.
-  - Read-only access to catalog, plans, tax rules, and discount rules.
-  - Denied access to manage other staff members or alter tax/discount configurations.
-- **Customer (Portal)**:
-  - Scoped strictly to their own account (`customer.user == request.user`).
-  - Self-service visibility of their own subscriptions and invoices.
-  - Permitted to trigger plan self-actions (pause or cancel) only when the assigned plan policy explicitly allows it.
+| Role         | Scope            | Permissions & Operational Powers                                                                                                                          | Sensitive Action Approval                                                                                          |
+| :----------- | :--------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------- |
+| **OWNER**    | Workspace        | Full control over workspace settings, billing plans, membership, invitations, catalog, and finances. Can transfer or delete workspace.                    | Self-approving authority.                                                                                          |
+| **ADMIN**    | Workspace        | Manage catalog, plans, tax/discount rules, staff invitations, customer accounts, quotations, subscriptions, and financial records.                        | Approves staff requests; cannot delete workspace.                                                                  |
+| **STAFF**    | Workspace        | Operational tasks: create quotations, manage day-to-day subscription states, record payments, view invoices. Read-only on catalog and tax/discount rules. | **Limited Power**: Discounts exceeding standard rules, cancellations, and write-offs require Admin/Owner approval. |
+| **CUSTOMER** | Workspace Portal | View own profile, assigned subscriptions, invoice history, payment records, and execute allowed renewal actions (pause, cancel, renew) per plan policy.   | Strictly isolated to their own customer record.                                                                    |
 
-### 2.3 Product Catalog & Variant Management
+---
 
-- **Products**: Name, Code/SKU, Product Type (`software`, `addon`, `service`, `physical`), Sales Price (Base), Cost Price, Notes, Is Active.
-- **Modular Add-ons**: Distinct product types that customers can toggle on/off.
-- **Product Variants**: Attribute-based variations with explicit price deltas (e.g., Attribute: `Brand`, Value: `Odoo Integration`, Price Delta: `+$560.00`).
-- **Price Calculation**: $\text{Total Unit Price} = \text{Product Base Price} + \sum(\text{Variant Deltas})$.
+## 3. Workspace-Scoped Business Modules
 
-### 2.4 Subscription Plans & Billing Intervals
+### 3.1 Product Catalog & Variant Pricing
+
+- **Products**: Scoped to workspace. SKU, product type (`software`, `addon`, `service`, `physical`), base price, cost, active status.
+- **Product Variants**: Attribute-based variations with price deltas (e.g. `Brand: Odoo Integration`, `+$560.00`).
+- **Unit Price Calculation**: $\text{Total Unit Price} = \text{Product Base Price} + \sum(\text{Variant Deltas})$.
+
+### 3.2 Subscription Plans & Policies
 
 - **Billing Intervals**: `daily`, `weekly`, `monthly`, `yearly`.
-- **Plan Pricing**: Base plan recurring cost, minimum seat quantity.
-- **Availability Window**: `start_date` and `end_date` governing plan purchase validity.
-- **Configurable Lifecycle Policies**:
-  - `auto_close_on_end`: Automatically closes subscription when contract expiry is reached.
-  - `allow_early_close`: Governs whether staff or customer can terminate prior to expiry.
-  - `allow_pause`: Governs whether subscription can be temporarily suspended.
-  - `allow_renew`: Governs whether subscription can be renewed upon expiration.
+- **Pricing**: Base recurring fee, min seat quantity, availability window.
+- **Lifecycle Policies**:
+  - `auto_close_on_end`: Auto-closes subscription at expiration date.
+  - `allow_early_close`: Governs whether staff or customer can terminate early.
+  - `allow_pause`: Governs whether subscription can be temporarily paused.
+  - `allow_renew`: Governs whether renewal is permitted upon expiration.
 
-### 2.5 Quotation Templates & Quotations
+### 3.3 Quotations & Templates
 
-- **Quotation Templates**: Standardized reusable templates with pre-configured plans and line items.
-- **Validity Window**: Configurable template validity in days (e.g., 15, 30, 60 days).
-- **Quotations**: Formal offers linked to a customer, holding line items (products, variants, quantities, taxes, subtotals).
+- Reusable quotation templates with predefined plans and lines.
+- Quotations linked to a workspace customer, calculating taxes and discounts.
 
-### 2.6 Subscription Lifecycle Management
+### 3.4 Subscription Lifecycle & State Machine
 
-- **Subscription Identifier**: Human-readable sequential reference (e.g., `SUB-2026-0001`).
-- **Core Fields**: Customer reference, Plan reference, Start date, Expiry date, Next billing date, Payment terms (`due_on_receipt`, `net_15`, `net_30`, `net_60`).
-- **Lifecycle State Machine**:
+- Workspace-unique sequential reference (e.g. `WS1-SUB-2026-0001`).
+- Strictly validated lifecycle transitions:
   $$\text{Draft} \longrightarrow \text{Quotation} \longrightarrow \text{Confirmed} \longrightarrow \text{Active} \longleftrightarrow \text{Paused} \longrightarrow \text{Closed}$$
-- **State Validation Rules**: Transitions are strictly validated on the backend; arbitrary status changes via direct PATCH are rejected.
+- Background Celery tasks monitor renewal dates and trigger expiration/renewals with workspace context.
 
-### 2.7 Automated Recurring Invoice Generation
+### 3.5 Automated Recurring Billing & Invoicing
 
-- **Automated Billing Engine**: Executes on billing schedules to bill due subscriptions (`next_billing_date <= target_date`).
-- **Pre-populated Invoices**: Automatically generates invoice headers, customer billing address, line items, taxes, and applied discounts.
-- **Idempotency Guarantee**: Deterministic idempotency key (`sub_{subscription_id}_{billing_date}`) ensures nothing is billed twice or skipped.
-- **Invoice Status Machine**:
+- Background billing engine evaluates subscriptions where `next_billing_date <= today` per workspace.
+- Deterministic idempotency key: `ws_{workspace_id}_sub_{subscription_id}_{billing_date}`.
+- Status flow:
   $$\text{Draft} \longrightarrow \text{Confirmed} \longrightarrow \text{Paid}$$
   $$\text{Draft / Confirmed} \longrightarrow \text{Cancelled}$$
 
-### 2.8 Tax Calculation
+### 3.6 Taxes & Discount Rules
 
-- **Admin Configuration**: Configurable tax rules (e.g., Standard VAT 10%, Sales Tax 8%).
-- **Calculation**: Automatically computed on line items and overall invoice subtotal during invoice generation.
+- Workspace-configured tax rules (e.g. VAT, GST, Sales Tax).
+- Workspace discount rules with eligibility thresholds, validity dates, and max use limits.
 
-### 2.9 Discount Rules & Application
+### 3.7 Payment Settlement & Reconciliation
 
-- **Creation Authority**: Admin only.
-- **Discount Types**: Percentage (`percentage`) or Fixed Amount (`fixed`).
-- **Eligibility Conditions**: Minimum purchase threshold, minimum seat quantity, active date range (`start_date` to `end_date`), and usage limits (`max_uses`).
-- **Scope**:
-  - `product`: Applies to matching product lines.
-  - `subscription`: Applies across whole subscription total.
-- **Lifecycle**: Automatically applies on next generated invoice and deactivates when limits or expiry dates are met.
+- Record payments with invoice reference, method, amount, date, transaction ID.
+- Atomic balance updates: $\text{Outstanding Balance} = \text{Invoice Total} - \sum(\text{Payments Received})$.
+- Automatically marks invoice `Paid` when balance reaches $\$0.00$.
 
-### 2.10 Payment Recording & Invoice Matching
+### 3.8 Customer Portal
 
-- **Payment Attributes**: Invoice reference, Payment Method (`credit_card`, `bank_transfer`, `cash`, `check`, `online`), Amount, Date, Reference/Notes.
-- **Atomic Balance Updates**:
-  $$\text{Outstanding Balance} = \text{Invoice Total} - \sum(\text{Payments Received})$$
-- **Automatic Settlement**: When $\text{Outstanding Balance} = \$0.00$, invoice status atomically transitions to `Paid`.
-- **Overdue Detection**: An invoice is overdue when status is `Confirmed`, $\text{Outstanding Balance} > 0$, and $\text{Due Date} < \text{Current Date}$.
+- Self-service portal scoped to authenticated customer's linked profile.
+- View active subscriptions, download invoices, trigger allowed renewal actions.
 
-### 2.11 Customer Self-Service Portal
+### 3.9 Executive Reporting & Analytics
 
-- Scoped self-service access for authenticated customers:
-  - View assigned active subscriptions and line items.
-  - Perform authorized lifecycle actions (e.g., pause or request cancellation if allowed by plan policy).
-  - View invoice history, download invoice PDFs, and settle open balances online.
+- Workspace-scoped aggregations: MRR, ARR, Cashflow, Active Subscriptions, Overdue balances.
+- Target response time: $< 2$ seconds.
 
-### 2.12 Revenue Analytics & Reporting
+### 3.10 Audit Logging
 
-- Executive dashboard metrics:
-  - Monthly Recurring Revenue (MRR) and Annual Recurring Revenue (ARR).
-  - Active subscriptions count and status breakdown.
-  - Total collected revenue and total outstanding receivables.
-  - Overdue invoices count and total overdue amount.
-  - Cash flow trends (last 6 months).
-- Performance target: Sub-2-second query responses using single-roundtrip database SQL aggregations.
+- Immutable audit log records for all critical workspace events: creation, membership changes, subscription transitions, invoice generation, payment recordings, and configuration edits.
+
+---
+
+## 4. Tenant Isolation & Security Rules
+
+1. **Zero Cross-Tenant Leakage**: Every query is filtered by active `workspace_id` derived from the validated route or authenticated context.
+2. **URL Scoping**: Workspace endpoints strictly follow `/api/v1/workspaces/{workspace_id}/...`.
+3. **No Blind Trust**: Workspace ID in request payloads is ignored or validated against the URL parameter and user membership.
+4. **Relational Integrity**: Foreign keys across models must enforce the same `workspace_id`. Cross-tenant foreign-key references are forbidden.
+5. **Password Complexity**: Enforce min 8 characters, uppercase, lowercase, special character.
+6. **Tokens**: Refresh tokens in secure httpOnly cookies. Expiring invitation tokens for staff.

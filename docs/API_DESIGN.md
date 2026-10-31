@@ -1,128 +1,68 @@
-# Brightloop Software — Subscription Management System
+# Brightloop Software — Multi-Tenant Subscription SaaS Platform
 
-## Minimal REST API Specification & Architecture Design
+## Minimal REST API Specification & Multi-Tenant Design
 
 **API Base URL:** `/api/v1/`  
 **OpenAPI Schema:** `/api/schema/`  
 **Interactive Swagger UI:** `/api/docs/`  
-**Status:** Canonical Design
+**Status:** Canonical Multi-Tenant Specification
 
 ---
 
-## 1. Architectural Principles
+## 1. Multi-Tenant Architectural Principles
 
-1. **Minimal API Surface**:
-   - Provide the minimum number of reusable, resource-oriented endpoints required to satisfy all business goals.
-   - Avoid creating an endpoint for every frontend button; use standard RESTful methods (`GET`, `POST`, `PATCH`, `DELETE`) and explicit action transitions (`/actions/`).
-2. **Backend Authority**:
-   - All business logic, tax calculations, discount evaluations, and lifecycle rules reside exclusively on the backend.
-   - The frontend never performs authoritative calculations.
-3. **Idempotency & Financial Consistency**:
-   - Automated billing runs use deterministic keys (`sub_{subscription_id}_{billing_date}`) to guarantee no double billing.
-   - Payment settlements execute within atomic database transactions.
-4. **Performance SLA**:
-   - Every list, detail, and aggregation endpoint must respond in **under 2.0 seconds** with tens of thousands of subscription records.
-   - Single-query SQL aggregations replace in-memory calculation loops.
-
----
-
-## 2. Authentication & Secure Token Strategy
-
-- **Authentication Scheme**: Django REST Framework SimpleJWT.
-- **Short-Lived Access Tokens**: Lifetime of 30 minutes, delivered in authorization headers (`Bearer <token>`).
-- **Secure Refresh Token Handling**:
-  - Refresh tokens have a lifetime of 7 days with token rotation.
-  - Refresh tokens are transmitted and stored strictly in secure, `httpOnly`, `SameSite=Lax` cookies.
-  - Long-lived credentials are **never stored in browser `localStorage`**, mitigating XSS token extraction vectors.
+1. **Strict URL Tenancy**:
+   - Global resources (Authentication, User profile, Workspace list/creation, Invitation acceptance) exist at `/api/v1/auth/`, `/api/v1/workspaces/`, and `/api/v1/invitations/`.
+   - All tenant business resources (Catalog, Plans, Quotes, Subscriptions, Billing, Invoices, Payments, Reporting) exist under `/api/v1/workspaces/{workspace_id}/...`.
+2. **Minimal & Resource-Oriented Surface**:
+   - Reusable CRUD endpoints with filtering, searching, and pagination (`page`, `page_size`).
+   - Business transitions use explicit transition routes (e.g. `/actions/pause/`, `/actions/confirm/`).
+3. **Workspace Authorization & Membership Guard**:
+   - The user's active membership is validated against the route's `{workspace_id}`.
+   - If user does not belong to the workspace, an immediate HTTP 403 Forbidden is returned.
+   - Request bodies cannot override `workspace_id`.
+4. **Sub-2-Second Performance SLA**:
+   - Endpoints respond in under 2 seconds.
+   - Aggregations and metrics are computed in PostgreSQL with single round-trips.
 
 ---
 
-## 3. Standard Request & Response Contracts
+## 2. Authentication & Token Strategy
 
-### 3.1 Standard Success Response
+- **Scheme**: DRF SimpleJWT with custom user model (`email` as identifier).
+- **Access Tokens**: Short-lived (30 minutes) returned in response bodies for client-side API calls.
+- **Refresh Tokens**: Long-lived (7 days) stored exclusively in secure `httpOnly`, `SameSite=Lax` cookies; never exposed to JavaScript `localStorage`.
+- **Expiring Invitation Tokens**: Cryptographically random 64-character tokens with configurable expiration (72 hours default) for onboarding staff.
+
+---
+
+## 3. Standard Request & Response Envelopes
+
+### 3.1 Paginated List Envelope
 
 ```json
 {
-  "status": "success",
-  "data": { ... }
-}
-```
-
-### 3.2 Standard Paginated List Response
-
-All list endpoints implement unified pagination:
-
-```json
-{
-  "count": 1420,
-  "next": "http://api.brightloop.com/api/v1/subscriptions/?page=2",
+  "count": 120,
+  "next": "http://localhost:8000/api/v1/workspaces/11111111-1111-1111-1111-111111111111/subscriptions/?page=2",
   "previous": null,
-  "results": [
-    { ... }
-  ]
+  "results": [ ... ]
 }
 ```
 
-### 3.3 Standard Error Response
+### 3.2 Error Envelope
 
 ```json
 {
-  "status": "error",
-  "error": {
-    "code": "VALIDATION_FAILED",
-    "message": "The subscription cannot be paused because the assigned plan policy prohibits pausing.",
-    "field_errors": {
-      "action": ["Invalid lifecycle transition for plan policy."]
-    }
-  }
+  "error": "You do not have permission to perform this action in this workspace.",
+  "code": "permission_denied",
+  "details": { ... }
 }
 ```
 
 ---
 
-## 4. Query Parameters: Filtering, Searching & Ordering
+## 4. Health & Operational Endpoints
 
-Endpoints support unified query filtering via `django-filter`:
-
-| Parameter   | Type    | Example                 | Description                                  |
-| ----------- | ------- | ----------------------- | -------------------------------------------- |
-| `page`      | Integer | `?page=2`               | Page number (default size: 20).              |
-| `page_size` | Integer | `?page_size=50`         | Custom page size (max: 100).                 |
-| `search`    | String  | `?search=Acme`          | Full-text search across primary text fields. |
-| `ordering`  | String  | `?ordering=-created_at` | Sort field (prefix `-` for descending).      |
-| `status`    | String  | `?status=active`        | Filter by entity state.                      |
-| `overdue`   | Boolean | `?overdue=true`         | Invoices past due date with balance $> 0$.   |
-
----
-
-## 5. Operational Health Probes
-
-Per cloud-native standards:
-
-1. **Liveness Probe**:
-   - **Endpoint:** `GET /api/v1/health/live/`
-   - **Purpose:** Process liveness probe returning HTTP 200 if the WSGI/ASGI application worker is running.
-2. **Readiness Probe**:
-   - **Endpoint:** `GET /api/v1/health/ready/`
-   - **Purpose:** Verifies that required dependencies (PostgreSQL connection pool and Redis cache/broker) are healthy before routing traffic.
-   - **Response:**
-     ```json
-     {
-       "status": "ready",
-       "database": "connected",
-       "redis": "connected"
-     }
-     ```
-
----
-
-## 6. Asynchronous Background Tasks (Celery)
-
-Background operations are executed via Celery Beat schedules and are **not exposed as public APIs**:
-
-1. `billing.tasks.run_recurring_billing_cycle` (Daily at 00:05 UTC)
-2. `subscriptions.tasks.check_subscription_renewals` (Daily at 01:00 UTC)
-3. `subscriptions.tasks.enforce_subscription_expiry` (Daily at 01:15 UTC)
-4. `billing.tasks.check_overdue_invoices` (Hourly)
-5. `billing.tasks.enforce_discount_limits` (Daily at 02:00 UTC)
-6. `notifications.tasks.dispatch_invoice_emails` (Event triggered)
+- `GET /api/v1/health/` — Consolidated health summary (DB, Redis, cache).
+- `GET /api/v1/health/live/` — Process liveness probe (HTTP 200).
+- `GET /api/v1/health/ready/` — Dependency readiness probe (verifies PostgreSQL & Redis connections).
