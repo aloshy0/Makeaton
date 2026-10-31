@@ -87,7 +87,12 @@ class Subscription(models.Model):
 
     def transition_to(self, new_status, user=None, reason=""):
         valid_transitions = {
-            self.Status.DRAFT: [self.Status.QUOTATION, self.Status.CONFIRMED, self.Status.CLOSED],
+            self.Status.DRAFT: [
+                self.Status.QUOTATION,
+                self.Status.CONFIRMED,
+                self.Status.ACTIVE,
+                self.Status.CLOSED,
+            ],
             self.Status.QUOTATION: [self.Status.CONFIRMED, self.Status.CLOSED],
             self.Status.CONFIRMED: [self.Status.ACTIVE, self.Status.CLOSED],
             self.Status.ACTIVE: [

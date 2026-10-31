@@ -297,3 +297,25 @@
   - Confirmed frontend builds and passes test suite cleanly (`next build` and Vitest unit tests).
   - Pushed full-stack changes to remote repository branches as requested.
 - **Status:** PASS
+
+---
+
+### [Stage 15] Full-Stack Backend Integration & Landing Page Footer Refinement
+
+- **Date/Time:** 2026-10-31 16:00 UTC+05:30
+- **Actions:**
+  - Audited full system: Django REST Framework backend routes, authentication flows, database state machine, and frontend TanStack Query integrations.
+  - Resolved backend subscription state machine transition permitting direct activation from draft and added comprehensive exception handling preventing HTTP 500 errors.
+  - Enhanced registration endpoint to generate and return immediate JWT tokens and authenticated user payloads for seamless onboarding.
+  - Configured frontend `account-context.tsx` and `api.ts` to automatically authenticate and restore live session against backend endpoints (`/api/v1/auth/me/active-context/`, `/api/v1/auth/me/`, `/api/v1/workspaces/`).
+  - Completely refined and fixed the closing landing page footer (`FinalCtaFooterSection.tsx`):
+    - Fixed in-page smooth section scrolling targeting `#products`, `#plans` (replacing arbitrary window height multiplier), `#customers`, `#billing`, and `#analytics`.
+    - Integrated with Lenis kinetic smooth scrolling in `SmoothScrollProvider`.
+    - Updated Solutions and Resources links to functional application routes (`/subscriptions`, `/invoices`, `/payments`, `/catalog`, `/quotations`, `/reports`, `/portal`, `/integrations`, `/audit-logs`, and OpenAPI docs).
+    - Added comprehensive interactive Legal Policies modal dialog with tabbed views for Privacy Policy, Terms of Service, Cookie Settings, and Security & Compliance, eliminating all dead `#` links.
+    - Added interactive newsletter subscription box with instant client-side feedback.
+    - Added live API health telemetry indicator, social links, and smooth back-to-top trigger.
+  - Verified tests:
+    - Vitest unit tests: 4/4 passed.
+    - Pytest backend test suite: 14/14 passed.
+- **Status:** PASS

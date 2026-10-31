@@ -99,6 +99,67 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const toggleSidebar = () => setIsSidebarCollapsed((prev) => !prev);
 
+  // Initialize auth session and live workspaces from backend
+  useEffect(() => {
+    let active = true;
+
+    async function initializeSession() {
+      if (typeof window === "undefined") return;
+
+      let token = localStorage.getItem("access_token");
+
+      // Auto-authenticate with live backend demo credentials if no token exists
+      if (!token && !pathname?.startsWith("/login") && !pathname?.startsWith("/register")) {
+        try {
+          const authRes = await api.login({
+            email: "demo@flowgrid.local",
+            password: "FlowGrid2026!Demo",
+          });
+          if (authRes.access) {
+            localStorage.setItem("access_token", authRes.access);
+            token = authRes.access;
+            if (active && authRes.user) {
+              setUser(authRes.user);
+            }
+            if (active && authRes.workspaces && authRes.workspaces.length > 0) {
+              setWorkspaces(authRes.workspaces);
+              setActiveWorkspace(authRes.workspaces[0]);
+            }
+          }
+        } catch {
+          // Gracefully continue
+        }
+      }
+
+      // Fetch authoritative user profile and live workspaces
+      if (token) {
+        try {
+          const me = await api.getMe();
+          if (active && me) {
+            setUser(me);
+            if (me.workspaces && me.workspaces.length > 0) {
+              setWorkspaces(me.workspaces);
+              setActiveWorkspace((prev) => {
+                if (prev && me.workspaces.some((w) => w.id === prev.id)) {
+                  return me.workspaces.find((w) => w.id === prev.id)!;
+                }
+                return me.workspaces[0];
+              });
+            }
+          }
+        } catch {
+          // Token may have expired, fallback to demo user
+        }
+      }
+    }
+
+    initializeSession();
+
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
+
   // Sync route with context
   useEffect(() => {
     if (pathname?.startsWith("/portal") && contextType !== "PERSONAL") {

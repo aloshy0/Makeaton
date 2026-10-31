@@ -23,11 +23,14 @@ class SubscriptionViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="actions/confirm")
     def confirm(self, request, workspace_id, pk=None):
         subscription = self.get_object()
-        subscription.transition_to(
-            Subscription.Status.ACTIVE,
-            user=request.user,
-            reason="Confirmed and activated by operator",
-        )
+        try:
+            subscription.transition_to(
+                Subscription.Status.ACTIVE,
+                user=request.user,
+                reason="Confirmed and activated by operator",
+            )
+        except Exception as e:
+            raise exceptions.ValidationError({"error": str(e)})
         return Response(self.get_serializer(subscription).data)
 
     @action(detail=True, methods=["post"], url_path="actions/pause")

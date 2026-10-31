@@ -25,6 +25,7 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       });
 
       lenisRef.current = lenis;
+      (window as any).lenis = lenis;
 
       // Sync Lenis scroll with GSAP ScrollTrigger
       lenis.on("scroll", ScrollTrigger.update);
@@ -45,6 +46,7 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       return () => {
         clearTimeout(timer);
         gsap.ticker.remove(updateTicker);
+        delete (window as any).lenis;
         lenis.destroy();
         ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
       };

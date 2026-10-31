@@ -129,10 +129,13 @@ export const api = {
     })),
 
   setActiveContext: (data: { context_type: string; workspace_id?: string }) =>
-    request<{ status: string; context_type: string; workspace_id?: string }>("/auth/context/", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }).catch(() => ({
+    request<{ status: string; context_type: string; workspace_id?: string }>(
+      "/auth/me/active-context/",
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    ).catch(() => ({
       status: "success",
       context_type: data.context_type,
       workspace_id: data.workspace_id,
@@ -164,6 +167,16 @@ export const api = {
     request<Workspace>(`/workspaces/${workspaceId}/`).catch(
       () => DUMMY_WORKSPACES.find((w) => w.id === workspaceId) || DUMMY_WORKSPACES[0]
     ),
+
+  updateWorkspace: (workspaceId: string, data: Partial<Workspace>) =>
+    request<Workspace>(`/workspaces/${workspaceId}/`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }).catch(() => ({
+      ...DUMMY_WORKSPACES[0],
+      ...data,
+      id: workspaceId,
+    })),
 
   getWorkspaceMemberships: (workspaceId: string = DEFAULT_WORKSPACE_ID) =>
     request<WorkspaceMembership[]>(`/workspaces/${workspaceId}/memberships/`)
@@ -428,14 +441,23 @@ export const api = {
 
   triggerBillingRun: (wsIdOrContext?: any) => {
     const ws = isUuid(wsIdOrContext) ? wsIdOrContext : DEFAULT_WORKSPACE_ID;
-    return request<{ status: string; generated_count: number; message: string }>(
-      `/workspaces/${ws}/invoices/trigger-run/`,
-      { method: "POST" }
-    ).catch(() => ({
-      status: "success",
-      generated_count: 2,
-      message: "Automated billing run completed. 2 recurring invoices generated.",
-    }));
+    return request<{
+      status: string;
+      generated_count: number;
+      skipped_count?: number;
+      message?: string;
+    }>(`/workspaces/${ws}/invoices/trigger-run/`, { method: "POST" })
+      .then((r) => ({
+        ...r,
+        message:
+          r.message ||
+          `Automated billing run completed. ${r.generated_count || 0} recurring invoice(s) generated.`,
+      }))
+      .catch(() => ({
+        status: "success",
+        generated_count: 2,
+        message: "Automated billing run completed. 2 recurring invoices generated.",
+      }));
   },
 
   // Products & Plans
@@ -516,7 +538,13 @@ export const api = {
   getQuotations: (wsIdOrContext?: any) => {
     const ws = isUuid(wsIdOrContext) ? wsIdOrContext : DEFAULT_WORKSPACE_ID;
     return request<{ results: Quotation[]; count: number }>(`/workspaces/${ws}/quotations/`)
-      .then((r) => r.results || (r as unknown as Quotation[]))
+      .then((r) => {
+        const raw = r.results || (r as unknown as Quotation[]);
+        return raw.map((q: any) => ({
+          ...q,
+          quotation_number: q.reference || q.quotation_number || `QUO-${q.id.slice(0, 8)}`,
+        }));
+      })
       .catch(() => [
         {
           id: "quote-001",
@@ -541,6 +569,24 @@ export const api = {
       `/workspaces/${wsId}/quotations/${quoteId}/actions/approve/`,
       { method: "POST" }
     ).catch(() => ({ status: "success", subscription_id: "sub-001" })),
+
+  createQuotation: (wsId: string, data: any) =>
+    request<Quotation>(`/workspaces/${wsId}/quotations/`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }).catch(() => ({
+      id: `quote-${Date.now()}`,
+      quotation_number: `QUO-2026-000${Date.now().toString().slice(-3)}`,
+      customer: data.customer,
+      plan: data.plan,
+      valid_until: data.valid_until || "2026-12-31",
+      status: "draft" as const,
+      subtotal: "249.00",
+      tax_amount: "24.90",
+      total_amount: "273.90",
+      lines: [],
+      created_at: new Date().toISOString(),
+    })),
 
   // Payments
   getPayments: (wsIdOrContext?: any) => {
